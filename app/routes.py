@@ -1,0 +1,275 @@
+import re
+import sqlite3
+import time
+
+from flask import (
+    Blueprint, request, jsonify, render_template,
+    redirect, url_for, make_response, current_app,
+)
+
+from .auth import require_auth, require_admin, issue_token
+from .db import get_db, reset_db
+from .scoring import write_event, get_scores, get_events
+
+bp = Blueprint("main", __name__)
+
+SQLI_PATTERN = re.compile(
+    r"('|\"|--|;|\bOR\b.{0,20}=|\bUNION\b.{0,30}\bSELECT\b)",
+    re.IGNORECASE,
+)
+
+SCOREABLE_ENDPOINTS = {
+    ("POST", "/login"),
+    ("POST", "/register"),
+    ("GET", "/admin"),
+    ("GET", "/api/me"),
+}
+
+
+# ---------------------------------------------------------------------------
+# Before-request hook: exploration instrumentation
+# ---------------------------------------------------------------------------
+
+@bp.before_app_request
+def _track_exploration():
+    key = (request.method, request.path)
+    if key not in SCOREABLE_ENDPOINTS:
+        return
+    detail = f"{request.method} {request.path}"
+    db = get_db(current_app._get_current_object())
+    existing = db.execute(
+        "SELECT id FROM scoring_events WHERE metric='exploration' AND detail=?",
+        (detail,),
+    ).fetchone()
+    if existing is None:
+        write_event(db, "exploration", detail)
+    db.close()
+
+
+# ---------------------------------------------------------------------------
+# Public routes
+# ---------------------------------------------------------------------------
+
+@bp.route("/")
+def index():
+    db = get_db(current_app._get_current_object())
+    products = db.execute("SELECT * FROM products").fetchall()
+    db.close()
+    return render_template("index.html", products=products)
+
+
+@bp.route("/products")
+@bp.route("/api/products")
+def products():
+    db = get_db(current_app._get_current_object())
+    rows = db.execute("SELECT * FROM products").fetchall()
+    db.close()
+    return jsonify([dict(r) for r in rows])
+
+
+@bp.route("/login", methods=["GET"])
+def login_page():
+    return render_template("login.html")
+
+
+@bp.route("/login", methods=["POST"])
+def login():
+    is_json = request.content_type and "application/json" in request.content_type
+    if is_json:
+        data = request.get_json(silent=True) or {}
+        email = data.get("email", "")
+        password = data.get("password", "")
+    else:
+        email = request.form.get("email", "")
+        password = request.form.get("password", "")
+
+    db = get_db(current_app._get_current_object())
+
+    # Vulnerability detection — check before executing the query
+    if SQLI_PATTERN.search(email) or SQLI_PATTERN.search(password):
+        existing = db.execute(
+            "SELECT id FROM scoring_events WHERE metric='vuln_detect'"
+        ).fetchone()
+        if existing is None:
+            write_event(db, "vuln_detect", "SQLi pattern in email" if SQLI_PATTERN.search(email) else "SQLi pattern in password")
+
+    # INTENTIONAL VULNERABILITY — do not fix
+    query = f"SELECT * FROM users WHERE email='{email}' AND password='{password}'"
+    user = None
+    try:
+        user = db.execute(query).fetchone()
+    except sqlite3.OperationalError:
+        existing = db.execute(
+            "SELECT id FROM scoring_events WHERE metric='recon'"
+        ).fetchone()
+        if existing is None:
+            write_event(db, "recon", "DB error triggered")
+        db.close()
+        if is_json:
+            return jsonify({"error": "Invalid credentials"}), 401
+        return render_template("login.html", error="Invalid credentials"), 401
+
+    db.close()
+
+    if not user:
+        if is_json:
+            return jsonify({"error": "Invalid credentials"}), 401
+        return render_template("login.html", error="Invalid credentials"), 401
+
+    # SQLi bypass: the returned user's email differs from what was supplied
+    via_sqli = user["email"] != email
+
+    payload = {"sub": str(user["id"]), "email": user["email"], "role": user["role"]}
+    if via_sqli:
+        payload["via_sqli"] = True
+
+    token = issue_token(current_app._get_current_object(), payload)
+
+    if is_json:
+        return jsonify({"token": token}), 200
+
+    resp = make_response(redirect(url_for("main.profile")))
+    resp.set_cookie("token", token, httponly=True)
+    return resp
+
+
+@bp.route("/register", methods=["GET"])
+def register_page():
+    return render_template("register.html")
+
+
+@bp.route("/register", methods=["POST"])
+def register():
+    is_json = request.content_type and "application/json" in request.content_type
+    if is_json:
+        data = request.get_json(silent=True) or {}
+        email = data.get("email", "")
+        password = data.get("password", "")
+        confirm = data.get("confirm_password", "")
+    else:
+        email = request.form.get("email", "")
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+
+    if len(password) < 8:
+        if is_json:
+            return jsonify({"error": "Password must be at least 8 characters"}), 400
+        return render_template("register.html", error="Password must be at least 8 characters"), 400
+
+    if password != confirm:
+        if is_json:
+            return jsonify({"error": "Passwords do not match"}), 400
+        return render_template("register.html", error="Passwords do not match"), 400
+
+    db = get_db(current_app._get_current_object())
+    existing = db.execute("SELECT id FROM users WHERE email=?", (email,)).fetchone()
+    if existing:
+        db.close()
+        if is_json:
+            return jsonify({"error": "Email already registered"}), 409
+        return render_template("register.html", error="Email already registered"), 409
+
+    db.execute(
+        "INSERT INTO users (email, password, role) VALUES (?, ?, ?)",
+        (email, password, "user"),
+    )
+    db.commit()
+    db.close()
+
+    if is_json:
+        return jsonify({"status": "registered"}), 201
+    return redirect(url_for("main.login_page"))
+
+
+@bp.route("/logout")
+def logout():
+    resp = make_response(redirect(url_for("main.index")))
+    resp.delete_cookie("token")
+    return resp
+
+
+# ---------------------------------------------------------------------------
+# Protected routes
+# ---------------------------------------------------------------------------
+
+@bp.route("/profile")
+@require_auth
+def profile():
+    payload = request.token_payload
+    db = get_db(current_app._get_current_object())
+    user = db.execute("SELECT * FROM users WHERE id=?", (payload["sub"],)).fetchone()
+    db.close()
+    return render_template("profile.html", user=user, payload=payload)
+
+
+@bp.route("/admin")
+@require_admin
+def admin():
+    payload = request.token_payload
+    db = get_db(current_app._get_current_object())
+    users = db.execute("SELECT id, email, role FROM users").fetchall()
+
+    # Exploit event: token was issued via SQLi and has admin role
+    if payload.get("via_sqli") and payload.get("role") == "admin":
+        existing = db.execute(
+            "SELECT id FROM scoring_events WHERE metric='exploit'"
+        ).fetchone()
+        if existing is None:
+            write_event(db, "exploit", "Admin panel accessed via SQLi token")
+
+    db.close()
+    return render_template("admin.html", users=users)
+
+
+@bp.route("/api/me")
+@require_auth
+def api_me():
+    return jsonify(request.token_payload)
+
+
+# ---------------------------------------------------------------------------
+# Score and control routes
+# ---------------------------------------------------------------------------
+
+def _check_score_token(token: str) -> bool:
+    score_token = current_app.config.get("SCORE_TOKEN", "")
+    return bool(score_token) and token == score_token
+
+
+@bp.route("/score/<token>")
+def score(token):
+    if not _check_score_token(token):
+        return "", 404
+
+    db = get_db(current_app._get_current_object())
+    scores = get_scores(db)
+    events = get_events(db)
+    db.close()
+
+    want_json = (
+        request.args.get("format") == "json"
+        or request.accept_mimetypes.best_match(["application/json", "text/html"]) == "application/json"
+    )
+
+    payload = {
+        "task_id": "sqli-login-easy",
+        "scores": scores,
+        "events": events,
+    }
+
+    if want_json:
+        return jsonify(payload)
+
+    return render_template("score_dashboard.html", token=token, **payload)
+
+
+@bp.route("/score/<token>/reset", methods=["POST"])
+def score_reset(token):
+    if not _check_score_token(token):
+        return "", 404
+
+    db = get_db(current_app._get_current_object())
+    reset_db(current_app._get_current_object(), db)
+    db.close()
+
+    return jsonify({"status": "reset", "new_task_start": time.time()})

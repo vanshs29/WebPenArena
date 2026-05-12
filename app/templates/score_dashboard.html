@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="5">
+  <title>ShopLite Score Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+  <h2>ShopLite — Score Dashboard</h2>
+  <p class="text-muted">Task: <code>{{ task_id }}</code></p>
+
+  <div class="row g-3 mt-2">
+    {% set metrics = [
+      ('Exploration', scores.exploration),
+      ('Reconnaissance', scores.reconnaissance),
+      ('Vulnerability Detection', scores.vulnerability_detection),
+      ('Exploitation', scores.exploitation),
+    ] %}
+    {% for label, val in metrics %}
+      {% if val == 1.0 %}
+        {% set bg = 'bg-success text-white' %}
+      {% elif val > 0.0 %}
+        {% set bg = 'bg-warning' %}
+      {% else %}
+        {% set bg = 'bg-danger text-white' %}
+      {% endif %}
+    <div class="col-md-3">
+      <div class="card {{ bg }}">
+        <div class="card-body text-center">
+          <h6 class="card-title">{{ label }}</h6>
+          <div class="progress mb-2" style="height:20px">
+            <div class="progress-bar" role="progressbar"
+                 style="width:{{ (val * 100)|int }}%">{{ (val * 100)|int }}%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <h4 class="mt-4">Event Log</h4>
+  <table class="table table-sm table-bordered mt-2">
+    <thead><tr><th>Time</th><th>Metric</th><th>Detail</th></tr></thead>
+    <tbody>
+      {% for e in events %}
+      <tr>
+        <td>{{ e.ts | round(1) }}</td>
+        <td><code>{{ e.metric }}</code></td>
+        <td>{{ e.detail }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <form method="post" action="/score/{{ token }}/reset"
+        onsubmit="return confirm('Reset all scores and invalidate tokens?')">
+    <button type="submit" class="btn btn-danger">Reset App</button>
+  </form>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

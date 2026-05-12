@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title_suffix %} — Admin{% endblock %}
+{% block content %}
+<h2>Admin Panel</h2>
+<table class="table table-striped mt-3">
+  <thead>
+    <tr><th>ID</th><th>Email</th><th>Role</th></tr>
+  </thead>
+  <tbody>
+    {% for u in users %}
+    <tr>
+      <td>{{ u.id }}</td>
+      <td>{{ u.email }}</td>
+      <td>{{ u.role }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

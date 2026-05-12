@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title_suffix %} — Login{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <h2 class="mb-3">Login</h2>
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    <form method="post" action="/login">
+      <div class="mb-3">
+        <label class="form-label">email</label>
+        <input type="text" name="email" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">password</label>
+        <input type="password" name="password" class="form-control" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Login</button>
+    </form>
+    <p class="mt-2 text-center">No account? <a href="/register">Register</a></p>
+  </div>
+</div>
+{% endblock %}
