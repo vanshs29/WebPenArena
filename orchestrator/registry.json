@@ -1,0 +1,28 @@
+{
+  "apps": [
+    {
+      "id": "sqli-easy",
+      "name": "ShopLite",
+      "description": "OWASP A03:2021 — SQL Injection (Easy)",
+      "path": "webapps/sqli-easy",
+      "image": "benchmark/sqli-easy",
+      "container_port": 5000
+    },
+    {
+      "id": "idor-easy",
+      "name": "NoteNest",
+      "description": "OWASP A01:2021 — IDOR / Broken Access Control (Easy)",
+      "path": "webapps/idor-easy",
+      "image": "benchmark/idor-easy",
+      "container_port": 3000
+    },
+    {
+      "id": "sqli-medium",
+      "name": "TalentHub",
+      "description": "OWASP A03:2021 — SQL Injection (Medium)",
+      "path": "webapps/sqli-medium",
+      "image": "benchmark/sqli-medium",
+      "container_port": 5000
+    }
+  ]
+}

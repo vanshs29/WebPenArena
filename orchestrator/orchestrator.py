@@ -1,0 +1,260 @@
+#!/usr/bin/env python3
+"""
+Benchmark orchestrator — interactive CLI for building and launching
+vulnerable web app environments via Docker.
+
+Usage:
+    cd prototype-webapp
+    python orchestrator/orchestrator.py
+"""
+
+import json
+import os
+import socket
+import subprocess
+import sys
+import uuid
+from pathlib import Path
+
+try:
+    import questionary
+except ImportError:
+    sys.exit("Missing dependency: pip install questionary")
+
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+REGISTRY_PATH = Path(__file__).resolve().parent / "registry.json"
+
+
+def load_registry() -> list[dict]:
+    with open(REGISTRY_PATH) as f:
+        return json.load(f)["apps"]
+
+
+# ---------------------------------------------------------------------------
+# Port helpers
+# ---------------------------------------------------------------------------
+
+def find_free_port(start: int = 8000, end: int = 9000) -> int:
+    for port in range(start, end):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                s.bind(("", port))
+                return port
+            except OSError:
+                continue
+    raise RuntimeError("No free port found in range 8000–9000")
+
+
+# ---------------------------------------------------------------------------
+# Docker helpers
+# ---------------------------------------------------------------------------
+
+def image_exists(image: str) -> bool:
+    result = subprocess.run(
+        ["docker", "image", "inspect", image],
+        capture_output=True,
+    )
+    return result.returncode == 0
+
+
+def build_image(app: dict) -> bool:
+    context = str(REPO_ROOT / app["path"])
+    print(f"\n[build] docker build -t {app['image']} {context}\n")
+    result = subprocess.run(
+        ["docker", "build", "-t", app["image"], context],
+    )
+    return result.returncode == 0
+
+
+def run_container(app: dict) -> None:
+    host_port = find_free_port()
+    token = str(uuid.uuid4())
+    short_id = uuid.uuid4().hex[:8]
+    container_name = f"benchmark-{app['id']}-{short_id}"
+
+    cmd = [
+        "docker", "run", "-d",
+        "--name", container_name,
+        "-p", f"{host_port}:{app['container_port']}",
+        "-e", f"SCORE_TOKEN={token}",
+        app["image"],
+    ]
+    print(f"\n[launch] {' '.join(cmd)}\n")
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"[error] {result.stderr.strip()}")
+        return
+
+    score_url = f"http://localhost:{host_port}/score/{token}"
+    print("=" * 60)
+    print(f"  App          : {app['name']} ({app['description']})")
+    print(f"  Container    : {container_name}")
+    print(f"  Host port    : {host_port}")
+    print(f"  Score URL    : {score_url}")
+    print(f"  Score token  : {token}")
+    print("=" * 60)
+
+
+def get_running_containers() -> list[dict]:
+    result = subprocess.run(
+        [
+            "docker", "ps",
+            "--filter", "name=benchmark-",
+            "--format",
+            "{{.Names}}\t{{.Ports}}\t{{.Status}}",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    rows = []
+    for line in result.stdout.strip().splitlines():
+        parts = line.split("\t")
+        if len(parts) == 3:
+            rows.append({"name": parts[0], "ports": parts[1], "status": parts[2]})
+    return rows
+
+
+def stop_container(name: str) -> None:
+    print(f"\n[stop] stopping {name} …")
+    subprocess.run(["docker", "stop", name], check=True)
+    subprocess.run(["docker", "rm", name], check=True)
+    print(f"[stop] {name} removed.")
+
+
+# ---------------------------------------------------------------------------
+# Menu helpers
+# ---------------------------------------------------------------------------
+
+def app_label(app: dict) -> str:
+    return f"{app['name']}  —  {app['description']}"
+
+
+def choose_app(apps: list[dict], prompt: str = "Which web app?") -> dict | None:
+    choices = {app_label(a): a for a in apps}
+    answer = questionary.select(prompt, choices=list(choices.keys())).ask()
+    if answer is None:
+        return None
+    return choices[answer]
+
+
+# ---------------------------------------------------------------------------
+# Actions
+# ---------------------------------------------------------------------------
+
+def action_launch(apps: list[dict]) -> None:
+    app = choose_app(apps, "Which web app to launch?")
+    if app is None:
+        return
+
+    if not image_exists(app["image"]):
+        print(f"\n[warn] Image '{app['image']}' not found locally.")
+        build_first = questionary.confirm("Build it now?").ask()
+        if not build_first:
+            print("[abort] Cannot launch without a built image.")
+            return
+        if not build_image(app):
+            print("[error] Build failed — aborting launch.")
+            return
+
+    run_container(app)
+
+
+def action_rebuild(apps: list[dict]) -> None:
+    all_label = "All apps"
+    choices = [all_label] + [app_label(a) for a in apps]
+    label_to_app = {app_label(a): a for a in apps}
+
+    answers = questionary.checkbox("Select image(s) to rebuild:", choices=choices).ask()
+    if not answers:
+        print("[abort] Nothing selected.")
+        return
+
+    targets = apps if all_label in answers else [label_to_app[a] for a in answers if a != all_label]
+
+    for app in targets:
+        ok = build_image(app)
+        status = "OK" if ok else "FAILED"
+        print(f"\n[rebuild] {app['image']} → {status}")
+
+
+def action_rebuild_and_launch(apps: list[dict]) -> None:
+    app = choose_app(apps, "Which web app to rebuild and launch?")
+    if app is None:
+        return
+
+    ok = build_image(app)
+    if not ok:
+        print("[error] Build failed — aborting launch.")
+        return
+
+    run_container(app)
+
+
+def action_show_running() -> None:
+    rows = get_running_containers()
+    if not rows:
+        print("\n[info] No benchmark containers are currently running.")
+        return
+
+    print(f"\n{'CONTAINER':<40} {'PORTS':<30} {'STATUS'}")
+    print("-" * 80)
+    for r in rows:
+        print(f"{r['name']:<40} {r['ports']:<30} {r['status']}")
+
+
+def action_stop() -> None:
+    rows = get_running_containers()
+    if not rows:
+        print("\n[info] No benchmark containers are running.")
+        return
+
+    choices = {r["name"]: r for r in rows}
+    answer = questionary.select(
+        "Which container to stop?", choices=list(choices.keys())
+    ).ask()
+    if answer is None:
+        return
+    stop_container(answer)
+
+
+# ---------------------------------------------------------------------------
+# Main loop
+# ---------------------------------------------------------------------------
+
+MENU = {
+    "Launch a web app": action_launch,
+    "Rebuild image(s)": action_rebuild,
+    "Rebuild and launch a web app": action_rebuild_and_launch,
+    "Show running apps": action_show_running,
+    "Stop a running app": action_stop,
+    "Exit": None,
+}
+
+
+def main() -> None:
+    apps = load_registry()
+
+    while True:
+        print()
+        choice = questionary.select(
+            "What would you like to do?", choices=list(MENU.keys())
+        ).ask()
+
+        if choice is None or choice == "Exit":
+            print("Bye.")
+            break
+
+        action = MENU[choice]
+        if action in (action_show_running, action_stop):
+            action()
+        else:
+            action(apps)
+
+
+if __name__ == "__main__":
+    main()

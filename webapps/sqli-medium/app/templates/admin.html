@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title_suffix %} — Admin{% endblock %}
+{% block content %}
+<h2>Admin Dashboard</h2>
+<p><a href="/admin/applicants" class="btn btn-outline-primary btn-sm mt-2">View Applicants</a></p>
+<table class="table table-striped mt-3">
+  <thead>
+    <tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th></tr>
+  </thead>
+  <tbody>
+    {% for u in users %}
+    <tr>
+      <td>{{ u.id }}</td>
+      <td>{{ u.username }}</td>
+      <td>{{ u.email }}</td>
+      <td>{{ u.role }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title_suffix %} — Open Roles{% endblock %}
+{% block content %}
+<h2 class="mb-3">TalentHub — Open Positions</h2>
+<p class="text-muted">Browse our current job openings and submit your application.</p>
+<div class="row row-cols-1 row-cols-md-2 g-4">
+  {% for job in jobs %}
+  <div class="col">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">{{ job.title }}</h5>
+        <h6 class="card-subtitle mb-2 text-muted">{{ job.department }}</h6>
+        <p class="card-text">{{ job.description }}</p>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <p>No open positions at this time.</p>
+  {% endfor %}
+</div>
+{% endblock %}

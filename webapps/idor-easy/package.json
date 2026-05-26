@@ -1,0 +1,20 @@
+{
+  "name": "notenest",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node run.js",
+    "test": "jest --forceExit"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.6.0",
+    "cookie-parser": "^1.4.6",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  }
+}

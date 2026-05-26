@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title_suffix %} — Applicants{% endblock %}
+{% block content %}
+<h2>All Applicants</h2>
+<a href="/admin" class="btn btn-outline-secondary btn-sm mb-3">Back to Admin</a>
+<table class="table table-striped">
+  <thead>
+    <tr><th>Applicant</th><th>Email</th><th>Position</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+    {% for a in applications %}
+    <tr>
+      <td>{{ a.username }}</td>
+      <td>{{ a.email }}</td>
+      <td>{{ a.job_title }}</td>
+      <td>{{ a.status }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
