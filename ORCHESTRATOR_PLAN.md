@@ -90,6 +90,7 @@ Single source of truth for all registered web apps. Adding a new app = adding on
 ```
 ? What would you like to do?
   ❯ Launch a web app
+    Launch all web apps
     Rebuild image(s)
     Rebuild and launch a web app
     Show running apps
@@ -105,6 +106,12 @@ Single source of truth for all registered web apps. Adding a new app = adding on
 4. Generate a UUID4 as `SCORE_TOKEN`.
 5. `docker run -d --name benchmark-<id>-<short_uuid> -p <host_port>:<container_port> -e SCORE_TOKEN=<token> benchmark/<id>`
 6. Print: container name, host port, score URL (`http://localhost:<port>/score/<token>`).
+
+### Launch all web apps
+
+1. Check which registered images are missing locally.
+2. If any are missing, offer to build them all before proceeding; abort if declined or a build fails.
+3. Call the Launch flow above for each app in registry order, each with its own free port and score token.
 
 ### Rebuild (standalone)
 

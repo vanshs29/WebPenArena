@@ -56,6 +56,8 @@ python orchestrator/orchestrator.py
 **Menu options:**
 - **Launch a web app** — picks a free host port (8000+), generates a UUID4 `SCORE_TOKEN`, runs the
   Docker image, and prints the score URL.
+- **Launch all web apps** — builds any missing images (with confirmation), then launches every
+  registered app, each with its own free port and score token.
 - **Rebuild image(s)** — multi-select rebuild of any subset or all images.
 - **Rebuild and launch** — rebuild one app then immediately launch it.
 - **Show running apps** — table of live benchmark containers with ports and score URLs.

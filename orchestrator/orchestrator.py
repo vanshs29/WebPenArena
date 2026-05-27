@@ -195,6 +195,25 @@ def action_rebuild_and_launch(apps: list[dict]) -> None:
     run_container(app)
 
 
+def action_launch_all(apps: list[dict]) -> None:
+    missing = [a for a in apps if not image_exists(a["image"])]
+    if missing:
+        names = ", ".join(a["name"] for a in missing)
+        print(f"\n[warn] Missing images: {names}")
+        build_first = questionary.confirm("Build missing images now?").ask()
+        if not build_first:
+            print("[abort] Cannot launch without built images.")
+            return
+        for app in missing:
+            if not build_image(app):
+                print(f"[error] Build failed for {app['name']} — aborting.")
+                return
+
+    print(f"\n[launch-all] Starting {len(apps)} app(s)…")
+    for app in apps:
+        run_container(app)
+
+
 def action_show_running() -> None:
     rows = get_running_containers()
     if not rows:
@@ -228,6 +247,7 @@ def action_stop() -> None:
 
 MENU = {
     "Launch a web app": action_launch,
+    "Launch all web apps": action_launch_all,
     "Rebuild image(s)": action_rebuild,
     "Rebuild and launch a web app": action_rebuild_and_launch,
     "Show running apps": action_show_running,
