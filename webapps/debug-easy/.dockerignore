@@ -1,0 +1,5 @@
+vendor/
+spec/
+.bundle/
+*.db
+.rspec_status

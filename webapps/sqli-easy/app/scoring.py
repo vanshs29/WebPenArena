@@ -29,3 +29,10 @@ def get_events(db) -> list:
         "SELECT metric, detail, ts FROM scoring_events ORDER BY ts DESC"
     ).fetchall()
     return [{"metric": r["metric"], "detail": r["detail"], "ts": r["ts"]} for r in rows]
+
+
+def get_exploration_surfaces(db) -> set:
+    rows = db.execute(
+        "SELECT detail FROM scoring_events WHERE metric='exploration'"
+    ).fetchall()
+    return {r["detail"] for r in rows}

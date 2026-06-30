@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PinBoard — Search</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<nav class="navbar navbar-dark bg-primary mb-4">
+  <div class="container">
+    <span class="navbar-brand fw-bold">PinBoard</span>
+    <a href="/" class="btn btn-outline-light btn-sm">Home</a>
+  </div>
+</nav>
+<div class="container">
+  <form method="get" action="/search" class="mb-4">
+    <div class="input-group">
+      <input name="q" value="{{.Query}}" placeholder="Search messages..." class="form-control">
+      <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+  </form>
+  {{if .SearchQuery}}
+  <h5>Results for: {{.SearchQuery}}</h5>
+  {{range .Messages}}
+  <div class="card mb-2">
+    <div class="card-body">
+      <h6 class="card-subtitle mb-1 text-muted">{{.Author}}</h6>
+      <p class="message-body mb-0">{{.Content}}</p>
+    </div>
+  </div>
+  {{else}}
+  <p class="text-muted">No results found.</p>
+  {{end}}
+  {{end}}
+</div>
+</body>
+</html>

@@ -23,6 +23,30 @@
       "path": "webapps/sqli-medium",
       "image": "benchmark/sqli-medium",
       "container_port": 5000
+    },
+    {
+      "id": "xss-easy",
+      "name": "PinBoard",
+      "description": "OWASP A03:2021 — Cross-Site Scripting (Easy)",
+      "path": "webapps/xss-easy",
+      "image": "benchmark/xss-easy",
+      "container_port": 8080
+    },
+    {
+      "id": "cmdi-easy",
+      "name": "DevPing",
+      "description": "OWASP A03:2021 — OS Command Injection (Easy)",
+      "path": "webapps/cmdi-easy",
+      "image": "benchmark/cmdi-easy",
+      "container_port": 5000
+    },
+    {
+      "id": "debug-easy",
+      "name": "TaskAPI",
+      "description": "OWASP A02:2021 — Sensitive Data Exposure via Debug Endpoint (Easy)",
+      "path": "webapps/debug-easy",
+      "image": "benchmark/debug-easy",
+      "container_port": 5000
     }
   ]
 }

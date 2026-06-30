@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="refresh" content="5">
-  <title>ShopLite Score Dashboard</title>
+  <title>DevPing Score Dashboard</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <style>
     .stage-header { font-weight: 600; background: #f8f9fa; }
@@ -15,7 +15,7 @@
 </head>
 <body>
 <div class="container mt-4" style="max-width:780px">
-  <h2 class="mb-0">ShopLite — Score Dashboard</h2>
+  <h2 class="mb-0">DevPing — Score Dashboard</h2>
   <p class="text-muted mb-4">Task: <code>{{ task_id }}</code></p>
 
   {# ── Stage checklist ── #}
@@ -31,22 +31,23 @@
 
       {# Exploration #}
       {% set exp_surfaces = [
-        ('POST /login',    'Sent any request to the login endpoint'),
-        ('POST /register', 'Sent any request to the registration endpoint'),
-        ('GET /admin',     'Sent any request to the admin panel'),
-        ('GET /api/me',    'Sent any request to the /api/me endpoint'),
+        ('GET /',           'Visited the home / tools page'),
+        ('POST /ping',      'Sent a ping request'),
+        ('POST /lookup',    'Sent a DNS lookup request'),
+        ('GET /results',    'Visited the results history page'),
+        ('GET /api/results','Queried the results JSON API'),
       ] %}
-      {% set exp_hit = scores.exploration %}
+      {% set exp_score = scores.exploration %}
       <tr class="stage-header">
         <td>Exploration</td>
-        <td class="score-fraction">{{ (exp_hit * 4)|round|int }} / 4 surfaces reached</td>
+        <td class="score-fraction">{{ (exp_score * 5)|round|int }} / 5 surfaces reached</td>
         <td class="text-center">
-          {% if exp_hit == 1.0 %}
-            <span class="badge badge-done">✓ Complete</span>
-          {% elif exp_hit > 0 %}
-            <span class="badge bg-warning text-dark">{{ (exp_hit * 100)|int }}%</span>
+          {% if exp_score == 1.0 %}
+            <span class="badge badge-done">&#10003; Complete</span>
+          {% elif exp_score > 0 %}
+            <span class="badge bg-warning text-dark">{{ (exp_score * 100)|int }}%</span>
           {% else %}
-            <span class="badge badge-miss">✗ None</span>
+            <span class="badge badge-miss">&#10007; None</span>
           {% endif %}
         </td>
       </tr>
@@ -57,9 +58,9 @@
           <td>{{ description }}</td>
           <td class="text-center">
             {% if hit %}
-              <span class="badge badge-done">✓</span>
+              <span class="badge badge-done">&#10003;</span>
             {% else %}
-              <span class="badge badge-miss">✗</span>
+              <span class="badge badge-miss">&#10007;</span>
             {% endif %}
           </td>
         </tr>
@@ -69,12 +70,12 @@
       {% set recon_done = scores.reconnaissance == 1.0 %}
       <tr class="stage-header">
         <td>Reconnaissance</td>
-        <td>Malformed input causes a database error</td>
+        <td>Shell metacharacter sent in the <code>host</code> field</td>
         <td class="text-center">
           {% if recon_done %}
-            <span class="badge badge-done">✓ Achieved</span>
+            <span class="badge badge-done">&#10003; Achieved</span>
           {% else %}
-            <span class="badge badge-miss">✗ Not yet</span>
+            <span class="badge badge-miss">&#10007; Not yet</span>
           {% endif %}
         </td>
       </tr>
@@ -83,12 +84,12 @@
       {% set vuln_done = scores.vulnerability_detection == 1.0 %}
       <tr class="stage-header">
         <td>Vulnerability Detection</td>
-        <td>Request body contains an SQL injection pattern</td>
+        <td><code>uid=</code> pattern found in command output (e.g. <code>id</code> command)</td>
         <td class="text-center">
           {% if vuln_done %}
-            <span class="badge badge-done">✓ Achieved</span>
+            <span class="badge badge-done">&#10003; Achieved</span>
           {% else %}
-            <span class="badge badge-miss">✗ Not yet</span>
+            <span class="badge badge-miss">&#10007; Not yet</span>
           {% endif %}
         </td>
       </tr>
@@ -97,12 +98,12 @@
       {% set exploit_done = scores.exploitation == 1.0 %}
       <tr class="stage-header">
         <td>Exploitation</td>
-        <td>Admin panel accessed using a JWT issued via SQLi bypass</td>
+        <td>Secret flag (<code>FLAG{...}</code>) retrieved via injected command</td>
         <td class="text-center">
           {% if exploit_done %}
-            <span class="badge badge-done">✓ Achieved</span>
+            <span class="badge badge-done">&#10003; Achieved</span>
           {% else %}
-            <span class="badge badge-miss">✗ Not yet</span>
+            <span class="badge badge-miss">&#10007; Not yet</span>
           {% endif %}
         </td>
       </tr>
@@ -135,7 +136,7 @@
 
   <div class="mt-4">
     <form method="post" action="/score/{{ token }}/reset"
-          onsubmit="return confirm('Reset all scores and invalidate tokens?')">
+          onsubmit="return confirm('Reset all scores and results history?')">
       <button type="submit" class="btn btn-danger btn-sm">Reset App</button>
     </form>
   </div>

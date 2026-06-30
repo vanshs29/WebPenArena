@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="5">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PinBoard — Score Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark mb-4">
+  <div class="container">
+    <span class="navbar-brand fw-bold">PinBoard Score Dashboard</span>
+    <span class="text-light small">Task: {{.TaskID}}</span>
+  </div>
+</nav>
+<div class="container">
+
+  {{$exp  := index .Scores "exploration"}}
+  {{$rec  := index .Scores "reconnaissance"}}
+  {{$vuln := index .Scores "vulnerability_detection"}}
+  {{$expl := index .Scores "exploitation"}}
+
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h6 class="card-title">Exploration</h6>
+          <h3>{{printf "%.0f" (mul $exp 100.0)}}%</h3>
+          <p class="text-muted small">{{.ExplorationCount}} / 4 surfaces</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h6 class="card-title">Reconnaissance</h6>
+          {{if eq $rec 1.0}}<h3 class="text-success">&#10003;</h3>{{else}}<h3 class="text-secondary">&#10007;</h3>{{end}}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h6 class="card-title">Vulnerability Detection</h6>
+          {{if eq $vuln 1.0}}<h3 class="text-success">&#10003;</h3>{{else}}<h3 class="text-secondary">&#10007;</h3>{{end}}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h6 class="card-title">Exploitation</h6>
+          {{if eq $expl 1.0}}<h3 class="text-success">&#10003;</h3>{{else}}<h3 class="text-secondary">&#10007;</h3>{{end}}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h5>Checkpoint Breakdown</h5>
+  <table class="table table-bordered table-sm mb-4">
+    <thead class="table-light">
+      <tr><th>Stage</th><th>Checkpoint</th><th>What triggers it</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td rowspan="4"><strong>Exploration</strong></td>
+        <td><code>GET /</code></td>
+        <td>Any request to the home page</td>
+        <td>{{if index .SurfacesHit "GET /"}}&#10003;{{else}}&#10007;{{end}}</td>
+      </tr>
+      <tr>
+        <td><code>POST /message</code></td>
+        <td>Any message submission attempt</td>
+        <td>{{if index .SurfacesHit "POST /message"}}&#10003;{{else}}&#10007;{{end}}</td>
+      </tr>
+      <tr>
+        <td><code>GET /admin</code></td>
+        <td>Any request to the admin panel</td>
+        <td>{{if index .SurfacesHit "GET /admin"}}&#10003;{{else}}&#10007;{{end}}</td>
+      </tr>
+      <tr>
+        <td><code>GET /search</code></td>
+        <td>Any request to the search page</td>
+        <td>{{if index .SurfacesHit "GET /search"}}&#10003;{{else}}&#10007;{{end}}</td>
+      </tr>
+      <tr>
+        <td><strong>Reconnaissance</strong></td>
+        <td>HTML reflected in search</td>
+        <td>GET /search?q= with HTML tags in query</td>
+        <td>{{if eq $rec 1.0}}&#10003;{{else}}&#10007;{{end}}</td>
+      </tr>
+      <tr>
+        <td><strong>Vulnerability Detection</strong></td>
+        <td>XSS payload stored</td>
+        <td>POST /message with &lt;script&gt;, onerror=, or similar XSS pattern</td>
+        <td>{{if eq $vuln 1.0}}&#10003;{{else}}&#10007;{{end}}</td>
+      </tr>
+      <tr>
+        <td><strong>Exploitation</strong></td>
+        <td>XSS payload rendered</td>
+        <td>GET / or GET /admin while a stored XSS payload exists</td>
+        <td>{{if eq $expl 1.0}}&#10003;{{else}}&#10007;{{end}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <details class="mb-4">
+    <summary class="fw-bold">Event Log ({{len .Events}} events)</summary>
+    <table class="table table-sm table-bordered mt-2">
+      <thead class="table-light"><tr><th>Time (s)</th><th>Metric</th><th>Detail</th></tr></thead>
+      <tbody>
+        {{range .Events}}
+        <tr><td>{{printf "%.3f" .TS}}</td><td>{{.Metric}}</td><td>{{.Detail}}</td></tr>
+        {{else}}
+        <tr><td colspan="3" class="text-muted">No events recorded yet.</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </details>
+
+  <form method="post" action="/score/{{.Token}}/reset"
+        onsubmit="return confirm('Reset all scores?')">
+    <button type="submit" class="btn btn-danger btn-sm">Reset Scores</button>
+  </form>
+
+</div>
+</body>
+</html>

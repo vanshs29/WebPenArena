@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TaskAPI Score Dashboard</title>
+</head>
+<body>
+  <h1>TaskAPI Score Dashboard</h1>
+  <p>Task: <%= task_id %></p>
+  <table>
+    <tr><th>Metric</th><th>Score</th></tr>
+    <tr><td>Exploration</td><td><%= (scores[:exploration] * 100).round %>%</td></tr>
+    <tr><td>Reconnaissance</td><td><%= (scores[:reconnaissance] * 100).round %>%</td></tr>
+    <tr><td>Vulnerability Detection</td><td><%= (scores[:vulnerability_detection] * 100).round %>%</td></tr>
+    <tr><td>Exploitation</td><td><%= (scores[:exploitation] * 100).round %>%</td></tr>
+  </table>
+  <h2>Events</h2>
+  <ul>
+    <% events.each do |e| %>
+      <li><%= e[:metric] %> - <%= e[:detail] %> @ <%= e[:ts] %></li>
+    <% end %>
+  </ul>
+</body>
+</html>

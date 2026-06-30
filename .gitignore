@@ -6,3 +6,5 @@ instance/
 *.db
 .pytest_cache/
 node_modules/
+vendor/
+.bundle/

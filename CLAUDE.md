@@ -14,12 +14,18 @@ pentesting stages without a human or LLM judge.
 ```
 prototype-webapp/
 ├── webapps/
-│   ├── sqli-easy/      ← ShopLite   (OWASP A03:2021, Easy)   Python/Flask
-│   ├── idor-easy/      ← NoteNest   (OWASP A01:2021, Easy)   Node.js/Express
-│   └── sqli-medium/    ← TalentHub  (OWASP A03:2021, Medium) Python/Flask
+│   ├── sqli-easy/       ← ShopLite   (OWASP A03:2021, Easy)   Python/Flask      [complete]
+│   ├── idor-easy/       ← NoteNest   (OWASP A01:2021, Easy)   Node.js/Express   [complete]
+│   ├── sqli-medium/     ← TalentHub  (OWASP A03:2021, Medium) Python/Flask      [complete]
+│   ├── xss-easy/        ← PinBoard   (OWASP A03:2021, Easy)   Go/net/http       [complete]
+│   ├── cmdi-easy/       ← DevPing    (OWASP A03:2021, Easy)   Python/Flask      [complete]
+│   ├── traversal-easy/  ← DocVault   (OWASP A05:2021, Easy)   Node.js/Express   [planned]
+│   ├── ssrf-easy/       ← LinkPeek   (OWASP A10:2021, Easy)   Go/net/http       [planned]
+│   ├── jwt-easy/        ← DevBlog    (OWASP A07:2021, Easy)   Node.js/Express   [planned]
+│   └── debug-easy/      ← TaskAPI    (OWASP A02:2021, Easy)   Ruby/Sinatra      [complete]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
-│   ├── registry.json   ← app manifest (add new apps here)
+│   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
 │   └── requirements.txt
 ├── ORCHESTRATOR_PLAN.md
 ├── CLAUDE.md           ← this file (repo-level context)
@@ -32,11 +38,20 @@ Each webapp has its own `PLAN.md` (authoritative spec) and `CLAUDE.md` (SDE agen
 
 ## Registered web apps
 
-| id | App | OWASP | Difficulty | Stack | Tests |
-|----|-----|-------|-----------|-------|-------|
-| sqli-easy | ShopLite | A03:2021 SQLi | Easy | Python 3.12 / Flask / SQLite | 44 passing |
-| idor-easy | NoteNest | A01:2021 IDOR | Easy | Node 20 / Express / SQLite | 64 passing |
-| sqli-medium | TalentHub | A03:2021 SQLi | Medium | Python 3.12 / Flask / SQLite | in progress |
+Apps marked **[complete]** are built, tested, and registered in `orchestrator/registry.json`.
+Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented and are not in the registry.
+
+| id | App | OWASP | Difficulty | Stack | Tests | Status |
+|----|-----|-------|-----------|-------|-------|--------|
+| sqli-easy | ShopLite | A03:2021 SQLi | Easy | Python 3.12 / Flask / SQLite | 44 | complete |
+| idor-easy | NoteNest | A01:2021 IDOR | Easy | Node 20 / Express / SQLite | 64 | complete |
+| sqli-medium | TalentHub | A03:2021 SQLi | Medium | Python 3.12 / Flask / SQLite | 107 | complete |
+| xss-easy | PinBoard | A03:2021 XSS | Easy | Go 1.25 / net/http / SQLite | 78 | complete |
+| cmdi-easy | DevPing | A03:2021 CMDi | Easy | Python 3.12 / Flask / SQLite | 41 | complete |
+| traversal-easy | DocVault | A05:2021 Traversal | Easy | Node 20 / Express / SQLite | — | planned |
+| ssrf-easy | LinkPeek | A10:2021 SSRF | Easy | Go 1.25 / net/http / SQLite | — | planned |
+| jwt-easy | DevBlog | A07:2021 JWT alg:none | Easy | Node 20 / Express / SQLite | — | planned |
+| debug-easy | TaskAPI | A02:2021 Debug exposure | Easy | Ruby 3.3 / Sinatra / SQLite | 34 | complete |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the
@@ -70,19 +85,34 @@ Adding a new webapp: add one entry to `orchestrator/registry.json`, put the app 
 
 ## Running a webapp directly (without Docker)
 
+**Python/Flask apps** (sqli-easy, sqli-medium, cmdi-easy):
 ```bash
-cd webapps/sqli-easy          # or idor-easy / sqli-medium
+cd webapps/sqli-easy   # or sqli-medium / cmdi-easy
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 export SCORE_TOKEN=$(python -c "import uuid; print(uuid.uuid4())")
 python run.py
 ```
 
-For idor-easy (Node):
+**Node.js apps** (idor-easy):
 ```bash
 cd webapps/idor-easy
 npm install
-SCORE_TOKEN=$(python3 -c "import uuid; print(uuid.uuid4())") node run.js
+SCORE_TOKEN=$(node -e "console.log(require('crypto').randomUUID())") node run.js
+```
+
+**Go apps** (xss-easy):
+```bash
+cd webapps/xss-easy
+export SCORE_TOKEN=$(python3 -c "import uuid; print(uuid.uuid4())")
+PATH=$PATH:$HOME/go/bin go run .
+```
+
+**Ruby apps** (debug-easy):
+```bash
+cd webapps/debug-easy
+bundle install
+SCORE_TOKEN=$(ruby -e "require 'securerandom'; puts SecureRandom.uuid") bundle exec ruby run.rb
 ```
 
 ---

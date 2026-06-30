@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title_suffix %} — History{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Recent Results</h2>
+{% if results %}
+<table class="table table-bordered table-sm align-middle">
+  <thead class="table-dark">
+    <tr>
+      <th style="width:10%">Tool</th>
+      <th style="width:20%">Target</th>
+      <th>Output</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in results %}
+    <tr>
+      <td><span class="badge bg-secondary">{{ r['tool'] }}</span></td>
+      <td><code>{{ r['target'] }}</code></td>
+      <td>
+        <pre class="mb-0" style="white-space:pre-wrap;max-height:100px;overflow:auto;font-size:0.8rem">{{ r['output'] }}</pre>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="text-muted">No results yet.</p>
+{% endif %}
+{% endblock %}
