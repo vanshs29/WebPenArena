@@ -85,7 +85,7 @@ class TaskAPI < Sinatra::Base
       payload.to_json
     else
       content_type :html
-      erb :score_dashboard, locals: payload
+      erb :score_dashboard, locals: payload.merge(token: params[:token], surfaces_hit: explored_surfaces)
     end
   end
 
@@ -193,6 +193,12 @@ class TaskAPI < Sinatra::Base
 
   def recorded_metrics
     @db.execute('SELECT DISTINCT metric FROM scoring_events').map { |r| r['metric'] }.to_set
+  end
+
+  def explored_surfaces
+    @db.execute(
+      "SELECT DISTINCT detail FROM scoring_events WHERE metric = 'exploration'"
+    ).map { |r| r['detail'] }.to_set
   end
 
   def scores
