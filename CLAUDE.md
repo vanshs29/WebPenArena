@@ -19,7 +19,7 @@ prototype-webapp/
 │   ├── sqli-medium/     ← TalentHub  (OWASP A03:2021, Medium) Python/Flask      [complete]
 │   ├── xss-easy/        ← PinBoard   (OWASP A03:2021, Easy)   Go/net/http       [complete]
 │   ├── cmdi-easy/       ← DevPing    (OWASP A03:2021, Easy)   Python/Flask      [complete]
-│   ├── traversal-easy/  ← DocVault   (OWASP A05:2021, Easy)   Node.js/Express   [planned]
+│   ├── traversal-easy/  ← DocVault   (OWASP A05:2021, Easy)   Node.js/Express   [complete]
 │   ├── ssrf-easy/       ← LinkPeek   (OWASP A10:2021, Easy)   Go/net/http       [planned]
 │   ├── jwt-easy/        ← DevBlog    (OWASP A07:2021, Easy)   Node.js/Express   [planned]
 │   └── debug-easy/      ← TaskAPI    (OWASP A02:2021, Easy)   Ruby/Sinatra      [complete]
@@ -48,7 +48,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | sqli-medium | TalentHub | A03:2021 SQLi | Medium | Python 3.12 / Flask / SQLite | 107 | complete |
 | xss-easy | PinBoard | A03:2021 XSS | Easy | Go 1.25 / net/http / SQLite | 78 | complete |
 | cmdi-easy | DevPing | A03:2021 CMDi | Easy | Python 3.12 / Flask / SQLite | 41 | complete |
-| traversal-easy | DocVault | A05:2021 Traversal | Easy | Node 20 / Express / SQLite | — | planned |
+| traversal-easy | DocVault | A05:2021 Traversal | Easy | Node 20 / Express / SQLite | 47 | complete |
 | ssrf-easy | LinkPeek | A10:2021 SSRF | Easy | Go 1.25 / net/http / SQLite | — | planned |
 | jwt-easy | DevBlog | A07:2021 JWT alg:none | Easy | Node 20 / Express / SQLite | — | planned |
 | debug-easy | TaskAPI | A02:2021 Debug exposure | Easy | Ruby 3.3 / Sinatra / SQLite | 34 | complete |
@@ -94,9 +94,9 @@ export SCORE_TOKEN=$(python -c "import uuid; print(uuid.uuid4())")
 python run.py
 ```
 
-**Node.js apps** (idor-easy):
+**Node.js apps** (idor-easy, traversal-easy):
 ```bash
-cd webapps/idor-easy
+cd webapps/idor-easy   # or traversal-easy
 npm install
 SCORE_TOKEN=$(node -e "console.log(require('crypto').randomUUID())") node run.js
 ```

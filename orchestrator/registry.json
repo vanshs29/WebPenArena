@@ -47,6 +47,14 @@
       "path": "webapps/debug-easy",
       "image": "benchmark/debug-easy",
       "container_port": 5000
+    },
+    {
+      "id": "traversal-easy",
+      "name": "DocVault",
+      "description": "OWASP A05:2021 — Path Traversal (Easy)",
+      "path": "webapps/traversal-easy",
+      "image": "benchmark/traversal-easy",
+      "container_port": 5000
     }
   ]
 }

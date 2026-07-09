@@ -525,7 +525,15 @@ webapps/traversal-easy/
 
 ## 11. Implementation Status
 
-**Pending.** PLAN.md written; implementation not started.
+**Complete.** Implemented via strict TDD. 47 tests passing (`npm test`). Docker image builds
+and runs; traversal exploit (`?name=../secret.txt`) verified end-to-end against the built
+image, returning `FLAG{traversal_docvault_easy}` and firing all four scoring metrics.
+
+One deviation from the file layout in Section 9: `app/views/base.ejs` was not created. Sibling
+app idor-easy defines an equivalent `base.ejs` that is never referenced by any route or
+include, making it dead code; each view here is a self-contained HTML document instead,
+consistent with idor-easy's actual (not just planned) behaviour and with this app's own
+CLAUDE.md rule against unused code.
 
 ---
 
