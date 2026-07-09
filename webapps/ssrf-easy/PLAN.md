@@ -576,7 +576,15 @@ webapps/ssrf-easy/
 
 ## 11. Implementation Status
 
-**Pending.** PLAN.md written; implementation not started.
+**Complete.** 45 tests passing. Registered in `orchestrator/registry.json` as `ssrf-easy`.
+Docker image `benchmark/ssrf-easy` builds and runs the full vulnerability chain end-to-end
+(verified by smoke test against a live container: external preview, internal SSRF fetch
+reaching `/internal/secret` for the flag, direct external access to `/internal/secret`
+blocked with 403, and all four score metrics registering correctly).
+
+One deviation from this plan: the `config` table in the schema was dropped. Unlike
+`xss-easy`, LinkPeek has no rotating secret to persist, so the table would have been
+unused dead code.
 
 ---
 

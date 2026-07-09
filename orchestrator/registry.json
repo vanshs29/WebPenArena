@@ -55,6 +55,14 @@
       "path": "webapps/traversal-easy",
       "image": "benchmark/traversal-easy",
       "container_port": 5000
+    },
+    {
+      "id": "ssrf-easy",
+      "name": "LinkPeek",
+      "description": "OWASP A10:2021 — Server-Side Request Forgery (Easy)",
+      "path": "webapps/ssrf-easy",
+      "image": "benchmark/ssrf-easy",
+      "container_port": 5000
     }
   ]
 }
