@@ -107,6 +107,14 @@ func (a *App) handleHistory(w http.ResponseWriter, r *http.Request) {
 	_ = a.tmpl.ExecuteTemplate(w, "history.html", historyData{Rows: rows})
 }
 
+func (a *App) handleClearHistory(w http.ResponseWriter, r *http.Request) {
+	if err := ClearHistory(a.db); err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/history", http.StatusSeeOther)
+}
+
 func (a *App) handleApiHistory(w http.ResponseWriter, r *http.Request) {
 	rows, err := fetchHistory(a)
 	if err != nil {

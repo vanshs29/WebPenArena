@@ -72,6 +72,11 @@ func seedHistoryRows(db *sql.DB) error {
 	return nil
 }
 
+func ClearHistory(db *sql.DB) error {
+	_, err := db.Exec("DELETE FROM history")
+	return err
+}
+
 func ResetDB(db *sql.DB) error {
 	if _, err := db.Exec("DELETE FROM scoring_events"); err != nil {
 		return err
