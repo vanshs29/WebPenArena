@@ -26,7 +26,6 @@ SCOREABLE_ENDPOINTS = {
 
 
 def run_ping(host):
-    # INTENTIONAL VULNERABILITY — do not fix
     return subprocess.run(
         f'ping -c 3 -W 2 {host}',
         shell=True, capture_output=True, text=True, timeout=15,

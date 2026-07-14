@@ -19,7 +19,6 @@ var (
 	flagPattern = regexp.MustCompile(`FLAG\{[a-zA-Z0-9_]+\}`)
 )
 
-// INTENTIONAL VULNERABILITY — do not fix; no allowlist on outbound host
 func defaultFetchURL(rawURL string) (fetchResult, error) {
 	resp, err := http.Get(rawURL)
 	if err != nil {

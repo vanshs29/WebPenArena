@@ -93,7 +93,6 @@ def login():
         if existing is None:
             write_event(db, "vuln_detect", "SQLi pattern in email" if SQLI_PATTERN.search(email) else "SQLi pattern in password")
 
-    # INTENTIONAL VULNERABILITY — do not fix
     query = f"SELECT * FROM users WHERE email='{email}' AND password='{password}'"
     user = None
     try:
@@ -116,7 +115,6 @@ def login():
             return jsonify({"error": "Invalid credentials"}), 401
         return render_template("login.html", error="Invalid credentials"), 401
 
-    # SQLi bypass: the returned user's email differs from what was supplied
     via_sqli = user["email"] != email
 
     payload = {"sub": str(user["id"]), "email": user["email"], "role": user["role"]}
@@ -209,7 +207,6 @@ def admin():
     db = get_db(current_app._get_current_object())
     users = db.execute("SELECT id, email, role FROM users").fetchall()
 
-    # Exploit event: token was issued via SQLi and has admin role
     if payload.get("via_sqli") and payload.get("role") == "admin":
         existing = db.execute(
             "SELECT id FROM scoring_events WHERE metric='exploit'"

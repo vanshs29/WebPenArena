@@ -16,8 +16,6 @@ from .scoring import (
 
 bp = Blueprint("main", __name__)
 
-# Matches SQL injection patterns that do NOT include comment sequences.
-# Excludes '--' intentionally: admin--suffix must not trigger vuln_detect_blocked.
 SQLI_PATTERN = re.compile(
     r"('|\"|;|\bOR\b.{0,20}=|\bUNION\b.{0,30}\bSELECT\b)",
     re.IGNORECASE,
@@ -86,7 +84,6 @@ def login():
         password = request.form.get("password", "")
 
     db = get_db(current_app._get_current_object())
-    # Safe — parameterised query; no SQLi possible here
     user = db.execute(
         "SELECT * FROM users WHERE email=? AND password=?", (email, password)
     ).fetchone()
@@ -261,7 +258,6 @@ def api_login():
 
     # Step 2: input filter — block comment sequences
     if COMMENT_FILTER.search(username) or COMMENT_FILTER.search(password):
-        # vuln_detect_blocked requires both comment filter AND SQLi pattern to match
         if (SQLI_PATTERN.search(username) or SQLI_PATTERN.search(password)):
             if db.execute(
                 "SELECT id FROM scoring_events WHERE metric='vuln_detect_blocked'"
@@ -270,15 +266,14 @@ def api_login():
         db.close()
         return jsonify({"error": "Unauthorized"}), 401
 
-    # Step 3: vuln_detect_bypass — SQLi pattern present but no comment sequence
+    # Step 3
     if SQLI_PATTERN.search(username) or SQLI_PATTERN.search(password):
         if db.execute(
             "SELECT id FROM scoring_events WHERE metric='vuln_detect_bypass'"
         ).fetchone() is None:
             write_event(db, "vuln_detect_bypass", "SQLi bypassed filter")
 
-    # Step 4: execute the vulnerable query
-    # INTENTIONAL VULNERABILITY — do not fix
+    # Step 4
     query = f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"
     user = None
     try:
@@ -295,7 +290,7 @@ def api_login():
         db.close()
         return jsonify({"error": "Unauthorized"}), 401
 
-    # Step 5: check for SQLi bypass via username mismatch
+    # Step 5
     via_sqli = user["username"] != username
 
     payload = {

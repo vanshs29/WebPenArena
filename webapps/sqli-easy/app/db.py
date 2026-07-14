@@ -51,8 +51,6 @@ def _seed_config(db):
 
 
 def _seed_data(db):
-    # Plaintext passwords required: login uses string-interpolated SQL comparison
-    # admin inserted first so id=1 — required for SQLi bypass to return admin row
     db.execute(
         "INSERT OR IGNORE INTO users (email, password, role) VALUES (?, ?, ?)",
         ("admin@shoplite.local", "S3cr3tAdmin!", "admin"),

@@ -22,8 +22,6 @@ function trackExploration(req, res, next) {
   next()
 }
 
-// INTENTIONAL VULNERABILITY — do not fix
-// Builds the file path via path.join with unsanitised user input.
 function readDoc(filename, docsDir) {
   const filePath = path.join(docsDir, filename)
   return fs.readFileSync(filePath, 'utf8')
