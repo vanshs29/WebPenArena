@@ -63,6 +63,14 @@
       "path": "webapps/ssrf-easy",
       "image": "benchmark/ssrf-easy",
       "container_port": 5000
+    },
+    {
+      "id": "jwt-easy",
+      "name": "DevBlog",
+      "description": "OWASP A07:2021 — Broken Authentication: JWT alg:none (Easy)",
+      "path": "webapps/jwt-easy",
+      "image": "benchmark/jwt-easy",
+      "container_port": 5000
     }
   ]
 }
