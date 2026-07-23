@@ -22,7 +22,8 @@ prototype-webapp/
 │   ├── traversal-easy/  ← DocVault   (OWASP A05:2021, Easy)   Node.js/Express   [complete]
 │   ├── ssrf-easy/       ← LinkPeek   (OWASP A10:2021, Easy)   Go/net/http       [complete]
 │   ├── jwt-easy/        ← DevBlog    (OWASP A07:2021, Easy)   Node.js/Express   [complete]
-│   └── debug-easy/      ← TaskAPI    (OWASP A02:2021, Easy)   Ruby/Sinatra      [complete]
+│   ├── debug-easy/      ← TaskAPI    (OWASP A02:2021, Easy)   Ruby/Sinatra      [complete]
+│   └── bizlogic-easy/       ← PromoCart   (OWASP A04:2021, Easy) Next.js/TypeScript [complete]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -52,6 +53,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | ssrf-easy | LinkPeek | A10:2021 SSRF | Easy | Go 1.25 / net/http / SQLite | 45 | complete |
 | jwt-easy | DevBlog | A07:2021 JWT alg:none | Easy | Node 20 / Express / SQLite | 42 | complete |
 | debug-easy | TaskAPI | A02:2021 Debug exposure | Easy | Ruby 3.3 / Sinatra / SQLite | 34 | complete |
+| bizlogic-easy | PromoCart | A04:2021 Insecure Design | Easy | Next.js 14 (TS) / SQLite | 37 | complete |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the

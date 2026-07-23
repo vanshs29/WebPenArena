@@ -71,6 +71,14 @@
       "path": "webapps/jwt-easy",
       "image": "benchmark/jwt-easy",
       "container_port": 5000
+    },
+    {
+      "id": "bizlogic-easy",
+      "name": "PromoCart",
+      "description": "OWASP A04:2021 — Insecure Design / Business Logic (Easy)",
+      "path": "webapps/bizlogic-easy",
+      "image": "benchmark/bizlogic-easy",
+      "container_port": 5000
     }
   ]
 }
