@@ -9,18 +9,17 @@ export default async function Home() {
   const products = getProducts(db)
 
   return (
-    <main>
-      <h1>PromoCart</h1>
-      <ul>
+    <main className="page">
+      <h1 className="page-title">Catalog</h1>
+      <div className="product-grid">
         {products.map((p) => (
-          <li key={p.id}>
-            <Link href={`/product/${p.id}`}>{p.name}</Link> — ${p.price.toFixed(2)}
-          </li>
+          <Link href={`/product/${p.id}`} key={p.id} className="product-card">
+            <div className="swatch" />
+            <span className="product-name">{p.name}</span>
+            <span className="product-price">${p.price.toFixed(2)}</span>
+          </Link>
         ))}
-      </ul>
-      <p>
-        <Link href="/cart">View cart</Link>
-      </p>
+      </div>
     </main>
   )
 }

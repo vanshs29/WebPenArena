@@ -23,6 +23,8 @@ export default function AddToCartButton({
   }
 
   return (
-    <button onClick={handleClick}>{added ? 'Added to cart' : 'Add to cart'}</button>
+    <button className="btn" onClick={handleClick} disabled={added}>
+      {added ? 'Added to cart' : 'Add to cart'}
+    </button>
   )
 }

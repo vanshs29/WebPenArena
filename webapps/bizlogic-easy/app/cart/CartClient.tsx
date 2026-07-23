@@ -27,28 +27,46 @@ export default function CartClient() {
   }
 
   if (orderId !== null) {
-    return <p>Order #{orderId} placed. Thank you!</p>
+    return (
+      <div className="confirmation">
+        <h2>Order #{orderId} placed</h2>
+        <p>Thank you for shopping with PromoCart.</p>
+        <Link href="/" className="btn btn-secondary">
+          Continue shopping
+        </Link>
+      </div>
+    )
   }
 
   if (cart.length === 0) {
     return (
-      <p>
-        Your cart is empty. <Link href="/">Browse products</Link>
-      </p>
+      <div className="empty-state">
+        <p>Your cart is empty.</p>
+        <Link href="/" className="back-link">
+          Browse products
+        </Link>
+      </div>
     )
   }
 
   return (
     <div>
-      <ul>
+      <div className="cart-list">
         {cart.map((item) => (
-          <li key={item.productId}>
-            Product #{item.productId} × {item.quantity} — ${item.unitPrice.toFixed(2)} each
-          </li>
+          <div className="cart-row" key={item.productId}>
+            <span className="cart-row-name">Product #{item.productId}</span>
+            <span className="cart-row-meta">
+              × {item.quantity} — ${item.unitPrice.toFixed(2)} each
+            </span>
+          </div>
         ))}
-      </ul>
-      <p>Total: ${total.toFixed(2)}</p>
-      <button onClick={handleCheckout}>Checkout</button>
+      </div>
+      <div className="cart-summary">
+        <span className="cart-total">Total: ${total.toFixed(2)}</span>
+        <button className="btn" onClick={handleCheckout}>
+          Checkout
+        </button>
+      </div>
     </div>
   )
 }
