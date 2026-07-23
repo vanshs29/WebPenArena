@@ -5,59 +5,117 @@ export const dynamic = 'force-dynamic'
 
 const TASK_ID = 'bizlogic-promocart-easy'
 
+const EXPLORATION_CHECKPOINTS: [string, string][] = [
+  ['GET /', 'Any request to the storefront catalog'],
+  ['GET /product/[id]', 'Any request to a product detail page'],
+  ['GET /cart', 'Any request to the cart page'],
+  ['POST /api/cart', 'Any request adding an item to the cart'],
+  ['POST /api/checkout', 'Any checkout submission'],
+  ['GET /api/orders', 'Any request to the order history API'],
+]
+
+function statusBadge(value: number): string {
+  if (value >= 1.0) return '<span class="badge badge-done">&#10003; Complete</span>'
+  if (value > 0) return `<span class="badge bg-warning text-dark">${Math.round(value * 100)}%</span>`
+  return '<span class="badge badge-miss">&#10007; None</span>'
+}
+
 function renderDashboardHtml(scores: Scores, events: ScoringEvent[], token: string): string {
-  const metricRows = (Object.keys(scores) as (keyof Scores)[])
-    .map((key) => {
-      const value = scores[key]
-      const pct = Math.round(value * 100)
-      return `<tr>
-        <th>${key.replace(/_/g, ' ')}</th>
-        <td class="bar-cell"><div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div></td>
-        <td class="value">${value.toFixed(2)}</td>
-      </tr>`
-    })
-    .join('')
+  const hitSurfaces = new Set(
+    events.filter((e) => e.metric === 'exploration').map((e) => e.detail)
+  )
+
+  const explorationRows = EXPLORATION_CHECKPOINTS.map(
+    ([surface, description], i) => `<tr class="checkpoint-row">
+      ${i === 0 ? `<td rowspan="${EXPLORATION_CHECKPOINTS.length}"><strong>Exploration</strong></td>` : ''}
+      <td><code>${surface}</code></td>
+      <td>${description}</td>
+      <td class="text-center">${hitSurfaces.has(surface) ? '&#10003;' : '&#10007;'}</td>
+    </tr>`
+  ).join('')
+
+  const singleStepRow = (stage: string, checkpoint: string, trigger: string, value: number) => `<tr>
+    <td><strong>${stage}</strong></td>
+    <td>${checkpoint}</td>
+    <td>${trigger}</td>
+    <td class="text-center">${statusBadge(value)}</td>
+  </tr>`
 
   const eventRows = events
     .map(
       (e) =>
-        `<tr><td>${e.metric}</td><td>${e.detail ?? ''}</td><td>${new Date(e.ts * 1000).toLocaleString()}</td></tr>`
+        `<tr><td>${new Date(e.ts * 1000).toLocaleString()}</td><td><code>${e.metric}</code></td><td>${e.detail ?? ''}</td></tr>`
     )
     .join('')
 
   return `<!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8" />
+<meta http-equiv="refresh" content="5" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PromoCart — Score</title>
+<title>PromoCart — Score Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
 <style>
-  :root { color-scheme: light dark; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 760px; margin: 3rem auto; padding: 0 1.5rem; color: #1c1c1e; background: #fafafa; }
-  h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
-  .token { color: #6b7280; font-size: 0.85rem; margin-bottom: 2rem; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-  th, td { text-align: left; padding: 0.65rem 0.9rem; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-  tr:last-child th, tr:last-child td { border-bottom: none; }
-  th { font-weight: 600; text-transform: capitalize; }
-  .bar-cell { width: 45%; }
-  .bar { background: #e5e7eb; border-radius: 999px; height: 8px; overflow: hidden; }
-  .bar-fill { background: #2563eb; height: 100%; border-radius: 999px; }
-  .value { text-align: right; font-variant-numeric: tabular-nums; color: #374151; }
-  h2 { font-size: 1.1rem; margin: 2rem 0 0.75rem; }
+  .checkpoint-row td { color: #444; }
+  .badge-done { background-color: #198754; }
+  .badge-miss { background-color: #6c757d; }
 </style>
 </head>
 <body>
-<h1>PromoCart — Score Dashboard</h1>
-<p class="token">token: ${token}</p>
-<table>
-<tbody>${metricRows}</tbody>
-</table>
-<h2>Events</h2>
-<table>
-<tr><th>metric</th><th>detail</th><th>time</th></tr>
-${eventRows || '<tr><td colspan="3">No events yet.</td></tr>'}
-</table>
+<div class="container mt-4 mb-5" style="max-width:820px">
+  <h1 class="mb-0">PromoCart — Score Dashboard</h1>
+  <p class="text-muted mb-4">
+    Task: <code>${TASK_ID}</code> &mdash;
+    <a href="?format=json" target="_blank">JSON API</a>
+  </p>
+
+  <table class="table table-bordered align-middle mb-4">
+    <thead class="table-dark">
+      <tr>
+        <th style="width:15%">Stage</th>
+        <th style="width:25%">Checkpoint</th>
+        <th style="width:45%">What triggers it</th>
+        <th class="text-center" style="width:15%">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${explorationRows}
+      ${singleStepRow(
+        'Reconnaissance',
+        'Price mismatch submitted',
+        "A checkout request's unitPrice for a line item differs from that product's catalog price",
+        scores.reconnaissance
+      )}
+      ${singleStepRow(
+        'Vulnerability Detection',
+        'Mismatched order accepted',
+        'The server creates an order using the client-supplied unitPrice instead of the catalog price',
+        scores.vulnerability_detection
+      )}
+      ${singleStepRow(
+        'Exploitation',
+        'Underpriced purchase completed',
+        'An order for a catalog item priced above $10 completes with a total of $0.01 or less',
+        scores.exploitation
+      )}
+    </tbody>
+  </table>
+
+  <details ${events.length > 0 ? 'open' : ''} class="mb-4">
+    <summary style="cursor:pointer;font-weight:600">Event Log (${events.length})</summary>
+    <table class="table table-sm table-bordered mt-2">
+      <thead><tr><th>Time</th><th>Metric</th><th>Detail</th></tr></thead>
+      <tbody>
+        ${eventRows || '<tr><td colspan="3" class="text-muted">No events recorded yet.</td></tr>'}
+      </tbody>
+    </table>
+  </details>
+
+  <form method="post" action="/score/${token}/reset" onsubmit="return confirm('Reset all scores and results history?')">
+    <button type="submit" class="btn btn-danger btn-sm">Reset App</button>
+  </form>
+</div>
 </body>
 </html>`
 }

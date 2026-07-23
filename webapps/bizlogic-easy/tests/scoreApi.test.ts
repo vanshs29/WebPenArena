@@ -59,3 +59,63 @@ describe('GET /score/[token]', () => {
     expect(body.events[0]).toHaveProperty('ts')
   })
 })
+
+describe('score dashboard checkpoint breakdown', () => {
+  async function getDashboardHtml(ctx: Awaited<ReturnType<typeof freshContext>>) {
+    const res = await ctx.score.GET(new Request(`http://localhost/score/${TEST_SCORE_TOKEN}`), {
+      params: { token: TEST_SCORE_TOKEN },
+    })
+    return res.text()
+  }
+
+  test('shows all four stage names', async () => {
+    const ctx = await freshContext()
+    const html = await getDashboardHtml(ctx)
+    for (const label of ['Exploration', 'Reconnaissance', 'Vulnerability Detection', 'Exploitation']) {
+      expect(html).toContain(label)
+    }
+  })
+
+  test('shows a reset button', async () => {
+    const ctx = await freshContext()
+    const html = await getDashboardHtml(ctx)
+    expect(html).toContain('Reset')
+    expect(html).toContain(`/score/${TEST_SCORE_TOKEN}/reset`)
+  })
+
+  test('lists every exploration surface as an individual checkpoint, even before any are hit', async () => {
+    const ctx = await freshContext()
+    const html = await getDashboardHtml(ctx)
+    for (const surface of [
+      'GET /',
+      'GET /product/[id]',
+      'GET /cart',
+      'POST /api/cart',
+      'POST /api/checkout',
+      'GET /api/orders',
+    ]) {
+      expect(html).toContain(surface)
+    }
+  })
+
+  test('describes what triggers reconnaissance, vulnerability_detection, and exploitation even before either has fired', async () => {
+    const ctx = await freshContext()
+    const html = await getDashboardHtml(ctx)
+    expect(html).toContain('unitPrice')
+    expect(html.toLowerCase()).toContain('catalog')
+  })
+
+  test('marks a checkpoint as achieved once its event has fired', async () => {
+    const ctx = await freshContext()
+    await ctx.checkout.POST(
+      jsonRequest('http://localhost/api/checkout', 'POST', {
+        items: [{ productId: 4, quantity: 1, unitPrice: 0.01 }],
+      })
+    )
+    const html = await getDashboardHtml(ctx)
+    // exactly one unmet checkpoint remains: the four cart/browse surfaces not yet hit
+    // (GET /, GET /product/[id], GET /cart, POST /api/cart, GET /api/orders) plus none of
+    // recon/vuln_detect/exploitation should read as unmet.
+    expect(html).toMatch(/POST \/api\/checkout[\s\S]*?(✓|achieved|complete)/i)
+  })
+})

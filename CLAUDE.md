@@ -76,6 +76,61 @@ orchestrator.
 
 ---
 
+## Cross-App Conventions
+
+Non-negotiable for any new app, regardless of stack. Both were violated in `bizlogic-easy`'s
+first draft and had to be fixed after the fact — check them before calling implementation done,
+not after.
+
+### Score/reset path — never under `/api`
+
+`GET /score/<token>` and `POST /score/<token>/reset` must live at that bare path. Do not nest
+them under `/api/`, `/v1/`, or anything else, even if the framework's own routing convention
+would naturally put them there (Next.js App Router route handlers, for instance, are
+conventionally placed under `app/api/`). `orchestrator/orchestrator.py`'s `run_container()`
+hardcodes `http://localhost:<port>/score/<token>` identically for every app with no per-app
+override — a different path 404s on the one URL the orchestrator actually requests. State this
+explicitly in the routes section of any new app's `PLAN.md` where the framework's convention
+would otherwise get it wrong.
+
+### Score dashboard — checkpoint breakdown, not just a number
+
+The HTML dashboard (not the JSON API — no app's `?format=json` response itemizes this) must
+render a per-category checkpoint table, one row per named check, even for categories with only
+one check:
+
+| Stage | Checkpoint | What triggers it | Status |
+|-------|-----------|-------------------|--------|
+| Exploration | `GET /` | Any request to the home page | ✓/✗ |
+| Exploration | ... one row per named surface ... | | |
+| Reconnaissance | *(name of the single check, or one row per sub-check if there are several)* | plain-language description of exactly what fires it | ✓/✗ |
+| Vulnerability Detection | same shape | | |
+| Exploitation | same shape | | |
+
+The point: an easy app with one reconnaissance check and a medium/hard app with three must
+produce the *same table shape* — one row per check either way — so a harder app's dashboard is
+structurally compliant with the contract an easy app already satisfies, not a different response
+shape bolted on later. `webapps/sqli-medium/app/scoring.py` + `.../templates/score_dashboard.html`
+are the reference for a category with multiple named sub-checks (`sub_checks_fired /
+total_sub_checks`, same fraction math as exploration); `webapps/jwt-easy/app/views/scoreDashboard.ejs`
+or `webapps/ssrf-easy/templates/score_dashboard.html` are the reference for the single-check
+case. Every dashboard also needs: a Reset button (`POST /score/<token>/reset`, `confirm()`
+dialog), a link to `?format=json`, and a collapsible event log.
+
+### Basic UI/design standard
+
+Every app's own functional pages (storefront, forms, whatever its actual surface is — distinct
+from the score dashboard above) need at least minimal, intentional styling, not bare unstyled
+HTML. These apps get demoed and reviewed. `webapps/bizlogic-easy/app/globals.css` is the
+reference for a from-scratch design (CSS custom properties, light/dark via
+`prefers-color-scheme`); apps built with a template engine can instead pull in Bootstrap via CDN
+the way every score dashboard already does. If no real browser is available to check the result,
+verify via a production build + curl (stylesheet compiles and is linked, expected class names
+render in the markup) and say so explicitly — that's markup/asset verification, not a substitute
+for actually looking at it.
+
+---
+
 ## Orchestrator
 
 The orchestrator is the primary entry point for running this benchmark.
