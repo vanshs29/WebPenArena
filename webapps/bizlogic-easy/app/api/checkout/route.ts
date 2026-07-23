@@ -36,7 +36,6 @@ export async function POST(req: Request) {
   })
   if (priceMismatch) writeEvent(db, 'recon', 'checkout submitted with unitPrice differing from catalog')
 
-  // INTENTIONAL VULNERABILITY — do not fix
   const total = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
 
   const order = createOrder(db, items, total)
