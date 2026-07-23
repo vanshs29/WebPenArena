@@ -43,7 +43,7 @@ func TestResetWrongToken(t *testing.T) {
 func TestResetClearsScores(t *testing.T) {
 	srv, app := newTestApp(t)
 	app.fetchURL = stubFetch(200, `{"flag":"FLAG{ssrf_linkpeek_easy}"}`)
-	postPreview(t, srv, "http://localhost:5000/internal/secret").Body.Close()
+	postPreview(t, srv, "http://localhost:5000/internal/status").Body.Close()
 	http.Get(srv.URL + "/")
 
 	http.Post(srv.URL+"/score/"+testToken+"/reset", "", nil)
@@ -74,11 +74,11 @@ func TestResetReseedsHistory(t *testing.T) {
 func TestResetScoresCanBeRebuiltAfterReset(t *testing.T) {
 	srv, app := newTestApp(t)
 	app.fetchURL = stubFetch(200, `{"flag":"FLAG{ssrf_linkpeek_easy}"}`)
-	postPreview(t, srv, "http://localhost:5000/internal/secret").Body.Close()
+	postPreview(t, srv, "http://localhost:5000/internal/status").Body.Close()
 
 	http.Post(srv.URL+"/score/"+testToken+"/reset", "", nil)
 
-	postPreview(t, srv, "http://localhost:5000/internal/secret").Body.Close()
+	postPreview(t, srv, "http://localhost:5000/internal/status").Body.Close()
 
 	scores := fetchScores(t, srv)
 	if scores["exploitation"] != 1.0 {

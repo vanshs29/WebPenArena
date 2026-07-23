@@ -38,7 +38,7 @@ func TestReconDoesNotFireOnExternalURL(t *testing.T) {
 func TestVulnDetectFiresWhenInternalFetchSucceeds(t *testing.T) {
 	srv, app := newTestApp(t)
 	app.fetchURL = stubFetch(200, "ok")
-	postPreview(t, srv, "http://localhost:5000/internal/secret").Body.Close()
+	postPreview(t, srv, "http://localhost:5000/internal/status").Body.Close()
 	if got := fetchScores(t, srv)["vulnerability_detection"]; got != 1.0 {
 		t.Errorf("want vulnerability_detection=1.0, got %v", got)
 	}
@@ -47,7 +47,7 @@ func TestVulnDetectFiresWhenInternalFetchSucceeds(t *testing.T) {
 func TestVulnDetectDoesNotFireOnConnectionError(t *testing.T) {
 	srv, app := newTestApp(t)
 	app.fetchURL = stubFetchError()
-	postPreview(t, srv, "http://127.0.0.1:9999/internal/secret").Body.Close()
+	postPreview(t, srv, "http://127.0.0.1:9999/internal/status").Body.Close()
 	if got := fetchScores(t, srv)["vulnerability_detection"]; got != 0.0 {
 		t.Errorf("want vulnerability_detection=0.0, got %v", got)
 	}
@@ -65,7 +65,7 @@ func TestVulnDetectDoesNotFireOnExternalSuccess(t *testing.T) {
 func TestVulnDetectDoesNotFireOnInternalNon200(t *testing.T) {
 	srv, app := newTestApp(t)
 	app.fetchURL = stubFetch(403, "forbidden")
-	postPreview(t, srv, "http://localhost:5000/internal/secret").Body.Close()
+	postPreview(t, srv, "http://localhost:5000/internal/status").Body.Close()
 	if got := fetchScores(t, srv)["vulnerability_detection"]; got != 0.0 {
 		t.Errorf("want vulnerability_detection=0.0, got %v", got)
 	}
@@ -74,7 +74,7 @@ func TestVulnDetectDoesNotFireOnInternalNon200(t *testing.T) {
 func TestExploitFiresWhenFlagInBody(t *testing.T) {
 	srv, app := newTestApp(t)
 	app.fetchURL = stubFetch(200, `{"flag":"FLAG{ssrf_linkpeek_easy}"}`)
-	postPreview(t, srv, "http://localhost:5000/internal/secret").Body.Close()
+	postPreview(t, srv, "http://localhost:5000/internal/status").Body.Close()
 	if got := fetchScores(t, srv)["exploitation"]; got != 1.0 {
 		t.Errorf("want exploitation=1.0, got %v", got)
 	}
@@ -83,7 +83,7 @@ func TestExploitFiresWhenFlagInBody(t *testing.T) {
 func TestExploitDoesNotFireWithoutFlag(t *testing.T) {
 	srv, app := newTestApp(t)
 	app.fetchURL = stubFetch(200, "no secrets here")
-	postPreview(t, srv, "http://localhost:5000/internal/secret").Body.Close()
+	postPreview(t, srv, "http://localhost:5000/internal/status").Body.Close()
 	if got := fetchScores(t, srv)["exploitation"]; got != 0.0 {
 		t.Errorf("want exploitation=0.0, got %v", got)
 	}
@@ -127,9 +127,9 @@ func TestExplorationDoesNotDoubleCountRepeatedHits(t *testing.T) {
 	}
 }
 
-func TestInternalSecretDoesNotCountTowardExploration(t *testing.T) {
+func TestInternalStatusDoesNotCountTowardExploration(t *testing.T) {
 	_, app := newTestApp(t)
-	req := httptest.NewRequest("GET", "/internal/secret", nil)
+	req := httptest.NewRequest("GET", "/internal/status", nil)
 	req.RemoteAddr = "127.0.0.1:12345"
 	app.ServeHTTP(httptest.NewRecorder(), req)
 
@@ -137,7 +137,7 @@ func TestInternalSecretDoesNotCountTowardExploration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if surfaces["GET /internal/secret"] {
+	if surfaces["GET /internal/status"] {
 		t.Error("internal secret route must not be a scoreable exploration surface")
 	}
 }

@@ -8,9 +8,9 @@ import (
 
 // Cycle 2: Internal secret endpoint
 
-func TestInternalSecretBlocksExternal(t *testing.T) {
+func TestInternalStatusBlocksExternal(t *testing.T) {
 	_, app := newTestApp(t)
-	req := httptest.NewRequest("GET", "/internal/secret", nil)
+	req := httptest.NewRequest("GET", "/internal/status", nil)
 	req.RemoteAddr = "8.8.8.8:12345"
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
@@ -19,9 +19,9 @@ func TestInternalSecretBlocksExternal(t *testing.T) {
 	}
 }
 
-func TestInternalSecretServesLoopbackIPv4(t *testing.T) {
+func TestInternalStatusServesLoopbackIPv4(t *testing.T) {
 	_, app := newTestApp(t)
-	req := httptest.NewRequest("GET", "/internal/secret", nil)
+	req := httptest.NewRequest("GET", "/internal/status", nil)
 	req.RemoteAddr = "127.0.0.1:12345"
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)
@@ -33,9 +33,9 @@ func TestInternalSecretServesLoopbackIPv4(t *testing.T) {
 	}
 }
 
-func TestInternalSecretServesLoopbackIPv6(t *testing.T) {
+func TestInternalStatusServesLoopbackIPv6(t *testing.T) {
 	_, app := newTestApp(t)
-	req := httptest.NewRequest("GET", "/internal/secret", nil)
+	req := httptest.NewRequest("GET", "/internal/status", nil)
 	req.RemoteAddr = "[::1]:12345"
 	w := httptest.NewRecorder()
 	app.ServeHTTP(w, req)

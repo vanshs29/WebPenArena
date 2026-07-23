@@ -10,7 +10,7 @@ import (
 func TestSSRFReachesInternalEndpoint(t *testing.T) {
 	srv, app := newTestApp(t)
 	app.fetchURL = stubFetch(200, `{"flag":"FLAG{ssrf_linkpeek_easy}"}`)
-	resp := postPreview(t, srv, "http://localhost:5000/internal/secret")
+	resp := postPreview(t, srv, "http://localhost:5000/internal/status")
 	defer resp.Body.Close()
 	buf := make([]byte, 4096)
 	n, _ := resp.Body.Read(buf)
@@ -24,7 +24,7 @@ func TestDefaultFetchURLPerformsRealHTTPGet(t *testing.T) {
 	// endpoint to prove the production fetch path (not the test stub)
 	// actually performs a real network request and can reach loopback.
 	srv, _ := newTestApp(t)
-	result, err := defaultFetchURL(srv.URL + "/internal/secret")
+	result, err := defaultFetchURL(srv.URL + "/internal/status")
 	if err != nil {
 		t.Fatalf("defaultFetchURL: %v", err)
 	}

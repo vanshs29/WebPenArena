@@ -180,7 +180,7 @@ func (a *App) handlePreview(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (a *App) handleInternalSecret(w http.ResponseWriter, r *http.Request) {
+func (a *App) handleInternalStatus(w http.ResponseWriter, r *http.Request) {
 	host, _, _ := net.SplitHostPort(r.RemoteAddr)
 	if host != "127.0.0.1" && host != "::1" {
 		http.Error(w, "forbidden", http.StatusForbidden)

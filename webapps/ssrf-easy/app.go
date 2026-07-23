@@ -60,7 +60,7 @@ func (a *App) registerRoutes() {
 	a.mux.HandleFunc("POST /history/clear", a.handleClearHistory)
 	a.mux.HandleFunc("GET /api/history", a.handleApiHistory)
 	a.mux.HandleFunc("GET /about", a.handleAbout)
-	a.mux.HandleFunc("GET /internal/secret", a.handleInternalSecret)
+	a.mux.HandleFunc("GET /internal/status", a.handleInternalStatus)
 	a.mux.HandleFunc("GET /score/{token}", a.handleScore)
 	a.mux.HandleFunc("POST /score/{token}/reset", a.handleReset)
 }
