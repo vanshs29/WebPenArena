@@ -139,9 +139,12 @@ CREATE TABLE scoring_events (
 
 ## 4. Score Endpoint
 
-Same pattern as the rest of the corpus: `GET /api/score/[token]`, `?format=json` for
-automation, wrong token → 404, `POST /api/score/[token]/reset` clears `scoring_events` and
-`orders`, re-seeds `products`.
+Same pattern as the rest of the corpus: `GET /score/[token]`, `?format=json` for
+automation, wrong token → 404, `POST /score/[token]/reset` clears `scoring_events` and
+`orders`, re-seeds `products`. **Not** under `/api` — the orchestrator constructs the score
+URL as `http://localhost:<port>/score/<token>` uniformly for every app regardless of
+framework, so this route must live at the bare `/score/[token]` path Next.js's App Router
+convention would otherwise push it under `/api/`.
 
 `SCORE_TOKEN` read from `process.env.SCORE_TOKEN` at Next.js server startup.
 

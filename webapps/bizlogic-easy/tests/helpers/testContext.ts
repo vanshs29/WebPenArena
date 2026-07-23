@@ -11,8 +11,8 @@ export async function freshContext() {
   const checkout = await import('../../app/api/checkout/route')
   const cart = await import('../../app/api/cart/route')
   const orders = await import('../../app/api/orders/route')
-  const score = await import('../../app/api/score/[token]/route')
-  const scoreReset = await import('../../app/api/score/[token]/reset/route')
+  const score = await import('../../app/score/[token]/route')
+  const scoreReset = await import('../../app/score/[token]/reset/route')
   const homePage = await import('../../app/page')
   const productPage = await import('../../app/product/[id]/page')
   const cartPage = await import('../../app/cart/page')
@@ -40,7 +40,7 @@ export function jsonRequest(url: string, method: string, body?: unknown) {
 }
 
 export async function readScores(ctx: Awaited<ReturnType<typeof freshContext>>) {
-  const res = await ctx.score.GET(new Request(`http://localhost/api/score/${TEST_SCORE_TOKEN}?format=json`), {
+  const res = await ctx.score.GET(new Request(`http://localhost/score/${TEST_SCORE_TOKEN}?format=json`), {
     params: { token: TEST_SCORE_TOKEN },
   })
   const body = await res.json()

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { freshContext, jsonRequest, readScores, TEST_SCORE_TOKEN } from './helpers/testContext'
 
-describe('POST /api/score/[token]/reset', () => {
+describe('POST /score/[token]/reset', () => {
   test('wrong token returns 404 and does not clear events', async () => {
     const ctx = await freshContext()
     await ctx.checkout.POST(
@@ -10,7 +10,7 @@ describe('POST /api/score/[token]/reset', () => {
       })
     )
     const res = await ctx.scoreReset.POST(
-      new Request('http://localhost/api/score/wrong-token/reset', { method: 'POST' }),
+      new Request('http://localhost/score/wrong-token/reset', { method: 'POST' }),
       { params: { token: 'wrong-token' } }
     )
     expect(res.status).toBe(404)
@@ -29,7 +29,7 @@ describe('POST /api/score/[token]/reset', () => {
     expect(Object.values(before).some((v) => (v as number) > 0)).toBe(true)
 
     const res = await ctx.scoreReset.POST(
-      new Request(`http://localhost/api/score/${TEST_SCORE_TOKEN}/reset`, { method: 'POST' }),
+      new Request(`http://localhost/score/${TEST_SCORE_TOKEN}/reset`, { method: 'POST' }),
       { params: { token: TEST_SCORE_TOKEN } }
     )
     expect(res.status).toBe(200)
@@ -49,7 +49,7 @@ describe('POST /api/score/[token]/reset', () => {
       })
     )
     await ctx.scoreReset.POST(
-      new Request(`http://localhost/api/score/${TEST_SCORE_TOKEN}/reset`, { method: 'POST' }),
+      new Request(`http://localhost/score/${TEST_SCORE_TOKEN}/reset`, { method: 'POST' }),
       { params: { token: TEST_SCORE_TOKEN } }
     )
     const res = await ctx.orders.GET()
