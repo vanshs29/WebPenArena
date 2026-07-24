@@ -95,6 +95,14 @@
       "path": "webapps/nosqli-easy",
       "image": "benchmark/nosqli-easy",
       "container_port": 5000
+    },
+    {
+      "id": "deserialization-easy",
+      "name": "SessionStore",
+      "description": "OWASP A08:2021 — Insecure Deserialization (Easy)",
+      "path": "webapps/deserialization-easy",
+      "image": "benchmark/deserialization-easy",
+      "container_port": 5000
     }
   ]
 }

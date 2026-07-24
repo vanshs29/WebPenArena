@@ -24,7 +24,7 @@ prototype-webapp/
 │   ├── jwt-easy/        ← DevBlog    (OWASP A07:2021, Easy)   Node.js/Express   [complete]
 │   ├── debug-easy/      ← TaskAPI    (OWASP A02:2021, Easy)   Ruby/Sinatra      [complete]
 │   ├── bizlogic-easy/       ← PromoCart   (OWASP A04:2021, Easy) Next.js/TypeScript [complete]
-│   ├── deserialization-easy/← SessionStore(OWASP A08:2021, Easy) Java/Spring Boot   [planned]
+│   ├── deserialization-easy/← SessionStore(OWASP A08:2021, Easy) Java/Spring Boot   [complete]
 │   ├── nosqli-easy/         ← QuickPoll   (OWASP A03:2021, Easy) Fastify/TypeScript [complete]
 │   └── config-exposure-easy/← ConfigLeak  (OWASP A05:2021, Easy) PHP 8.3            [complete]
 ├── orchestrator/
@@ -66,7 +66,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | jwt-easy | DevBlog | A07:2021 JWT alg:none | Easy | Node 20 / Express / SQLite | 42 | complete |
 | debug-easy | TaskAPI | A02:2021 Debug exposure | Easy | Ruby 3.3 / Sinatra / SQLite | 34 | complete |
 | bizlogic-easy | PromoCart | A04:2021 Insecure Design | Easy | Next.js 14 (TS) / SQLite | 37 | complete |
-| deserialization-easy | SessionStore | A08:2021 Deserialization | Easy | Java 21 / Spring Boot / SQLite | — | planned |
+| deserialization-easy | SessionStore | A08:2021 Deserialization | Easy | Java 21 / Spring Boot / SQLite | 34 | complete |
 | nosqli-easy | QuickPoll | A03:2021 NoSQL Injection | Easy | Fastify (TS) / MongoDB + SQLite | 48 | complete |
 | config-exposure-easy | ConfigLeak | A05:2021 Backup File Exposure | Easy | PHP 8.3 / SQLite | 40 | complete |
 
@@ -199,6 +199,19 @@ interpreter, run it inside `php:8.3-cli` via Docker instead — see
 `webapps/config-exposure-easy/CLAUDE.md` for the exact commands and gotchas (a phpunit PHAR
 downloaded once into a git-ignored `tools/` directory, `pdo_sqlite`/`curl` already compiled
 into the base image, feature tests spinning up real `php -S` subprocesses per test).
+
+**Java apps** (deserialization-easy):
+```bash
+cd webapps/deserialization-easy
+export SCORE_TOKEN=$(python3 -c "import uuid; print(uuid.uuid4())")
+./gradlew bootRun
+```
+Needs a full JDK 21 (`javac`, not just a JRE) on `PATH`/`JAVA_HOME` — this environment's
+system `openjdk-21-jre` package is JRE-only. A portable Temurin 21 JDK was fetched into a
+scratch directory and used via `JAVA_HOME=/path/to/jdk-21.0.5+11 ./gradlew ...` rather than
+touching system packages; do the same if `javac` isn't already on `PATH`. `./gradlew test`
+runs the JUnit 5 + MockMvc suite; the Gradle wrapper (`gradlew`, `gradle/wrapper/`) is
+committed so no separate Gradle install is required once a JDK is available.
 
 ---
 

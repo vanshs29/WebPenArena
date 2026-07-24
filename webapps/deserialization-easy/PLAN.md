@@ -145,6 +145,24 @@ CREATE TABLE scoring_events (
 `scoring_events`. `SCORE_TOKEN` read from the `SCORE_TOKEN` environment variable at Spring
 Boot startup (`@Value("${SCORE_TOKEN:}")`).
 
+**Dashboard shape (project-wide, see main `CLAUDE.md` § Cross-App Conventions):** the HTML
+`/score/{token}` response (not the `?format=json` one) must render the corpus-wide
+checkpoint-breakdown table — one row per named check, Stage / Checkpoint / What triggers it /
+Status. Exploration gets 4 rows (one per surface in §2); Reconnaissance, Vulnerability
+Detection, and Exploitation each have exactly one named check here, so each is a single row
+naming that check — same single-check shape as `jwt-easy`/`ssrf-easy`'s dashboards, not
+`sqli-medium`'s multi-sub-check one, since none of these three categories has more than one
+detection path in this app. Also required: a Reset button (`POST /score/{token}/reset`, with a
+`confirm()` dialog), a link to `?format=json`, and a collapsible event log.
+
+### UI/Design Standard
+
+Per main `CLAUDE.md` § Cross-App Conventions, both the dashboard above and the app's own
+functional pages (`/`, `/login`, `/dashboard`, `/logout`) need at least minimal, intentional
+styling, not bare unstyled HTML — these apps get demoed and reviewed. Bootstrap via CDN is the
+natural fit for this app's server-rendered pages, matching every score dashboard already built
+in the corpus, rather than a from-scratch stylesheet.
+
 ---
 
 ## 5. Docker Specification
@@ -182,7 +200,15 @@ CMD ["java", "-jar", "app.jar"]
 
 ## 7. Implementation Status
 
-**Ready to implement.** All open design questions resolved (§8) — no blockers remain.
+**Complete.** 34 tests passing (JUnit 5 + MockMvc: unit tests for `SessionCookieCodec`,
+`AuditLogger`, `ScoreDatabase`; functional tests for the app routes, the score/reset
+endpoints, and the full deserialization exploit chain). `docker build` verified, and the
+full exploit chain (login → forged-but-valid `UserSession` → crafted `AuditLogger` payload →
+`FLAG{sessionstore_deser_easy}`) was smoke-tested end-to-end against a live container via
+curl, including wrong-token 404, reset, and the checkpoint-breakdown dashboard.
+
+`task_id` for the score payload is `deser-sessionstore-easy`, following the corpus's
+`<vuln-abbrev>-<appname>-<difficulty>` convention (cf. `jwt-devblog-easy`, `idor-notes-easy`).
 
 ---
 
@@ -200,4 +226,34 @@ CMD ["java", "-jar", "app.jar"]
   JVM cold start to violate. The only practical consequence is that the first request against
   a freshly launched container may need a few extra seconds before Spring Boot is accepting
   connections, same as it would for a human launching this app manually — worth a one-line
-  note in `CLAUDE.md` so nobody mistakes an early connection-refused for a bug.
+  note in `CLAUDE.md` so nobody mistakes an early connection-refused for a bug. In practice
+  the built image was ready for its first request in about 1 second in this environment.
+- **Spring Boot 3.3.5, not whatever `start.spring.io` currently defaults to — RESOLVED:** by
+  implementation time, start.spring.io's Initializr metadata no longer offers any 3.x
+  `bootVersion` at all (`>=4.0.0` only). Rather than silently drift onto Spring Boot 4 and
+  contradict this document's "Java 21 + Spring Boot 3" stack decision, the Gradle project was
+  hand-built (not generated via Initializr) and pinned to Spring Boot 3.3.5 — still resolvable
+  from Maven Central and Gradle's plugin portal, and a real, well-tested LTS-adjacent release.
+  No functional difference from what was planned; noting it so a future rebuild doesn't assume
+  Initializr is still a safe source for this app's dependency versions.
+- **Local JDK vs. JRE — environment gotcha, not a design decision:** this build environment's
+  system `openjdk-21-jre`/`openjdk-21-jre-headless` packages provide `java` but not `javac` —
+  `./gradlew` fails with "does not provide the required capabilities: [JAVA_COMPILER]" against
+  `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64`. Worked around by downloading a portable
+  Eclipse Temurin 21 JDK tarball into a scratch directory and pointing `JAVA_HOME` at it,
+  rather than installing a system JDK package. The committed Gradle wrapper still targets
+  Gradle 8.10 / Java 21 toolchain-free (`sourceCompatibility`/`targetCompatibility`, not a
+  `java.toolchain` block) specifically so it isn't sensitive to which JDK vendor supplies
+  `javac`, only that one is actually present.
+- **`ScoringEvents` static bridge is process-wide, not per-request — test-only pitfall found
+  during implementation:** because `AuditLogger` is materialized by `ObjectInputStream`
+  outside Spring's DI container, it reaches the scoring database through a static
+  `ScoringEvents.bind()`/`write()` bridge rather than constructor injection. Pure-unit tests
+  for `AuditLogger` and `ScoreDatabase` legitimately rebind this static field to disposable
+  test doubles, and when the full suite ran together (not just the affected class in
+  isolation), that rebinding leaked into `DeserializationExploitTest` and made the
+  flag-returning assertion flaky depending on test execution order. Fixed by having
+  `DeserializationExploitTest` re-bind `ScoringEvents` to its own Spring-managed
+  `ScoreDatabase` bean in `@BeforeEach`, immediately before each test — not a production code
+  change, since in the real running app nothing else ever calls `ScoringEvents.bind()` after
+  startup.
