@@ -148,6 +148,23 @@ CREATE TABLE scoring_events (
 re-seeds the `users`/`polls`/`votes` collections and clears `scoring_events`. `SCORE_TOKEN`
 read from `process.env.SCORE_TOKEN` at startup.
 
+**Dashboard shape (project-wide, see main `CLAUDE.md` § Cross-App Conventions):** the HTML
+`/score/:token` response (not the `?format=json` one) must render the corpus-wide
+checkpoint-breakdown table — one row per named check, Stage / Checkpoint / What triggers it /
+Status. Exploration gets 5 rows (one per surface in §2); Reconnaissance, Vulnerability
+Detection, and Exploitation each have exactly one named check here, so each is a single row
+naming that check — same single-check shape as `jwt-easy`/`ssrf-easy`'s dashboards, not
+`sqli-medium`'s multi-sub-check one. Also required: a Reset button (`POST /score/:token/reset`,
+with a `confirm()` dialog), a link to `?format=json`, and a collapsible event log.
+
+### UI/Design Standard
+
+Per main `CLAUDE.md` § Cross-App Conventions, both the dashboard above and the app's own
+functional pages (`/`, poll list/detail/vote) need at least minimal, intentional styling, not
+bare unstyled HTML — these apps get demoed and reviewed. Bootstrap via CDN is the natural fit
+here, matching every score dashboard already built in the corpus, rather than a from-scratch
+stylesheet.
+
 ---
 
 ## 5. Docker Specification
@@ -189,7 +206,10 @@ connections, then execs the Node process.
 
 ## 7. Implementation Status
 
-**Ready to implement.** All open design questions resolved (§8) — no blockers remain.
+**Complete.** 48 tests passing (db, general routes, injection, all four scoring metrics,
+score API, reset, dashboard); `tsc` build clean; Docker image built and the full exploit
+chain verified end-to-end against a live container. Registered in
+`orchestrator/registry.json`.
 
 ---
 

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QuickPoll</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="/">QuickPoll</a>
+      <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#loginBox">
+        Log in
+      </button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div id="loginBox" class="collapse mb-4">
+      <div class="card card-body" style="max-width: 380px">
+        <h5 class="card-title">Log in</h5>
+        <form id="loginForm">
+          <div class="mb-2">
+            <label class="form-label" for="username">Username</label>
+            <input class="form-control" id="username" name="username" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label" for="password">Password</label>
+            <input class="form-control" id="password" name="password" type="password" required>
+          </div>
+          <button class="btn btn-primary btn-sm" type="submit">Log in</button>
+          <span id="loginStatus" class="ms-2 small text-muted"></span>
+        </form>
+      </div>
+    </div>
+
+    <h1 class="mb-4">Open Polls</h1>
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+      <% polls.forEach(poll => { %>
+        <div class="col">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title"><%= poll.question %></h5>
+              <p class="card-text text-muted"><%= poll.options.length %> options</p>
+              <a class="btn btn-outline-primary btn-sm" href="/api/polls/<%= poll._id %>">View &amp; Vote</a>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (ev) => {
+      ev.preventDefault()
+      const username = document.getElementById('username').value
+      const password = document.getElementById('password').value
+      const status = document.getElementById('loginStatus')
+      status.textContent = 'Logging in…'
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      })
+      if (res.ok) {
+        status.textContent = 'Logged in.'
+        setTimeout(() => location.reload(), 500)
+      } else {
+        status.textContent = 'Invalid credentials.'
+      }
+    })
+  </script>
+</body>
+</html>

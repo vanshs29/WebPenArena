@@ -25,7 +25,7 @@ prototype-webapp/
 │   ├── debug-easy/      ← TaskAPI    (OWASP A02:2021, Easy)   Ruby/Sinatra      [complete]
 │   ├── bizlogic-easy/       ← PromoCart   (OWASP A04:2021, Easy) Next.js/TypeScript [complete]
 │   ├── deserialization-easy/← SessionStore(OWASP A08:2021, Easy) Java/Spring Boot   [planned]
-│   ├── nosqli-easy/         ← QuickPoll   (OWASP A03:2021, Easy) Fastify/TypeScript [planned]
+│   ├── nosqli-easy/         ← QuickPoll   (OWASP A03:2021, Easy) Fastify/TypeScript [complete]
 │   └── config-exposure-easy/← ConfigLeak  (OWASP A05:2021, Easy) PHP 8.3            [planned]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
@@ -67,7 +67,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | debug-easy | TaskAPI | A02:2021 Debug exposure | Easy | Ruby 3.3 / Sinatra / SQLite | 34 | complete |
 | bizlogic-easy | PromoCart | A04:2021 Insecure Design | Easy | Next.js 14 (TS) / SQLite | 37 | complete |
 | deserialization-easy | SessionStore | A08:2021 Deserialization | Easy | Java 21 / Spring Boot / SQLite | — | planned |
-| nosqli-easy | QuickPoll | A03:2021 NoSQL Injection | Easy | Fastify (TS) / MongoDB + SQLite | — | planned |
+| nosqli-easy | QuickPoll | A03:2021 NoSQL Injection | Easy | Fastify (TS) / MongoDB + SQLite | 48 | complete |
 | config-exposure-easy | ConfigLeak | A05:2021 Backup File Exposure | Easy | PHP 8.3 / SQLite | — | planned |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability

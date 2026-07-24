@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(timeout 5 curl -sI https://registry.npmjs.org/fastify)",
+      "Bash(echo \"sudo exit: $?\")",
+      "Bash(dpkg -l)",
+      "Bash(mkdir -p /tmp/claude-1000/-home-vsri29-info4990-prototype-webapp-webapps-nosqli-easy/6c79e343-cfbc-4e44-ba4e-7b7299e38bd0/scratchpad/mongotest)",
+      "Bash(npm init *)",
+      "Bash(npm_config_ignore_scripts=false npm install mongodb-memory-server --foreground-scripts)",
+      "Bash(node -e ' *)",
+      "Bash(npm_config_ignore_scripts=false npm install --foreground-scripts)",
+      "Bash(npm_config_bin_links=true npm_config_ignore_scripts=false npm install --foreground-scripts)",
+      "Bash(npx tsc *)",
+      "Bash(npm_config_bin_links=true npm_config_ignore_scripts=false npm install --save-dev @types/ejs --foreground-scripts)",
+      "Bash(docker run *)",
+      "Bash(curl -s http://localhost:18080/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" -X POST http://localhost:18080/api/login -H \"Content-Type: application/json\" -d '{\"username\":\"admin\",\"password\":\"guess\"}')",
+      "Bash(curl -s -i -X POST http://localhost:18080/api/login -H 'Content-Type: application/json' -d '{\"username\":{\"$regex\":\"^admin$\"},\"password\":{\"$ne\":null}}' -c /tmp/claude-1000/-home-vsri29-info4990-prototype-webapp-webapps-nosqli-easy/6c79e343-cfbc-4e44-ba4e-7b7299e38bd0/scratchpad/cookies.txt)",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('orchestrator/registry.json'\\)\\); print\\(len\\(d['apps']\\), 'apps'\\); [print\\(a['id']\\) for a in d['apps']]\")",
+      "Bash(sed -i '28s#.*#│   ├── nosqli-easy/         ← QuickPoll   \\(OWASP A03:2021, Easy\\) Fastify/TypeScript [complete]#' /tmp/claude-1000/-home-vsri29-info4990-prototype-webapp-webapps-nosqli-easy/6c79e343-cfbc-4e44-ba4e-7b7299e38bd0/scratchpad/target_claude.md)",
+      "Bash(sed -i '70s#.*#| nosqli-easy | QuickPoll | A03:2021 NoSQL Injection | Easy | Fastify \\(TS\\) / MongoDB + SQLite | 48 | complete |#' /tmp/claude-1000/-home-vsri29-info4990-prototype-webapp-webapps-nosqli-easy/6c79e343-cfbc-4e44-ba4e-7b7299e38bd0/scratchpad/target_claude.md)"
+    ],
+    "additionalDirectories": [
+      "/home/vsri29/info4990/prototype-webapp/orchestrator",
+      "/home/vsri29/info4990/prototype-webapp",
+      "/home/vsri29/info4990"
+    ]
+  }
+}
