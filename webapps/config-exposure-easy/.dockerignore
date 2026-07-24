@@ -1,0 +1,6 @@
+tools/
+tests/
+data/*.db
+vendor/
+phpunit.xml
+.gitignore

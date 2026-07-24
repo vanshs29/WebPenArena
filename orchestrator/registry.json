@@ -81,6 +81,14 @@
       "container_port": 5000
     },
     {
+      "id": "config-exposure-easy",
+      "name": "ConfigLeak",
+      "description": "OWASP A05:2021 — Security Misconfiguration / Backup File Exposure (Easy)",
+      "path": "webapps/config-exposure-easy",
+      "image": "benchmark/config-exposure-easy",
+      "container_port": 5000
+    },
+    {
       "id": "nosqli-easy",
       "name": "QuickPoll",
       "description": "OWASP A03:2021 — NoSQL Injection (Easy)",

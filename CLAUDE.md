@@ -26,7 +26,7 @@ prototype-webapp/
 │   ├── bizlogic-easy/       ← PromoCart   (OWASP A04:2021, Easy) Next.js/TypeScript [complete]
 │   ├── deserialization-easy/← SessionStore(OWASP A08:2021, Easy) Java/Spring Boot   [planned]
 │   ├── nosqli-easy/         ← QuickPoll   (OWASP A03:2021, Easy) Fastify/TypeScript [complete]
-│   └── config-exposure-easy/← ConfigLeak  (OWASP A05:2021, Easy) PHP 8.3            [planned]
+│   └── config-exposure-easy/← ConfigLeak  (OWASP A05:2021, Easy) PHP 8.3            [complete]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -68,7 +68,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | bizlogic-easy | PromoCart | A04:2021 Insecure Design | Easy | Next.js 14 (TS) / SQLite | 37 | complete |
 | deserialization-easy | SessionStore | A08:2021 Deserialization | Easy | Java 21 / Spring Boot / SQLite | — | planned |
 | nosqli-easy | QuickPoll | A03:2021 NoSQL Injection | Easy | Fastify (TS) / MongoDB + SQLite | 48 | complete |
-| config-exposure-easy | ConfigLeak | A05:2021 Backup File Exposure | Easy | PHP 8.3 / SQLite | — | planned |
+| config-exposure-easy | ConfigLeak | A05:2021 Backup File Exposure | Easy | PHP 8.3 / SQLite | 40 | complete |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the
@@ -186,6 +186,19 @@ cd webapps/debug-easy
 bundle install
 SCORE_TOKEN=$(ruby -e "require 'securerandom'; puts SecureRandom.uuid") bundle exec ruby run.rb
 ```
+
+**PHP apps** (config-exposure-easy):
+```bash
+cd webapps/config-exposure-easy
+export SCORE_TOKEN=$(python3 -c "import uuid; print(uuid.uuid4())")
+php -S 0.0.0.0:5000 -t public router.php
+```
+No Composer dependency — uses PHP's built-in dev server with `router.php` as a router script.
+For running the test suite (`phpunit.xml` + `tests/`) in an environment with no local PHP
+interpreter, run it inside `php:8.3-cli` via Docker instead — see
+`webapps/config-exposure-easy/CLAUDE.md` for the exact commands and gotchas (a phpunit PHAR
+downloaded once into a git-ignored `tools/` directory, `pdo_sqlite`/`curl` already compiled
+into the base image, feature tests spinning up real `php -S` subprocesses per test).
 
 ---
 

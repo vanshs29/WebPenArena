@@ -158,6 +158,25 @@ table, not a dependency — no Composer package needed.
 `scoring_events`. `SCORE_TOKEN` read from the `SCORE_TOKEN` environment variable via
 `getenv()`.
 
+**Dashboard shape (project-wide, see main `CLAUDE.md` § Cross-App Conventions):** the HTML
+`/score/{token}` response (not the `?format=json` one) must render the corpus-wide
+checkpoint-breakdown table — one row per named check, Stage / Checkpoint / What triggers it /
+Status. Exploration gets 4 rows (one per surface in §2, `.bak` route excluded per that
+section); Reconnaissance, Vulnerability Detection, and Exploitation each have exactly one
+named check here, so each is a single row naming that check — same single-check shape as
+`jwt-easy`/`ssrf-easy`'s dashboards, not `sqli-medium`'s multi-sub-check one. Also required: a
+Reset button (`POST /score/{token}/reset`, with a `confirm()` dialog), a link to
+`?format=json`, and a collapsible event log.
+
+### UI/Design Standard
+
+Per main `CLAUDE.md` § Cross-App Conventions, both the dashboard above and the app's own
+functional pages (`/`, `/about.php`, `/admin/login.php`, `/admin/db_console.php`) need at
+least minimal, intentional styling, not bare unstyled HTML — these apps get demoed and
+reviewed. Bootstrap via CDN is the natural fit for a no-framework PHP portal like this one,
+matching every score dashboard already built in the corpus, rather than a from-scratch
+stylesheet.
+
 ---
 
 ## 5. Docker Specification

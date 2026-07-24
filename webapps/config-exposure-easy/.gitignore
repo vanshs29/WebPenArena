@@ -1,0 +1,4 @@
+/tools/
+/data/*.db
+/vendor/
+.phpunit.result.cache
