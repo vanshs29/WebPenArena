@@ -26,7 +26,8 @@ prototype-webapp/
 │   ├── bizlogic-easy/       ← PromoCart   (OWASP A04:2021, Easy) Next.js/TypeScript [complete]
 │   ├── deserialization-easy/← SessionStore(OWASP A08:2021, Easy) Java/Spring Boot   [complete]
 │   ├── nosqli-easy/         ← QuickPoll   (OWASP A03:2021, Easy) Fastify/TypeScript [complete]
-│   └── config-exposure-easy/← ConfigLeak  (OWASP A05:2021, Easy) PHP 8.3            [complete]
+│   ├── config-exposure-easy/← ConfigLeak  (OWASP A05:2021, Easy) PHP 8.3            [complete]
+│   └── outdated-components-easy/← PixSnap (OWASP A06:2021, Easy) Python/Flask       [complete]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -69,6 +70,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | deserialization-easy | SessionStore | A08:2021 Deserialization | Easy | Java 21 / Spring Boot / SQLite | 34 | complete |
 | nosqli-easy | QuickPoll | A03:2021 NoSQL Injection | Easy | Fastify (TS) / MongoDB + SQLite | 48 | complete |
 | config-exposure-easy | ConfigLeak | A05:2021 Backup File Exposure | Easy | PHP 8.3 / SQLite | 40 | complete |
+| outdated-components-easy | PixSnap | A06:2021 Vulnerable/Outdated Components (ImageTragick) | Easy | Python 3.12 / Flask / SQLite | 68 | complete |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the
@@ -174,14 +176,19 @@ Adding a new webapp: add one entry to `orchestrator/registry.json`, put the app 
 
 ## Running a webapp directly (without Docker)
 
-**Python/Flask apps** (sqli-easy, sqli-medium, cmdi-easy):
+**Python/Flask apps** (sqli-easy, sqli-medium, cmdi-easy, outdated-components-easy):
 ```bash
-cd webapps/sqli-easy   # or sqli-medium / cmdi-easy
+cd webapps/sqli-easy   # or sqli-medium / cmdi-easy / outdated-components-easy
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 export SCORE_TOKEN=$(python -c "import uuid; print(uuid.uuid4())")
 python run.py
 ```
+`outdated-components-easy` (PixSnap) is the one exception where this only gets you the app's
+normal (non-vulnerable) behavior: the exploit depends on the specific pre-patch ImageMagick
+6.9.3-9 binary the Dockerfile builds from source, not whatever `convert` happens to be on
+`PATH` locally. Running it directly is fine for iterating on routes/scoring, but the actual
+ImageTragick RCE only reproduces inside the Docker image.
 
 **Node.js apps** (idor-easy, traversal-easy, jwt-easy):
 ```bash

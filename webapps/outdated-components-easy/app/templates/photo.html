@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title_suffix %} — Photo {{ photo.id }}{% endblock %}
+{% block content %}
+  <h2 class="mb-4">Photo #{{ photo.id }}</h2>
+  <div class="row">
+    <div class="col-md-6">
+      <img src="{{ url_for('main.uploaded_file', filename=photo.filename) }}"
+           class="img-fluid rounded" alt="Original photo">
+      <p class="text-muted small mt-2">Original: {{ photo.filename }}</p>
+    </div>
+    <div class="col-md-6">
+      {% if photo.thumb_filename %}
+        <img src="{{ url_for('main.uploaded_file', filename=photo.thumb_filename) }}"
+             class="img-fluid rounded border" alt="Generated thumbnail">
+        <p class="text-muted small mt-2">Thumbnail: {{ photo.thumb_filename }}</p>
+      {% else %}
+        <p class="text-muted">No thumbnail could be generated for this photo.</p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

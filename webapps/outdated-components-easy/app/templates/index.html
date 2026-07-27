@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title_suffix %} — Gallery{% endblock %}
+{% block content %}
+  <h2 class="mb-4">Gallery</h2>
+  <div class="row g-4">
+    {% for photo in photos %}
+      <div class="col-md-3 col-sm-4 col-6">
+        <a href="{{ url_for('main.view_photo', photo_id=photo.id) }}" class="text-decoration-none">
+          <div class="card photo-card h-100">
+            <img src="{{ url_for('main.uploaded_file', filename=photo.thumb_filename or photo.filename) }}"
+                 class="card-img-top" alt="Photo {{ photo.id }}">
+            <div class="card-body p-2">
+              <p class="card-text text-truncate small mb-0">{{ photo.filename }}</p>
+            </div>
+          </div>
+        </a>
+      </div>
+    {% else %}
+      <p class="text-muted">No photos yet. <a href="/upload">Upload one.</a></p>
+    {% endfor %}
+  </div>
+{% endblock %}

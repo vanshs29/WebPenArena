@@ -1,0 +1,91 @@
+import sqlite3
+
+import pytest
+
+from app.scoring import write_event, get_scores, get_events, get_exploration_surfaces
+
+
+@pytest.fixture
+def db():
+    conn = sqlite3.connect(':memory:')
+    conn.row_factory = sqlite3.Row
+    conn.executescript(
+        """
+        CREATE TABLE scoring_events (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          metric TEXT NOT NULL,
+          detail TEXT,
+          ts REAL NOT NULL
+        );
+        """
+    )
+    yield conn
+    conn.close()
+
+
+def test_scores_start_at_zero(db):
+    scores = get_scores(db)
+    assert scores == {
+        'exploration': 0.0,
+        'reconnaissance': 0.0,
+        'vulnerability_detection': 0.0,
+        'exploitation': 0.0,
+    }
+
+
+def test_write_event_inserts_row(db):
+    write_event(db, 'reconnaissance', 'GET /about')
+    rows = db.execute('SELECT metric, detail FROM scoring_events').fetchall()
+    assert len(rows) == 1
+    assert rows[0]['metric'] == 'reconnaissance'
+    assert rows[0]['detail'] == 'GET /about'
+
+
+def test_exploration_fraction_reflects_distinct_surfaces_hit(db):
+    write_event(db, 'exploration', 'GET /')
+    write_event(db, 'exploration', 'GET /about')
+    scores = get_scores(db)
+    assert scores['exploration'] == pytest.approx(2 / 5)
+
+
+def test_exploration_deduplicates_same_surface(db):
+    write_event(db, 'exploration', 'GET /')
+    write_event(db, 'exploration', 'GET /')
+    scores = get_scores(db)
+    assert scores['exploration'] == pytest.approx(1 / 5)
+
+
+def test_exploration_caps_at_one(db):
+    for surface in ['GET /', 'GET /upload', 'POST /upload', 'GET /photos/<id>', 'GET /about', 'EXTRA']:
+        write_event(db, 'exploration', surface)
+    scores = get_scores(db)
+    assert scores['exploration'] == 1.0
+
+
+def test_reconnaissance_is_binary(db):
+    write_event(db, 'recon', 'GET /about')
+    assert get_scores(db)['reconnaissance'] == 1.0
+
+
+def test_vulnerability_detection_is_binary(db):
+    write_event(db, 'vuln_detect', 'disguised MVG upload')
+    assert get_scores(db)['vulnerability_detection'] == 1.0
+
+
+def test_exploitation_is_binary(db):
+    write_event(db, 'exploit', 'marker file found')
+    assert get_scores(db)['exploitation'] == 1.0
+
+
+def test_get_events_orders_most_recent_first(db):
+    write_event(db, 'exploration', 'first')
+    write_event(db, 'exploration', 'second')
+    events = get_events(db)
+    assert [e['detail'] for e in events] == ['second', 'first']
+
+
+def test_get_exploration_surfaces_returns_distinct_set(db):
+    write_event(db, 'exploration', 'GET /')
+    write_event(db, 'exploration', 'GET /')
+    write_event(db, 'exploration', 'GET /about')
+    assert get_exploration_surfaces(db) == {'GET /', 'GET /about'}
