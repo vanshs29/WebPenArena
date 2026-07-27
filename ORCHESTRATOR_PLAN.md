@@ -95,6 +95,7 @@ Single source of truth for all registered web apps. Adding a new app = adding on
     Rebuild and launch a web app
     Show running apps
     Stop a running app
+    Stop all running apps
     Exit
 ```
 
@@ -133,6 +134,13 @@ app name | container name | host port | status | score URL.
 
 Dropdown populated from live `docker ps` output.
 `docker stop <name> && docker rm <name>`.
+
+### Stop all running apps
+
+Lists every running benchmark container from live `docker ps` output, then asks a single
+`questionary.confirm()` before stopping and removing all of them (same
+`docker stop <name> && docker rm <name>` per container as the single-container flow above).
+Aborts with no changes if declined or if nothing is running.
 
 ---
 

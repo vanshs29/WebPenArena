@@ -117,6 +117,22 @@ or `webapps/ssrf-easy/templates/score_dashboard.html` are the reference for the 
 case. Every dashboard also needs: a Reset button (`POST /score/<token>/reset`, `confirm()`
 dialog), a link to `?format=json`, and a collapsible event log.
 
+### Event log — scoring checkpoints only, never raw request logging
+
+The `scoring_events` table (and the event log rendered from it on the score dashboard) may only
+ever receive a row from an explicit, named write call tied to one of the four scoring metrics —
+`write_event`/`writeEvent`/`WriteEvent`/`recordEvent` called from a specific route handler or
+condition (an exploration surface in a finite `SCOREABLE_ENDPOINTS`/`EXPLORATION_SURFACES` list,
+a recon/vuln_detect/exploit trigger). It must never be fed by a blanket request/access logger
+(e.g. `morgan`, a global `before_request`/middleware that logs every path, an nginx-style access
+log) that records every incoming HTTP request regardless of route or outcome. Audited across all
+13 built apps on 27 July 2026 and all were already compliant — no generic request-logging
+middleware exists anywhere in the corpus; every write site is a finite, named checkpoint. This is
+now a standing requirement for every future app too, not just a one-time check: verify it the
+same way this audit did, by grepping the app's route/handler files for every call site of its
+event-write function and confirming each one sits behind a specific named condition, not a
+catch-all logging hook.
+
 ### Basic UI/design standard
 
 Every app's own functional pages (storefront, forms, whatever its actual surface is — distinct
@@ -149,6 +165,7 @@ python orchestrator/orchestrator.py
 - **Rebuild and launch** — rebuild one app then immediately launch it.
 - **Show running apps** — table of live benchmark containers with ports and score URLs.
 - **Stop a running app** — dropdown of running containers to stop and remove.
+- **Stop all running apps** — lists every running benchmark container, asks for one confirmation, then stops and removes all of them.
 
 Adding a new webapp: add one entry to `orchestrator/registry.json`, put the app under
 `webapps/<id>/`, and make sure its Dockerfile is present.

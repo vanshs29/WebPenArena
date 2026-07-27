@@ -241,6 +241,27 @@ def action_stop() -> None:
     stop_container(answer)
 
 
+def action_stop_all() -> None:
+    rows = get_running_containers()
+    if not rows:
+        print("\n[info] No benchmark containers are running.")
+        return
+
+    print(f"\nRunning containers ({len(rows)}):")
+    for r in rows:
+        print(f"  - {r['name']}")
+
+    confirmed = questionary.confirm(
+        f"Stop and remove all {len(rows)} running benchmark container(s)?", default=False
+    ).ask()
+    if not confirmed:
+        print("[abort] Nothing stopped.")
+        return
+
+    for r in rows:
+        stop_container(r["name"])
+
+
 # ---------------------------------------------------------------------------
 # Main loop
 # ---------------------------------------------------------------------------
@@ -252,6 +273,7 @@ MENU = {
     "Rebuild and launch a web app": action_rebuild_and_launch,
     "Show running apps": action_show_running,
     "Stop a running app": action_stop,
+    "Stop all running apps": action_stop_all,
     "Exit": None,
 }
 
@@ -270,7 +292,7 @@ def main() -> None:
             break
 
         action = MENU[choice]
-        if action in (action_show_running, action_stop):
+        if action in (action_show_running, action_stop, action_stop_all):
             action()
         else:
             action(apps)
