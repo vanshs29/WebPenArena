@@ -27,7 +27,7 @@
 
 ### Via orchestrator (recommended)
 ```bash
-cd /home/vsri29/info4990/prototype-webapp
+cd /home/vsri29/info4990/webpen-arena
 pip install -r orchestrator/requirements.txt
 python orchestrator/orchestrator.py
 ```

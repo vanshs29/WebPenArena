@@ -1,4 +1,4 @@
-# Benchmark Task Environments — prototype-webapp
+# Benchmark Task Environments — webpen-arena
 
 ## Repository purpose
 
@@ -12,7 +12,7 @@ pentesting stages without a human or LLM judge.
 ## Repository layout
 
 ```
-prototype-webapp/
+webpen-arena/
 ├── webapps/
 │   ├── sqli-easy/       ← ShopLite   (OWASP A03:2021, Easy)   Python/Flask      [complete]
 │   ├── idor-easy/       ← NoteNest   (OWASP A01:2021, Easy)   Node.js/Express   [complete]
@@ -26,8 +26,10 @@ prototype-webapp/
 │   ├── bizlogic-easy/       ← PromoCart   (OWASP A04:2021, Easy) Next.js/TypeScript [complete]
 │   ├── deserialization-easy/← SessionStore(OWASP A08:2021, Easy) Java/Spring Boot   [complete]
 │   ├── nosqli-easy/         ← QuickPoll   (OWASP A03:2021, Easy) Fastify/TypeScript [complete]
-│   ├── config-exposure-easy/← ConfigLeak  (OWASP A05:2021, Easy) PHP 8.3            [complete]
-│   └── outdated-components-easy/← PixSnap (OWASP A06:2021, Easy) Python/Flask       [complete]
+│   ├── config-exposure-easy/← OpsDesk     (OWASP A05:2021, Easy) PHP 8.3            [complete]
+│   ├── outdated-components-easy/← PixSnap (OWASP A06:2021, Easy) Python/Flask       [complete]
+│   ├── blind-xss-easy/      ← DeskLine    (OWASP A03:2021, Easy) Node/Express+Playwright [planned]
+│   └── clickjacking-easy/   ← BillFold    (OWASP A05:2021, Easy) Node/Express+Playwright [planned]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -69,8 +71,10 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | bizlogic-easy | PromoCart | A04:2021 Insecure Design | Easy | Next.js 14 (TS) / SQLite | 37 | complete |
 | deserialization-easy | SessionStore | A08:2021 Deserialization | Easy | Java 21 / Spring Boot / SQLite | 34 | complete |
 | nosqli-easy | QuickPoll | A03:2021 NoSQL Injection | Easy | Fastify (TS) / MongoDB + SQLite | 48 | complete |
-| config-exposure-easy | ConfigLeak | A05:2021 Backup File Exposure | Easy | PHP 8.3 / SQLite | 40 | complete |
+| config-exposure-easy | OpsDesk | A05:2021 Backup File Exposure | Easy | PHP 8.3 / SQLite | 40 | complete |
 | outdated-components-easy | PixSnap | A06:2021 Vulnerable/Outdated Components (ImageTragick) | Easy | Python 3.12 / Flask / SQLite | 68 | complete |
+| blind-xss-easy | DeskLine | A03:2021 Blind/Stored XSS via admin bot | Easy | Node 20 / Express / Playwright / SQLite | — | planned |
+| clickjacking-easy | BillFold | A05:2021 Clickjacking / UI Redress | Easy | Node 20 / Express / Playwright / SQLite | — | planned |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the

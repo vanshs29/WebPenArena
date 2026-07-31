@@ -10,7 +10,7 @@ interactive CLI tool to build, launch, and manage any of them via Docker.
 ## Directory Layout (after reorganisation)
 
 ```
-prototype-webapp/
+webpen-arena/
 ├── webapps/
 │   ├── sqli-easy/          ← ShopLite   (was: root app/ + run.py + Dockerfile)
 │   │   ├── app/

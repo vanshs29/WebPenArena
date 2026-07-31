@@ -342,7 +342,7 @@ TDD for a deliberately vulnerable application inverts the usual framing: the vul
 ### Test file structure
 
 ```
-prototype-webapp/
+webpen-arena/
 ├── app/
 │   ├── __init__.py       ← Flask app factory; reads SCORE_TOKEN from env
 │   ├── db.py             ← DB init, seed, reset, connection helper
@@ -837,7 +837,7 @@ curl -X POST http://localhost:5000/score/$TOKEN/reset
 ## 11. File Layout (target state after implementation)
 
 ```
-prototype-webapp/
+webpen-arena/
 ├── PLAN.md
 ├── app/
 │   ├── __init__.py          ← Flask app factory; loads SCORE_TOKEN, JWT_SECRET

@@ -60,7 +60,7 @@ pytest  →  44 passed in ~1.2s
 Implement exactly this structure — no extra files:
 
 ```
-prototype-webapp/
+webpen-arena/
 ├── CLAUDE.md
 ├── PLAN.md
 ├── app/

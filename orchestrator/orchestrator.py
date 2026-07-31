@@ -4,7 +4,7 @@ Benchmark orchestrator — interactive CLI for building and launching
 vulnerable web app environments via Docker.
 
 Usage:
-    cd prototype-webapp
+    cd webpen-arena
     python orchestrator/orchestrator.py
 """
 

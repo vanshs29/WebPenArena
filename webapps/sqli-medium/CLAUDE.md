@@ -28,7 +28,7 @@ route, schema, scoring rule, and TDD cycle. This file covers workflow and toolin
 ## Setup
 
 ```bash
-# From prototype-webapp/ — shares the same venv as ShopLite
+# From webpen-arena/ — shares the same venv as ShopLite
 source .venv/bin/activate
 
 cd sqli-medium
