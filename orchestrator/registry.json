@@ -82,7 +82,7 @@
     },
     {
       "id": "config-exposure-easy",
-      "name": "ConfigLeak",
+      "name": "OpsDesk",
       "description": "OWASP A05:2021 — Security Misconfiguration / Backup File Exposure (Easy)",
       "path": "webapps/config-exposure-easy",
       "image": "benchmark/config-exposure-easy",
