@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/src/Scoring.php';
 
-function configleak_scoring(): \ConfigLeak\Scoring
+function opsdesk_scoring(): \OpsDesk\Scoring
 {
     static $scoring = null;
 
@@ -12,7 +12,7 @@ function configleak_scoring(): \ConfigLeak\Scoring
         if ($dbPath !== ':memory:' && !is_dir($dir)) {
             mkdir($dir, 0777, true);
         }
-        $scoring = \ConfigLeak\Scoring::connect($dbPath);
+        $scoring = \OpsDesk\Scoring::connect($dbPath);
     }
 
     return $scoring;

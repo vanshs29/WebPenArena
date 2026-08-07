@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (hash_equals($DB_USER, $username) && hash_equals($DB_PASS, $password)) {
         $_SESSION['authenticated'] = true;
-        configleak_scoring()->recordEvent('exploit', 'admin login succeeded');
+        opsdesk_scoring()->recordEvent('exploit', 'admin login succeeded');
         header('Location: /admin/db_console.php');
         exit;
     }
@@ -27,13 +27,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin Login — ConfigLeak Portal</title>
+  <title>Admin Login — OpsDesk Portal</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 <body>
 <nav class="navbar navbar-expand navbar-dark bg-dark">
   <div class="container">
-    <a class="navbar-brand fw-bold" href="/">ConfigLeak</a>
+    <a class="navbar-brand fw-bold" href="/">OpsDesk</a>
     <div class="navbar-nav">
       <a class="nav-link" href="/">Home</a>
       <a class="nav-link" href="/about.php">About</a>

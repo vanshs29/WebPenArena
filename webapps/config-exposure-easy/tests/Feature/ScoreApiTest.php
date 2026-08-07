@@ -1,7 +1,7 @@
 <?php
 
-use ConfigLeak\Tests\Support\HttpClient;
-use ConfigLeak\Tests\Support\TestServer;
+use OpsDesk\Tests\Support\HttpClient;
+use OpsDesk\Tests\Support\TestServer;
 use PHPUnit\Framework\TestCase;
 
 class ScoreApiTest extends TestCase
@@ -38,7 +38,7 @@ class ScoreApiTest extends TestCase
         $response = $this->http->get($this->server->baseUrl() . "/score/{$this->token}?format=json");
         $data = json_decode($response['body'], true);
 
-        $this->assertSame('config-exposure-configleak-easy', $data['task_id']);
+        $this->assertSame('config-exposure-opsdesk-easy', $data['task_id']);
         $this->assertArrayHasKey('scores', $data);
         $this->assertArrayHasKey('events', $data);
     }

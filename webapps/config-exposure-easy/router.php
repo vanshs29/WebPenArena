@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/bootstrap.php';
 
-const TASK_ID = 'config-exposure-configleak-easy';
+const TASK_ID = 'config-exposure-opsdesk-easy';
 const EXPLORATION_SURFACES = ['/', '/about.php', '/admin/login.php', '/admin/db_console.php'];
 
 function score_wants_json(): bool
@@ -30,7 +30,7 @@ function handle_score_view(string $token): void
         return;
     }
 
-    $scoring = configleak_scoring();
+    $scoring = opsdesk_scoring();
     $scores = $scoring->getScores();
     $events = $scoring->getEvents();
 
@@ -56,7 +56,7 @@ function handle_score_reset(string $token): void
         return;
     }
 
-    configleak_scoring()->reset();
+    opsdesk_scoring()->reset();
     header('Location: /score/' . rawurlencode($token));
     http_response_code(302);
 }
@@ -75,13 +75,13 @@ if ($method === 'GET' && preg_match('#^/score/([^/]+)$#', $uri, $m)) {
 }
 
 if ($method === 'GET' && in_array($uri, EXPLORATION_SURFACES, true)) {
-    configleak_scoring()->recordEvent('exploration', "GET {$uri}");
+    opsdesk_scoring()->recordEvent('exploration', "GET {$uri}");
 }
 
 if (preg_match('#^/config\.php\.(bak|old|swp)$#', $uri)) {
-    configleak_scoring()->recordEvent('recon', "GET {$uri}");
+    opsdesk_scoring()->recordEvent('recon', "GET {$uri}");
     if ($uri === '/config.php.bak') {
-        configleak_scoring()->recordEvent('vuln_detect', "GET {$uri}");
+        opsdesk_scoring()->recordEvent('vuln_detect', "GET {$uri}");
     }
 }
 

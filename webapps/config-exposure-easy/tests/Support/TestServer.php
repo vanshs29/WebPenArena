@@ -1,6 +1,6 @@
 <?php
 
-namespace ConfigLeak\Tests\Support;
+namespace OpsDesk\Tests\Support;
 
 class TestServer
 {
@@ -20,7 +20,7 @@ class TestServer
     public static function start(string $scoreToken = 'test-token'): self
     {
         $port = random_int(20000, 60000);
-        $dbPath = sys_get_temp_dir() . '/configleak_test_' . bin2hex(random_bytes(8)) . '.db';
+        $dbPath = sys_get_temp_dir() . '/opsdesk_test_' . bin2hex(random_bytes(8)) . '.db';
 
         $env = array_merge(
             array_filter($_SERVER, static fn($v) => is_scalar($v)),

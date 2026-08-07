@@ -1,7 +1,7 @@
 <?php
 
-use ConfigLeak\Tests\Support\HttpClient;
-use ConfigLeak\Tests\Support\TestServer;
+use OpsDesk\Tests\Support\HttpClient;
+use OpsDesk\Tests\Support\TestServer;
 use PHPUnit\Framework\TestCase;
 
 class VulnTest extends TestCase
@@ -43,7 +43,7 @@ class VulnTest extends TestCase
     {
         $response = $this->http->get($this->server->baseUrl() . '/config.php.bak');
         $this->assertSame(200, $response['status']);
-        $this->assertStringContainsString('configleak_admin', $response['body']);
+        $this->assertStringContainsString('opsdesk_admin', $response['body']);
         $this->assertStringContainsString('Tr0ub4dor&3', $response['body']);
     }
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace ConfigLeak;
+namespace OpsDesk;
 
 class Scoring
 {

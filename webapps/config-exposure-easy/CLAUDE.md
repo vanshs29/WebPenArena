@@ -122,7 +122,7 @@ A task is complete when:
 
 ---
 
-## Implementation Notes (ConfigLeak, complete)
+## Implementation Notes (OpsDesk, complete)
 
 Status: complete, 40 tests passing (10 unit + 30 feature/system), matching `PLAN.md` exactly.
 

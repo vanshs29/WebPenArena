@@ -1,4 +1,4 @@
-# ConfigLeak — Planning Document
+# OpsDesk — Planning Document
 
 ## 1. Challenge Selection
 
@@ -11,7 +11,7 @@
 ### Why this challenge
 
 `traversal-easy` is currently the corpus's only A05 app, and it tests a different mechanism
-(unsanitized path input). ConfigLeak tests the far more common real-world A05 pattern: an
+(unsanitized path input). OpsDesk tests the far more common real-world A05 pattern: an
 editor/deploy tool leaves a backup or swap file (`configuration.php~`, `config.php.bak`,
 `.config.php.swp`) sitting next to the live file, directly web-servable because the file
 extension no longer matches what the server is configured to execute. This is the generic
@@ -43,7 +43,7 @@ real-software/recognition-testing variant of "old/vulnerable architecture."
 
 ### Application concept
 
-**ConfigLeak** — a small internal-tools portal (a "legacy admin panel" flavor, deliberately
+**OpsDesk** — a small internal-tools portal (a "legacy admin panel" flavor, deliberately
 generic rather than modeled on any one real CMS). The live `config.php` include file is
 never directly reachable (PHP source is executed, not served), but a leftover
 `config.php.bak` from a past deploy is reachable as static content and contains the DB
@@ -92,7 +92,7 @@ fire together almost every time, losing that diagnostic resolution.
 <?php
 // INTENTIONAL VULNERABILITY — do not fix
 $DB_HOST = 'localhost';
-$DB_USER = 'configleak_admin';
+$DB_USER = 'opsdesk_admin';
 $DB_PASS = 'Tr0ub4dor&3';
 ?>
 ```
@@ -201,7 +201,7 @@ everything else to the built-in server's normal static/PHP file handling.
 ```json
 {
   "id": "config-exposure-easy",
-  "name": "ConfigLeak",
+  "name": "OpsDesk",
   "description": "OWASP A05:2021 — Security Misconfiguration / Backup File Exposure (Easy)",
   "path": "webapps/config-exposure-easy",
   "image": "benchmark/config-exposure-easy",

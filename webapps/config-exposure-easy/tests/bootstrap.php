@@ -3,7 +3,7 @@
 define('PROJECT_ROOT', dirname(__DIR__));
 
 spl_autoload_register(function (string $class): void {
-    $prefix = 'ConfigLeak\\';
+    $prefix = 'OpsDesk\\';
     if (!str_starts_with($class, $prefix)) {
         return;
     }

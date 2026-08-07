@@ -1,7 +1,7 @@
 <?php
 
-use ConfigLeak\Tests\Support\HttpClient;
-use ConfigLeak\Tests\Support\TestServer;
+use OpsDesk\Tests\Support\HttpClient;
+use OpsDesk\Tests\Support\TestServer;
 use PHPUnit\Framework\TestCase;
 
 class DashboardTest extends TestCase

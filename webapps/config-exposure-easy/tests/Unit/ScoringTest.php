@@ -1,6 +1,6 @@
 <?php
 
-use ConfigLeak\Scoring;
+use OpsDesk\Scoring;
 use PHPUnit\Framework\TestCase;
 
 class ScoringTest extends TestCase

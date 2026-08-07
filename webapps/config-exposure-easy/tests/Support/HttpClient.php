@@ -1,6 +1,6 @@
 <?php
 
-namespace ConfigLeak\Tests\Support;
+namespace OpsDesk\Tests\Support;
 
 class HttpClient
 {
@@ -8,7 +8,7 @@ class HttpClient
 
     public function __construct()
     {
-        $this->cookieJar = sys_get_temp_dir() . '/configleak_cookies_' . bin2hex(random_bytes(8)) . '.txt';
+        $this->cookieJar = sys_get_temp_dir() . '/opsdesk_cookies_' . bin2hex(random_bytes(8)) . '.txt';
     }
 
     /** @return array{status:int, body:string, headers:array<string,string>} */
