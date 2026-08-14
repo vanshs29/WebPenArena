@@ -1,7 +1,7 @@
 # Orchestrator: Scoring, Reset, and Benchmark Mode — Plan
 
-**Status: planned, not yet implemented.** This doc is the design reference; `orchestrator.py`
-does not yet contain any of the code described below.
+**Status: implemented.** This doc is the design reference `orchestrator.py` and `scoring.py`
+were built against; see both files for the actual code.
 
 ## Goal
 

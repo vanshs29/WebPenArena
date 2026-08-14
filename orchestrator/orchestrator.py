@@ -13,6 +13,7 @@ import os
 import socket
 import subprocess
 import sys
+import time
 import uuid
 from pathlib import Path
 
@@ -20,6 +21,8 @@ try:
     import questionary
 except ImportError:
     sys.exit("Missing dependency: pip install questionary")
+
+import scoring
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -263,12 +266,139 @@ def action_stop_all() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Benchmark mode: scoreboard, single-app score, reset
+# ---------------------------------------------------------------------------
+
+def choose_running_app(apps: list[dict], prompt: str = "Which running app?") -> dict | None:
+    rows = scoring.discover_running_apps(apps)
+    if not rows:
+        print("\n[info] No benchmark containers are currently running.")
+        return None
+    choices = {f"{r['app']['name']}  ({r['container_name']})": r for r in rows}
+    answer = questionary.select(prompt, choices=list(choices.keys())).ask()
+    if answer is None:
+        return None
+    return choices[answer]
+
+
+def action_view_scoreboard(apps: list[dict]) -> None:
+    if not scoring.discover_running_apps(apps):
+        print("\n[info] No benchmark containers are currently running.")
+        return
+
+    print("\n[scoreboard] Live view — Ctrl+C to return to the menu.")
+    try:
+        while True:
+            rows = scoring.discover_running_apps(apps)
+            if not rows:
+                print("\n[info] No benchmark containers are currently running.")
+                return
+
+            for row in rows:
+                row["score"] = scoring.fetch_score(row["host_port"], row["token"])
+            agg = scoring.aggregate_scores(rows)
+
+            print("\033[2J\033[H", end="")
+            print(f"Benchmark scoreboard — {agg['n_responded']}/{agg['n_total']} apps responding")
+            print("=" * 70)
+            for metric in scoring.METRICS:
+                print(f"  {metric:<24}: {agg['totals'][metric]}")
+            print("=" * 70)
+
+            print(f"\n{'APP':<24} {'EXPLORE':<9} {'RECON':<9} {'VULNDET':<9} {'EXPLOIT':<9} STATUS")
+            print("-" * 70)
+            for row in rows:
+                app = row["app"]
+                score = row["score"]
+                if score is None:
+                    print(f"{app['id']:<24} {'-':<9} {'-':<9} {'-':<9} {'-':<9} not responding")
+                    continue
+                s = score["scores"]
+                print(
+                    f"{app['id']:<24} "
+                    f"{s.get('exploration', 0):<9.2f} "
+                    f"{s.get('reconnaissance', 0):<9.2f} "
+                    f"{s.get('vulnerability_detection', 0):<9.2f} "
+                    f"{s.get('exploitation', 0):<9.2f} "
+                    f"{row['status']}"
+                )
+
+            time.sleep(3)
+    except KeyboardInterrupt:
+        print("\n[scoreboard] Returning to menu.")
+
+
+def action_view_app_score(apps: list[dict]) -> None:
+    row = choose_running_app(apps, "Which app's score to view?")
+    if row is None:
+        return
+
+    score = scoring.fetch_score(row["host_port"], row["token"])
+    if score is None:
+        print(f"\n[warn] {row['app']['name']} did not respond to the score request.")
+        return
+
+    print(f"\n{'=' * 60}")
+    print(f"  App        : {row['app']['name']} ({row['app']['description']})")
+    print(f"  Task id    : {score.get('task_id')}")
+    print(f"{'=' * 60}")
+    for metric in scoring.METRICS:
+        print(f"  {metric:<24}: {score['scores'].get(metric, 0):.2f}")
+    print(f"{'=' * 60}")
+
+    events = score.get("events", [])
+    print(f"\n  Recent events ({len(events)} total, newest first):")
+    for event in events[:10]:
+        print(f"    - {event}")
+
+
+def action_reset_scores(apps: list[dict]) -> None:
+    rows = scoring.discover_running_apps(apps)
+    if not rows:
+        print("\n[info] No benchmark containers are currently running.")
+        return
+
+    all_label = "All running apps"
+    labels = {f"{r['app']['name']}  ({r['container_name']})": r for r in rows}
+    choices = [all_label] + list(labels.keys())
+
+    answers = questionary.checkbox("Select app(s) to reset:", choices=choices).ask()
+    if not answers:
+        print("[abort] Nothing selected.")
+        return
+
+    targets = rows if all_label in answers else [labels[a] for a in answers if a != all_label]
+
+    confirmed = questionary.confirm(
+        f"Reset {len(targets)} app(s)? This clears scoring state and re-seeds app data.",
+        default=False,
+    ).ask()
+    if not confirmed:
+        print("[abort] Nothing reset.")
+        return
+
+    for row in targets:
+        ok = scoring.reset_score(row["host_port"], row["token"])
+        status = "OK" if ok else "FAILED"
+        print(f"[reset] {row['app']['name']} → {status}")
+
+
+def action_benchmark_mode(apps: list[dict]) -> None:
+    action_launch_all(apps)
+    action_view_scoreboard(apps)
+
+
+# ---------------------------------------------------------------------------
 # Main loop
 # ---------------------------------------------------------------------------
 
 MENU = {
     "Launch a web app": action_launch,
     "Launch all web apps": action_launch_all,
+    "Benchmark mode (launch all + live scoreboard)": action_benchmark_mode,
+    "View benchmark scoreboard": action_view_scoreboard,
+    "View single app score": action_view_app_score,
+    "Reset app score(s)": action_reset_scores,
     "Rebuild image(s)": action_rebuild,
     "Rebuild and launch a web app": action_rebuild_and_launch,
     "Show running apps": action_show_running,
