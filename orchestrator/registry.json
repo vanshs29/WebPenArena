@@ -111,6 +111,14 @@
       "path": "webapps/outdated-components-easy",
       "image": "benchmark/outdated-components-easy",
       "container_port": 5000
+    },
+    {
+      "id": "clickjacking-easy",
+      "name": "BillFold",
+      "description": "OWASP A05:2021 — Clickjacking / UI Redress (Easy)",
+      "path": "webapps/clickjacking-easy",
+      "image": "benchmark/clickjacking-easy",
+      "container_port": 5000
     }
   ]
 }

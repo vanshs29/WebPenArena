@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manage Subscription — BillFold</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; }
+    .stage { position: relative; width: 1280px; height: 800px; }
+    .header { position: absolute; top: 20px; left: 20px; }
+    #btn1, #btn2 { width: 200px; height: 60px; font-size: 18px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="header">
+      <h1>Manage Subscription</h1>
+      <p><strong>Status: <%= status %></strong></p>
+    </div>
+
+    <button id="btn1" type="button" style="position:absolute; left:540px; top:370px;">
+      Deactivate Subscription
+    </button>
+
+    <div id="confirmArea" style="display:none; position:absolute; left:540px; top:420px;">
+      <form method="POST" action="/account/deactivate">
+        <button id="btn2" type="submit">Confirm Deactivation</button>
+      </form>
+    </div>
+  </div>
+  <script>
+    document.getElementById('btn1').addEventListener('click', function () {
+      document.getElementById('confirmArea').style.display = 'block'
+    })
+  </script>
+</body>
+</html>

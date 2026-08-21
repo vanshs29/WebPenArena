@@ -29,7 +29,7 @@ webpen-arena/
 │   ├── config-exposure-easy/← OpsDesk     (OWASP A05:2021, Easy) PHP 8.3            [complete]
 │   ├── outdated-components-easy/← PixSnap (OWASP A06:2021, Easy) Python/Flask       [complete]
 │   ├── blind-xss-easy/      ← DeskLine    (OWASP A03:2021, Easy) Node/Express+Playwright [planned]
-│   └── clickjacking-easy/   ← BillFold    (OWASP A05:2021, Easy) Node/Express+Playwright [planned]
+│   └── clickjacking-easy/   ← BillFold    (OWASP A05:2021, Easy) Node/Express+Playwright [complete]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -73,8 +73,8 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | nosqli-easy | QuickPoll | A03:2021 NoSQL Injection | Easy | Fastify (TS) / MongoDB + SQLite | 48 | complete |
 | config-exposure-easy | OpsDesk | A05:2021 Backup File Exposure | Easy | PHP 8.3 / SQLite | 40 | complete |
 | outdated-components-easy | PixSnap | A06:2021 Vulnerable/Outdated Components (ImageTragick) | Easy | Python 3.12 / Flask / SQLite | 68 | complete |
+| clickjacking-easy | BillFold | A05:2021 Clickjacking / UI Redress | Easy | Node 20 / Express / Playwright / SQLite | 72 | complete |
 | blind-xss-easy | DeskLine | A03:2021 Blind/Stored XSS via admin bot | Easy | Node 20 / Express / Playwright / SQLite | — | planned |
-| clickjacking-easy | BillFold | A05:2021 Clickjacking / UI Redress | Easy | Node 20 / Express / Playwright / SQLite | — | planned |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the
@@ -200,6 +200,24 @@ cd webapps/idor-easy   # or traversal-easy / jwt-easy
 npm install
 SCORE_TOKEN=$(node -e "console.log(require('crypto').randomUUID())") node run.js
 ```
+
+**Node.js + Playwright apps** (clickjacking-easy):
+```bash
+cd webapps/clickjacking-easy
+npm install
+SCORE_TOKEN=$(node -e "console.log(require('crypto').randomUUID())") node run.js
+```
+`npm install` pulls the exact `playwright` npm version pinned in `package.json`
+(currently 1.62.1), matched 1:1 against the `mcr.microsoft.com/playwright:v1.62.1-jammy`
+base image so the Docker build always has the right bundled Chromium. This sandbox's cached
+Chromium build under `~/.cache/ms-playwright/` (installed via a separate Python playwright
+package) is a different revision than what a plain `npx playwright install chromium` resolves
+for the npm package — the default download silently stalls with no error in this environment.
+Point at the cached build directly instead of trying to install a fresh one:
+`PLAYWRIGHT_CHROMIUM_PATH=~/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome node run.js`
+(and the same env var for `npm test`, since `tests/bot.system.test.js` launches a real
+browser). `src/bot/browser.js` reads this var only when set; it's unset in the Docker image,
+where the bundled browser resolves normally.
 
 **Go apps** (xss-easy, ssrf-easy):
 ```bash
