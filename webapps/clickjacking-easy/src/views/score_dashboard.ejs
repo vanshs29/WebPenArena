@@ -72,60 +72,60 @@
           <td rowspan="8"><strong>Exploration</strong></td>
           <td><code>GET /</code></td>
           <td>Any request to the home page</td>
-          <td><%= explDetails.has('home') ? '&#10003;' : '&#10007;' %></td>
+          <td><%= explDetails.has('home') ? '✓' : '✗' %></td>
         </tr>
         <tr>
           <td>Account auth</td>
           <td>GET or POST to <code>/register</code> or <code>/login</code></td>
-          <td><%= explDetails.has('account_auth') ? '&#10003;' : '&#10007;' %></td>
+          <td><%= explDetails.has('account_auth') ? '✓' : '✗' %></td>
         </tr>
         <tr>
           <td><code>GET /account/deactivate</code></td>
           <td>Viewed the subscription deactivation page</td>
-          <td><%= explDetails.has('view_deactivate') ? '&#10003;' : '&#10007;' %></td>
+          <td><%= explDetails.has('view_deactivate') ? '✓' : '✗' %></td>
         </tr>
         <tr>
           <td><code>POST /account/deactivate</code></td>
           <td>Submitted the deactivation form on your own account</td>
-          <td><%= explDetails.has('submit_deactivate') ? '&#10003;' : '&#10007;' %></td>
+          <td><%= explDetails.has('submit_deactivate') ? '✓' : '✗' %></td>
         </tr>
         <tr>
           <td>Create custom page</td>
           <td>GET <code>/pages/new</code> or POST <code>/pages</code></td>
-          <td><%= explDetails.has('create_page') ? '&#10003;' : '&#10007;' %></td>
+          <td><%= explDetails.has('create_page') ? '✓' : '✗' %></td>
         </tr>
         <tr>
           <td><code>GET /pages/:id</code></td>
           <td>Viewed a hosted custom page</td>
-          <td><%= explDetails.has('view_page') ? '&#10003;' : '&#10007;' %></td>
+          <td><%= explDetails.has('view_page') ? '✓' : '✗' %></td>
         </tr>
         <tr>
           <td>Report a URL</td>
           <td>GET or POST <code>/report</code></td>
-          <td><%= explDetails.has('report_url') ? '&#10003;' : '&#10007;' %></td>
+          <td><%= explDetails.has('report_url') ? '✓' : '✗' %></td>
         </tr>
         <tr>
           <td><code>GET /about</code></td>
           <td>Viewed the about page</td>
-          <td><%= explDetails.has('about') ? '&#10003;' : '&#10007;' %></td>
+          <td><%= explDetails.has('about') ? '✓' : '✗' %></td>
         </tr>
         <tr>
           <td><strong>Reconnaissance</strong></td>
           <td>Custom page embeds the vulnerable route</td>
           <td>A submitted custom page's HTML contains an &lt;iframe&gt; targeting <code>/account/deactivate</code></td>
-          <td><%= rec === 1 ? '&#10003;' : '&#10007;' %></td>
+          <td><%= rec === 1 ? '✓' : '✗' %></td>
         </tr>
         <tr>
           <td><strong>Vulnerability Detection</strong></td>
           <td>Route loaded with credentials inside a frame</td>
           <td>The review bot's browser successfully loads <code>/account/deactivate</code> inside an iframe with its own live session</td>
-          <td><%= vuln === 1 ? '&#10003;' : '&#10007;' %></td>
+          <td><%= vuln === 1 ? '✓' : '✗' %></td>
         </tr>
         <tr>
           <td><strong>Exploitation</strong></td>
           <td>Framed click deactivated the subscription</td>
           <td>The review bot's documented click sequence lands on the real button through the overlay and the subscription flips off</td>
-          <td><%= expl === 1 ? '&#10003;' : '&#10007;' %></td>
+          <td><%= expl === 1 ? '✓' : '✗' %></td>
         </tr>
       </tbody>
     </table>
