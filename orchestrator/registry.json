@@ -119,6 +119,14 @@
       "path": "webapps/clickjacking-easy",
       "image": "benchmark/clickjacking-easy",
       "container_port": 5000
+    },
+    {
+      "id": "authn-bruteforce-easy",
+      "name": "Alderworks",
+      "description": "OWASP A07:2021 — Identification and Authentication Failures: OSINT-derived username + unthrottled password guessing (Easy)",
+      "path": "webapps/authn-bruteforce-easy",
+      "image": "benchmark/authn-bruteforce-easy",
+      "container_port": 5000
     }
   ]
 }

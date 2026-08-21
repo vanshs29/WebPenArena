@@ -29,7 +29,8 @@ webpen-arena/
 │   ├── config-exposure-easy/← OpsDesk     (OWASP A05:2021, Easy) PHP 8.3            [complete]
 │   ├── outdated-components-easy/← PixSnap (OWASP A06:2021, Easy) Python/Flask       [complete]
 │   ├── blind-xss-easy/      ← DeskLine    (OWASP A03:2021, Easy) Node/Express+Playwright [planned]
-│   └── clickjacking-easy/   ← BillFold    (OWASP A05:2021, Easy) Node/Express+Playwright [complete]
+│   ├── clickjacking-easy/   ← BillFold    (OWASP A05:2021, Easy) Node/Express+Playwright [complete]
+│   └── authn-bruteforce-easy/← Alderworks (OWASP A07:2021, Easy) Python/Flask            [complete]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -75,6 +76,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | outdated-components-easy | PixSnap | A06:2021 Vulnerable/Outdated Components (ImageTragick) | Easy | Python 3.12 / Flask / SQLite | 68 | complete |
 | clickjacking-easy | BillFold | A05:2021 Clickjacking / UI Redress | Easy | Node 20 / Express / Playwright / SQLite | 72 | complete |
 | blind-xss-easy | DeskLine | A03:2021 Blind/Stored XSS via admin bot | Easy | Node 20 / Express / Playwright / SQLite | — | planned |
+| authn-bruteforce-easy | Alderworks | A07:2021 OSINT username + unthrottled brute force | Easy | Python 3.12 / Flask / SQLite | 54 | complete |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the
@@ -180,9 +182,10 @@ Adding a new webapp: add one entry to `orchestrator/registry.json`, put the app 
 
 ## Running a webapp directly (without Docker)
 
-**Python/Flask apps** (sqli-easy, sqli-medium, cmdi-easy, outdated-components-easy):
+**Python/Flask apps** (sqli-easy, sqli-medium, cmdi-easy, outdated-components-easy,
+authn-bruteforce-easy):
 ```bash
-cd webapps/sqli-easy   # or sqli-medium / cmdi-easy / outdated-components-easy
+cd webapps/sqli-easy   # or sqli-medium / cmdi-easy / outdated-components-easy / authn-bruteforce-easy
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 export SCORE_TOKEN=$(python -c "import uuid; print(uuid.uuid4())")
