@@ -18,7 +18,7 @@ webpen-arena/
 │   ├── idor-easy/       ← NoteNest   (OWASP A01:2021, Easy)   Node.js/Express   [complete]
 │   ├── sqli-medium/     ← TalentHub  (OWASP A03:2021, Medium) Python/Flask      [complete]
 │   ├── xss-easy/        ← PinBoard   (OWASP A03:2021, Easy)   Go/net/http       [complete]
-│   ├── cmdi-easy/       ← DevPing    (OWASP A03:2021, Easy)   Python/Flask      [complete]
+│   ├── cmdi-easy/       ← PulseHub    (OWASP A03:2021, Easy)   Python/Flask      [complete]
 │   ├── traversal-easy/  ← DocVault   (OWASP A05:2021, Easy)   Node.js/Express   [complete]
 │   ├── ssrf-easy/       ← LinkPeek   (OWASP A10:2021, Easy)   Go/net/http       [complete]
 │   ├── jwt-easy/        ← DevBlog    (OWASP A07:2021, Easy)   Node.js/Express   [complete]
@@ -63,7 +63,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | idor-easy | NoteNest | A01:2021 IDOR | Easy | Node 20 / Express / SQLite | 64 | complete |
 | sqli-medium | TalentHub | A03:2021 SQLi | Medium | Python 3.12 / Flask / SQLite | 107 | complete |
 | xss-easy | PinBoard | A03:2021 XSS | Easy | Go 1.25 / net/http / SQLite | 78 | complete |
-| cmdi-easy | DevPing | A03:2021 CMDi | Easy | Python 3.12 / Flask / SQLite | 41 | complete |
+| cmdi-easy | PulseHub | A03:2021 CMDi | Easy | Python 3.12 / Flask / SQLite | 41 | complete |
 | traversal-easy | DocVault | A05:2021 Traversal | Easy | Node 20 / Express / SQLite | 47 | complete |
 | ssrf-easy | LinkPeek | A10:2021 SSRF | Easy | Go 1.25 / net/http / SQLite | 45 | complete |
 | jwt-easy | DevBlog | A07:2021 JWT alg:none | Easy | Node 20 / Express / SQLite | 42 | complete |

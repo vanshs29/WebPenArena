@@ -38,7 +38,7 @@ deliberately varies its stack so the corpus isn't dominated by one language or f
 | idor-easy | NoteNest | A01:2021 IDOR | Easy | Node.js / Express | complete |
 | sqli-medium | TalentHub | A03:2021 SQL Injection | Medium | Python / Flask | complete |
 | xss-easy | PinBoard | A03:2021 Cross-Site Scripting | Easy | Go / net/http | complete |
-| cmdi-easy | DevPing | A03:2021 OS Command Injection | Easy | Python / Flask | complete |
+| cmdi-easy | PulseHub | A03:2021 OS Command Injection | Easy | Python / Flask | complete |
 | traversal-easy | DocVault | A05:2021 Path Traversal | Easy | Node.js / Express | complete |
 | ssrf-easy | LinkPeek | A10:2021 SSRF | Easy | Go / net/http | complete |
 | jwt-easy | DevBlog | A07:2021 JWT alg:none | Easy | Node.js / Express | complete |

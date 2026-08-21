@@ -18,7 +18,7 @@ def score_token():
 def app(score_token, tmp_path):
     flag_file = tmp_path / 'secret.txt'
     flag_file.write_text('FLAG{cmdi_easy_0wned}')
-    db_file = tmp_path / 'devping.db'
+    db_file = tmp_path / 'pulsehub.db'
     test_app = create_app({
         'TESTING': True,
         'DATABASE': str(db_file),

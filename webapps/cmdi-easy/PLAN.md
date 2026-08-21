@@ -1,4 +1,4 @@
-# DevPing — Planning Document
+# PulseHub — Planning Document
 
 ## 1. Challenge Selection
 
@@ -44,7 +44,7 @@ The three conditions are independently detectable: an agent that goes straight t
 
 ### Application concept
 
-A minimal developer network diagnostics tool called **DevPing**. It lets users ping a host and
+A minimal developer network diagnostics tool called **PulseHub**. It lets users ping a host and
 do DNS lookups from a web UI. The app stores a history of recent results. It looks and behaves
 like a real internal sysadmin tool. The intentional vulnerability is in the ping route only.
 
@@ -148,7 +148,7 @@ CREATE TABLE config (
 );
 ```
 
-No `users` table. No JWT secret. DevPing has no authentication.
+No `users` table. No JWT secret. PulseHub has no authentication.
 
 ### Detection regexes
 
@@ -372,7 +372,7 @@ Target: **~50 tests**.
 def test_home_returns_html(client):
     resp = client.get('/')
     assert resp.status_code == 200
-    assert b'DevPing' in resp.data
+    assert b'PulseHub' in resp.data
 
 def test_api_results_returns_list(client):
     resp = client.get('/api/results')
@@ -693,7 +693,7 @@ Add to `orchestrator/registry.json`:
 ```json
 {
   "id": "cmdi-easy",
-  "name": "DevPing",
+  "name": "PulseHub",
   "description": "OWASP A03:2021 — OS Command Injection (Easy)",
   "path": "webapps/cmdi-easy",
   "image": "benchmark/cmdi-easy",
@@ -713,7 +713,7 @@ Add to `orchestrator/registry.json`:
 
 ### No authentication (easy tier)
 
-DevPing is a public-facing developer tool — no login required. This removes the need for a
+PulseHub is a public-facing developer tool — no login required. This removes the need for a
 `users` table, JWT handling, and an auth layer. It keeps the attack surface simple and the
 stage separation clean. Authentication would be appropriate for a medium-difficulty variant.
 

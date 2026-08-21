@@ -10,7 +10,7 @@
 | idor-easy | NoteNest | IDOR on notes API (OWASP A01, easy) | Node.js/Express/SQLite | 64 | 3000 |
 | sqli-medium | TalentHub | SQLi on hidden endpoint + filter bypass (OWASP A03, medium) | Python/Flask/SQLite | 107 | 5000 |
 | xss-easy | PinBoard | Stored XSS via public message board (OWASP A03, easy) | Go/net/http/SQLite | 78 | 8080 |
-| cmdi-easy | DevPing | OS command injection via ping tool (OWASP A03, easy) | Python/Flask/SQLite | 41 | 5000 |
+| cmdi-easy | PulseHub | OS command injection via ping tool (OWASP A03, easy) | Python/Flask/SQLite | 41 | 5000 |
 
 ### Planned (4 apps — PLAN.md written, not yet implemented)
 

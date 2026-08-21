@@ -4,7 +4,7 @@ from .conftest import FakePingResult
 def test_home_returns_html(client):
     resp = client.get('/')
     assert resp.status_code == 200
-    assert b'DevPing' in resp.data
+    assert b'PulseHub' in resp.data
 
 
 def test_api_results_returns_list(client):

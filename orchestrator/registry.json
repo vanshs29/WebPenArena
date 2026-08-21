@@ -34,7 +34,7 @@
     },
     {
       "id": "cmdi-easy",
-      "name": "DevPing",
+      "name": "PulseHub",
       "description": "OWASP A03:2021 — OS Command Injection (Easy)",
       "path": "webapps/cmdi-easy",
       "image": "benchmark/cmdi-easy",
