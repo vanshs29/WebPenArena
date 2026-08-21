@@ -90,7 +90,7 @@ def contact():
     return render_template('contact.html')
 
 
-@bp.route('/dev/login', methods=['GET'])
+@bp.route('/dev', methods=['GET'])
 def dev_login_form():
     db = get_db(current_app._get_current_object())
     _write_event_once(db, 'reconnaissance', 'hidden_endpoint_found')
@@ -98,7 +98,7 @@ def dev_login_form():
     return render_template('dev_login.html', error=None)
 
 
-@bp.route('/dev/login', methods=['POST'])
+@bp.route('/dev', methods=['POST'])
 def dev_login_submit():
     username = request.form.get('username', '')
     password = request.form.get('password', '')

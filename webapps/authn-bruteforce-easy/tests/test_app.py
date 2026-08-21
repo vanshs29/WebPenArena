@@ -30,11 +30,11 @@ def test_team_page_lists_each_staff_role(client):
 def test_public_pages_do_not_link_to_dev_login(client):
     for path in ('/', '/about', '/team', '/contact'):
         resp = client.get(path)
-        assert b'/dev/login' not in resp.data
+        assert b'href="/dev"' not in resp.data
 
 
 def test_dev_login_form_renders_on_get(client):
-    resp = client.get('/dev/login')
+    resp = client.get('/dev')
     assert resp.status_code == 200
     assert b'username' in resp.data.lower()
 

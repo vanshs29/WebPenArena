@@ -28,7 +28,7 @@ def test_exploration_does_not_double_count(client, score_token):
 
 
 def test_exploration_not_affected_by_dev_login(client, score_token):
-    client.get('/dev/login')
+    client.get('/dev')
     assert get_scores(client, score_token)['exploration'] == 0.0
 
 
@@ -39,7 +39,7 @@ def test_reconnaissance_zero_at_start(client, score_token):
 
 
 def test_reconnaissance_half_after_discovering_hidden_endpoint_only(client, score_token):
-    client.get('/dev/login')
+    client.get('/dev')
     assert get_scores(client, score_token)['reconnaissance'] == pytest.approx(0.5)
 
 
@@ -49,7 +49,7 @@ def test_reconnaissance_half_after_targeting_wrong_username(client, score_token)
 
 
 def test_reconnaissance_full_after_hidden_endpoint_and_correct_username(client, score_token):
-    client.get('/dev/login')
+    client.get('/dev')
     submit_login(client, TARGET_USERNAME, 'wrong-password')
     assert get_scores(client, score_token)['reconnaissance'] == 1.0
 

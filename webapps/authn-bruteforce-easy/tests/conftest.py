@@ -32,4 +32,4 @@ def get_scores(client, score_token):
 
 
 def submit_login(client, username, password):
-    return client.post('/dev/login', data={'username': username, 'password': password})
+    return client.post('/dev', data={'username': username, 'password': password})
