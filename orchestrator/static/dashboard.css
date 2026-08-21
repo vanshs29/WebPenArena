@@ -94,6 +94,7 @@ body {
 .btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: 0.5; cursor: default; transform: none; }
 .btn.is-disabled { opacity: 0.5; cursor: default; pointer-events: none; }
+.btn[hidden] { display: none; }
 
 .btn-primary  { background: var(--metric-exploration); color: #fff; }
 .btn-warn     { background: var(--status-warning); color: #1a1200; }
@@ -112,7 +113,6 @@ body {
 .btn-ghost {
   background: transparent;
   color: var(--text-muted);
-  margin-left: auto;
 }
 .btn-ghost:not(:disabled):hover { color: var(--text-secondary); }
 
@@ -273,7 +273,10 @@ body {
 
 /* ---------------------------------------------------------------- footer / events */
 
-.app-card-footer { display: flex; align-items: center; gap: 8px; }
+.app-card-footer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; row-gap: 6px; }
+
+.footer-secondary { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.btn-rebuild { padding: 5px 8px; font-size: 14px; line-height: 1; }
 
 .event-count { color: var(--text-muted); }
 .chev { display: inline-block; transition: transform 0.15s ease; }

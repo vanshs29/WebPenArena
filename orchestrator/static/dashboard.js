@@ -47,6 +47,7 @@ function buildCard(app) {
   }
 
   node.querySelector(".btn-launch").addEventListener("click", (e) => withButton(e.target, () => launchOne(app.id)));
+  node.querySelector(".btn-rebuild").addEventListener("click", (e) => withButton(e.target, () => rebuildOne(app.id)));
   node.querySelector(".btn-reset").addEventListener("click", () => resetOne(app.id));
   node.querySelector(".btn-stop").addEventListener("click", () => stopOne(app.id));
   node.querySelector(".btn-events").addEventListener("click", () => {
@@ -162,6 +163,11 @@ async function launchOne(id) {
   refresh();
 }
 
+async function rebuildOne(id) {
+  await fetch(`/api/apps/${id}/rebuild`, { method: "POST" });
+  refresh();
+}
+
 async function resetOne(id) {
   if (!confirm(`Reset scoring state for "${id}"? This clears its events and re-seeds app data.`)) return;
   await fetch(`/api/apps/${id}/reset`, { method: "POST" });
@@ -176,6 +182,10 @@ async function stopOne(id) {
 
 document.getElementById("btn-launch-all").addEventListener("click", (e) => {
   withButton(e.target, () => fetch("/api/launch-all", { method: "POST" }));
+});
+
+document.getElementById("btn-rebuild-all").addEventListener("click", (e) => {
+  withButton(e.target, () => fetch("/api/rebuild-all", { method: "POST" }));
 });
 
 document.getElementById("btn-reset-all").addEventListener("click", (e) => {

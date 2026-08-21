@@ -109,6 +109,26 @@ def create_app(apps: list[dict]) -> Flask:
             return jsonify({"ok": False, "error": "docker run failed"}), 500
         return jsonify({"ok": True, "info": info})
 
+    @app.post("/api/rebuild-all")
+    def api_rebuild_all():
+        from orchestrator import build_image_data
+
+        results = {}
+        for reg_app in apps:
+            results[reg_app["id"]] = build_image_data(reg_app)
+        return jsonify({"results": results})
+
+    @app.post("/api/apps/<app_id>/rebuild")
+    def api_rebuild_one(app_id):
+        from orchestrator import build_image_data
+
+        reg_app = next((a for a in apps if a["id"] == app_id), None)
+        if reg_app is None:
+            return jsonify({"ok": False, "error": "unknown app"}), 404
+
+        ok = build_image_data(reg_app)
+        return jsonify({"ok": ok})
+
     @app.post("/api/apps/<app_id>/reset")
     def api_reset_one(app_id):
         row = _find_running(apps, app_id)

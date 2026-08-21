@@ -14,6 +14,7 @@
     </div>
     <div class="actions">
       <button id="btn-launch-all" class="btn btn-primary">Launch all</button>
+      <button id="btn-rebuild-all" class="btn btn-outline">Rebuild all</button>
       <button id="btn-reset-all" class="btn btn-warn">Reset all</button>
       <button id="btn-stop-all" class="btn btn-danger">Stop all</button>
     </div>
@@ -39,7 +40,10 @@
         <button class="btn btn-small btn-primary btn-launch">Launch</button>
         <button class="btn btn-small btn-outline btn-reset">Reset</button>
         <button class="btn btn-small btn-outline btn-stop">Stop</button>
-        <button class="btn btn-small btn-ghost btn-events">Events <span class="event-count"></span> <span class="chev">▾</span></button>
+        <div class="footer-secondary">
+          <button class="btn btn-small btn-ghost btn-rebuild" title="Rebuild this app's image">⟳</button>
+          <button class="btn btn-small btn-ghost btn-events">Events <span class="event-count"></span> <span class="chev">▾</span></button>
+        </div>
       </div>
       <ul class="events-list"></ul>
     </article>
