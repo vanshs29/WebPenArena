@@ -80,17 +80,20 @@ body {
 
 .btn {
   appearance: none;
+  display: inline-block;
   border: 1px solid transparent;
   border-radius: 8px;
   padding: 9px 16px;
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
+  text-decoration: none;
   cursor: pointer;
   transition: opacity 0.15s ease, transform 0.05s ease;
 }
 .btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+.btn.is-disabled { opacity: 0.5; cursor: default; pointer-events: none; }
 
 .btn-primary  { background: var(--metric-exploration); color: #fff; }
 .btn-warn     { background: var(--status-warning); color: #1a1200; }
@@ -200,6 +203,13 @@ body {
   font-size: 12px;
   color: var(--text-muted);
   margin: 0;
+}
+
+.app-port {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  margin: 4px 0 0;
 }
 
 .status-pill {

@@ -42,6 +42,7 @@ def create_app(apps: list[dict]) -> Flask:
                     "status": None,
                     "running": False,
                     "score": None,
+                    "score_url": None,
                 })
                 continue
 
@@ -55,6 +56,7 @@ def create_app(apps: list[dict]) -> Flask:
                 "status": row["status"],
                 "running": True,
                 "score": score,
+                "score_url": f"http://localhost:{row['host_port']}/score/{row['token']}",
             })
 
         agg = scoring.aggregate_scores([{"app": e, "score": e["score"]} for e in entries if e["running"]])
@@ -70,8 +72,13 @@ def create_app(apps: list[dict]) -> Flask:
     def api_launch_all():
         from orchestrator import image_exists, build_image_data, run_container_data
 
-        launched, errors = [], []
+        already_running = {row["app"]["id"] for row in scoring.discover_running_apps(apps)}
+
+        launched, errors, skipped = [], [], []
         for reg_app in apps:
+            if reg_app["id"] in already_running:
+                skipped.append(reg_app["id"])
+                continue
             if not image_exists(reg_app["image"]):
                 if not build_image_data(reg_app):
                     errors.append({"id": reg_app["id"], "error": "image build failed"})
@@ -82,7 +89,25 @@ def create_app(apps: list[dict]) -> Flask:
             else:
                 launched.append(info)
 
-        return jsonify({"launched": launched, "errors": errors})
+        return jsonify({"launched": launched, "errors": errors, "skipped": skipped})
+
+    @app.post("/api/apps/<app_id>/launch")
+    def api_launch_one(app_id):
+        from orchestrator import image_exists, build_image_data, run_container_data
+
+        reg_app = next((a for a in apps if a["id"] == app_id), None)
+        if reg_app is None:
+            return jsonify({"ok": False, "error": "unknown app"}), 404
+        if _find_running(apps, app_id) is not None:
+            return jsonify({"ok": False, "error": "already running"}), 409
+
+        if not image_exists(reg_app["image"]) and not build_image_data(reg_app):
+            return jsonify({"ok": False, "error": "image build failed"}), 500
+
+        info = run_container_data(reg_app)
+        if info is None:
+            return jsonify({"ok": False, "error": "docker run failed"}), 500
+        return jsonify({"ok": True, "info": info})
 
     @app.post("/api/apps/<app_id>/reset")
     def api_reset_one(app_id):

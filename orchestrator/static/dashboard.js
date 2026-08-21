@@ -46,6 +46,7 @@ function buildCard(app) {
     meters.appendChild(row);
   }
 
+  node.querySelector(".btn-launch").addEventListener("click", (e) => withButton(e.target, () => launchOne(app.id)));
   node.querySelector(".btn-reset").addEventListener("click", () => resetOne(app.id));
   node.querySelector(".btn-stop").addEventListener("click", () => stopOne(app.id));
   node.querySelector(".btn-events").addEventListener("click", () => {
@@ -60,6 +61,7 @@ function buildCard(app) {
 function patchCard(node, app) {
   node.querySelector(".app-name").textContent = app.name;
   node.querySelector(".app-desc").textContent = app.description;
+  node.querySelector(".app-port").textContent = app.running && app.host_port ? `Port ${app.host_port}` : "";
 
   const pill = node.querySelector(".status-pill");
   const score = app.score;
@@ -102,10 +104,21 @@ function patchCard(node, app) {
     list.appendChild(li);
   }
 
+  const scoreboardLink = node.querySelector(".btn-scoreboard");
+  if (app.score_url) {
+    scoreboardLink.href = app.score_url;
+    scoreboardLink.classList.remove("is-disabled");
+  } else {
+    scoreboardLink.removeAttribute("href");
+    scoreboardLink.classList.add("is-disabled");
+  }
+
+  const launchBtn = node.querySelector(".btn-launch");
   const resetBtn = node.querySelector(".btn-reset");
   const stopBtn = node.querySelector(".btn-stop");
-  resetBtn.disabled = !app.running;
-  stopBtn.disabled = !app.running;
+  launchBtn.hidden = app.running;
+  resetBtn.hidden = !app.running;
+  stopBtn.hidden = !app.running;
 }
 
 function renderApps(apps) {
@@ -142,6 +155,11 @@ async function withButton(btn, fn) {
     btn.textContent = original;
     refresh();
   }
+}
+
+async function launchOne(id) {
+  await fetch(`/api/apps/${id}/launch`, { method: "POST" });
+  refresh();
 }
 
 async function resetOne(id) {
