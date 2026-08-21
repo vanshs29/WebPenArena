@@ -13,7 +13,6 @@ import os
 import socket
 import subprocess
 import sys
-import time
 import uuid
 from pathlib import Path
 
@@ -21,8 +20,6 @@ try:
     import questionary
 except ImportError:
     sys.exit("Missing dependency: pip install questionary")
-
-import scoring
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -50,7 +47,7 @@ def find_free_port(start: int = 8000, end: int = 9000) -> int:
                 return port
             except OSError:
                 continue
-    raise RuntimeError("No free port found in range 8000–9000")
+    raise RuntimeError(f"No free port found in range {start}–{end}")
 
 
 # ---------------------------------------------------------------------------
@@ -65,6 +62,18 @@ def image_exists(image: str) -> bool:
     return result.returncode == 0
 
 
+def build_image_data(app: dict) -> bool:
+    """Build `app`'s image with no streamed output to the caller's stdout/stderr —
+    used by the web dashboard, which must not leak subprocess output to the
+    terminal. `build_image()` is the CLI-facing wrapper that streams it."""
+    context = str(REPO_ROOT / app["path"])
+    result = subprocess.run(
+        ["docker", "build", "-t", app["image"], context],
+        capture_output=True,
+    )
+    return result.returncode == 0
+
+
 def build_image(app: dict) -> bool:
     context = str(REPO_ROOT / app["path"])
     print(f"\n[build] docker build -t {app['image']} {context}\n")
@@ -74,7 +83,10 @@ def build_image(app: dict) -> bool:
     return result.returncode == 0
 
 
-def run_container(app: dict) -> None:
+def run_container_data(app: dict) -> dict | None:
+    """Launch a container for `app`, returning launch info as a dict (no printing)
+    or None on failure. Used by both the CLI (`run_container`, which prints this)
+    and the web dashboard (which renders it in the browser instead)."""
     host_port = find_free_port()
     token = str(uuid.uuid4())
     short_id = uuid.uuid4().hex[:8]
@@ -87,19 +99,34 @@ def run_container(app: dict) -> None:
         "-e", f"SCORE_TOKEN={token}",
         app["image"],
     ]
-    print(f"\n[launch] {' '.join(cmd)}\n")
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
-        print(f"[error] {result.stderr.strip()}")
+        return None
+
+    return {
+        "id": app["id"],
+        "name": app["name"],
+        "description": app["description"],
+        "container_name": container_name,
+        "host_port": host_port,
+        "token": token,
+        "score_url": f"http://localhost:{host_port}/score/{token}",
+    }
+
+
+def run_container(app: dict) -> None:
+    print(f"\n[launch] starting {app['name']}…\n")
+    info = run_container_data(app)
+    if info is None:
+        print("[error] docker run failed")
         return
 
-    score_url = f"http://localhost:{host_port}/score/{token}"
     print("=" * 60)
-    print(f"  App          : {app['name']} ({app['description']})")
-    print(f"  Container    : {container_name}")
-    print(f"  Host port    : {host_port}")
-    print(f"  Score URL    : {score_url}")
-    print(f"  Score token  : {token}")
+    print(f"  App          : {info['name']} ({info['description']})")
+    print(f"  Container    : {info['container_name']}")
+    print(f"  Host port    : {info['host_port']}")
+    print(f"  Score URL    : {info['score_url']}")
+    print(f"  Score token  : {info['token']}")
     print("=" * 60)
 
 
@@ -120,6 +147,14 @@ def get_running_containers() -> list[dict]:
         if len(parts) == 3:
             rows.append({"name": parts[0], "ports": parts[1], "status": parts[2]})
     return rows
+
+
+def stop_container_data(name: str) -> bool:
+    """Stop+remove `name` with no streamed output — used by the web dashboard.
+    `stop_container()` is the CLI-facing wrapper that prints progress."""
+    stop_ok = subprocess.run(["docker", "stop", name], capture_output=True).returncode == 0
+    rm_ok = subprocess.run(["docker", "rm", name], capture_output=True).returncode == 0
+    return stop_ok and rm_ok
 
 
 def stop_container(name: str) -> None:
@@ -266,126 +301,12 @@ def action_stop_all() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Benchmark mode: scoreboard, single-app score, reset
+# Benchmark mode: web dashboard
 # ---------------------------------------------------------------------------
 
-def choose_running_app(apps: list[dict], prompt: str = "Which running app?") -> dict | None:
-    rows = scoring.discover_running_apps(apps)
-    if not rows:
-        print("\n[info] No benchmark containers are currently running.")
-        return None
-    choices = {f"{r['app']['name']}  ({r['container_name']})": r for r in rows}
-    answer = questionary.select(prompt, choices=list(choices.keys())).ask()
-    if answer is None:
-        return None
-    return choices[answer]
-
-
-def action_view_scoreboard(apps: list[dict]) -> None:
-    if not scoring.discover_running_apps(apps):
-        print("\n[info] No benchmark containers are currently running.")
-        return
-
-    print("\n[scoreboard] Live view — Ctrl+C to return to the menu.")
-    try:
-        while True:
-            rows = scoring.discover_running_apps(apps)
-            if not rows:
-                print("\n[info] No benchmark containers are currently running.")
-                return
-
-            for row in rows:
-                row["score"] = scoring.fetch_score(row["host_port"], row["token"])
-            agg = scoring.aggregate_scores(rows)
-
-            print("\033[2J\033[H", end="")
-            print(f"Benchmark scoreboard — {agg['n_responded']}/{agg['n_total']} apps responding")
-            print("=" * 70)
-            for metric in scoring.METRICS:
-                print(f"  {metric:<24}: {agg['totals'][metric]}")
-            print("=" * 70)
-
-            print(f"\n{'APP':<24} {'EXPLORE':<9} {'RECON':<9} {'VULNDET':<9} {'EXPLOIT':<9} STATUS")
-            print("-" * 70)
-            for row in rows:
-                app = row["app"]
-                score = row["score"]
-                if score is None:
-                    print(f"{app['id']:<24} {'-':<9} {'-':<9} {'-':<9} {'-':<9} not responding")
-                    continue
-                s = score["scores"]
-                print(
-                    f"{app['id']:<24} "
-                    f"{s.get('exploration', 0):<9.2f} "
-                    f"{s.get('reconnaissance', 0):<9.2f} "
-                    f"{s.get('vulnerability_detection', 0):<9.2f} "
-                    f"{s.get('exploitation', 0):<9.2f} "
-                    f"{row['status']}"
-                )
-
-            time.sleep(3)
-    except KeyboardInterrupt:
-        print("\n[scoreboard] Returning to menu.")
-
-
-def action_view_app_score(apps: list[dict]) -> None:
-    row = choose_running_app(apps, "Which app's score to view?")
-    if row is None:
-        return
-
-    score = scoring.fetch_score(row["host_port"], row["token"])
-    if score is None:
-        print(f"\n[warn] {row['app']['name']} did not respond to the score request.")
-        return
-
-    print(f"\n{'=' * 60}")
-    print(f"  App        : {row['app']['name']} ({row['app']['description']})")
-    print(f"  Task id    : {score.get('task_id')}")
-    print(f"{'=' * 60}")
-    for metric in scoring.METRICS:
-        print(f"  {metric:<24}: {score['scores'].get(metric, 0):.2f}")
-    print(f"{'=' * 60}")
-
-    events = score.get("events", [])
-    print(f"\n  Recent events ({len(events)} total, newest first):")
-    for event in events[:10]:
-        print(f"    - {event}")
-
-
-def action_reset_scores(apps: list[dict]) -> None:
-    rows = scoring.discover_running_apps(apps)
-    if not rows:
-        print("\n[info] No benchmark containers are currently running.")
-        return
-
-    all_label = "All running apps"
-    labels = {f"{r['app']['name']}  ({r['container_name']})": r for r in rows}
-    choices = [all_label] + list(labels.keys())
-
-    answers = questionary.checkbox("Select app(s) to reset:", choices=choices).ask()
-    if not answers:
-        print("[abort] Nothing selected.")
-        return
-
-    targets = rows if all_label in answers else [labels[a] for a in answers if a != all_label]
-
-    confirmed = questionary.confirm(
-        f"Reset {len(targets)} app(s)? This clears scoring state and re-seeds app data.",
-        default=False,
-    ).ask()
-    if not confirmed:
-        print("[abort] Nothing reset.")
-        return
-
-    for row in targets:
-        ok = scoring.reset_score(row["host_port"], row["token"])
-        status = "OK" if ok else "FAILED"
-        print(f"[reset] {row['app']['name']} → {status}")
-
-
-def action_benchmark_mode(apps: list[dict]) -> None:
-    action_launch_all(apps)
-    action_view_scoreboard(apps)
+def action_benchmark_mode_web(apps: list[dict]) -> None:
+    import dashboard
+    dashboard.run_dashboard(apps)
 
 
 # ---------------------------------------------------------------------------
@@ -395,10 +316,7 @@ def action_benchmark_mode(apps: list[dict]) -> None:
 MENU = {
     "Launch a web app": action_launch,
     "Launch all web apps": action_launch_all,
-    "Benchmark mode (launch all + live scoreboard)": action_benchmark_mode,
-    "View benchmark scoreboard": action_view_scoreboard,
-    "View single app score": action_view_app_score,
-    "Reset app score(s)": action_reset_scores,
+    "Benchmark mode (web dashboard)": action_benchmark_mode_web,
     "Rebuild image(s)": action_rebuild,
     "Rebuild and launch a web app": action_rebuild_and_launch,
     "Show running apps": action_show_running,

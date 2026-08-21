@@ -3,6 +3,15 @@
 **Status: implemented.** This doc is the design reference `orchestrator.py` and `scoring.py`
 were built against; see both files for the actual code.
 
+**Update:** the terminal-based scoreboard/single-app-view/reset actions described in "New menu
+actions" below (§2) were replaced by a Flask web dashboard (`orchestrator/dashboard.py` +
+`orchestrator/templates/`/`orchestrator/static/`) after the user found the terminal view
+unpleasant to use and asked for a proper web UI with no terminal output driving it. §2, §3, §4,
+"Files touched", and "Verification" below describe the original terminal design and are kept for
+history; the current behavior is described in the new "Web dashboard (supersedes §2–§4)" section
+that follows them. `scoring.py` itself (§1) is unchanged — it was written framework-agnostic
+specifically so this swap wouldn't require touching it, per "Future direction" below.
+
 ## Goal
 
 `orchestrator.py` currently only builds, launches, and stops Docker containers. Every one of the
@@ -146,6 +155,60 @@ scoreboard does every refresh tick.
 
 No changes needed to any web app — the score/reset endpoints and JSON shape are already
 standardized across the corpus.
+
+---
+
+## Web dashboard (supersedes §2–§4)
+
+`orchestrator/dashboard.py` is a Flask app, launched from the CLI's single
+`"Benchmark mode (web dashboard)"` menu item (`action_benchmark_mode_web`, replacing the old
+`action_benchmark_mode` + the three separate scoreboard/view/reset menu items — those three no
+longer exist as menu items, their functionality moved into the dashboard's buttons). It binds to
+`127.0.0.1` on a free port (`orchestrator.find_free_port()`), auto-opens the default browser via
+`webbrowser.open()`, and blocks in the foreground until Ctrl+C (same contract the old
+`action_view_scoreboard` had — Ctrl+C returns cleanly to the CLI menu).
+
+Werkzoug's startup banner and per-request access log are both suppressed
+(`flask.cli.show_server_banner` no-op'd, `logging.getLogger("werkzeug")` set to `ERROR`) so the
+terminal only ever prints one line — the dashboard URL — for the whole session. This is a
+deliberate, documented exception to "completely removing terminal output": it's a safety net in
+case `webbrowser.open()` silently fails (headless/SSH session with no `DISPLAY`), not a
+scoreboard.
+
+Routes, all built directly on top of `scoring.py`'s existing framework-agnostic functions (no
+scoring/Docker logic lives in `dashboard.py` itself):
+
+- `GET /` — renders `templates/dashboard.html` (a static shell; all data loads client-side).
+- `GET /api/scoreboard` — one JSON payload combining `scoring.discover_running_apps()` +
+  `scoring.fetch_score()` per app + `scoring.aggregate_scores()`. Includes every *registered*
+  app, not just running ones (`score: null` / `running: false` for anything not launched), so the
+  frontend renders the full registry in one request.
+- `POST /api/launch-all` — same build-missing-then-launch logic `action_launch_all` used, via a
+  new `orchestrator.run_container_data()` (the non-printing half `run_container()` was split
+  into, so the CLI's `run_container()` keeps printing while the dashboard gets the same launch
+  info back as JSON instead).
+- `POST /api/apps/<id>/reset`, `POST /api/reset-all`, `POST /api/apps/<id>/stop`,
+  `POST /api/stop-all` — thin wrappers over `scoring.reset_score()` / `orchestrator.stop_container()`,
+  keyed by registry `id` (not the container's randomly-suffixed name) for stable URLs.
+
+Frontend (`templates/dashboard.html`, `static/dashboard.css`, `static/dashboard.js`): a card per
+registered app with a status pill and 4 metric meters (Exploration/Reconnaissance/Vulnerability
+Detection/Exploitation), plus aggregate stat tiles at the top and Launch-all/Reset-all/Stop-all
+buttons; per-card Reset/Stop buttons and a collapsible recent-events list. `dashboard.js` polls
+`/api/scoreboard` every 2s and patches the DOM in place (no full reload/flicker, scroll position
+and open event-lists survive a refresh tick). Colors, meter/stat-tile specs, and the categorical
+palette (one fixed hue per metric, validated with the `dataviz` skill's
+`scripts/validate_palette.js`) follow the same custom-CSS-properties + `prefers-color-scheme`
+approach as `webapps/bizlogic-easy/app/globals.css`, rather than the Bootstrap-CDN convention
+used by each app's own `score_dashboard.html` — this is a purpose-built aggregate view, not a
+per-app dashboard, so it isn't bound by that convention.
+
+New dependency: `flask>=3.0` added to `orchestrator/requirements.txt` alongside `questionary` and
+`requests`.
+
+Everyday CLI actions (`Launch a web app`, `Rebuild image(s)`, `Rebuild and launch`, `Show running
+apps`, `Stop a running app`, `Stop all running apps`) are unchanged — only benchmark mode itself
+moved to the web, by explicit scope decision.
 
 ---
 

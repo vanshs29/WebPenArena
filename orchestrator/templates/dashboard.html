@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Benchmark Scoreboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-title">
+      <h1>Benchmark Scoreboard</h1>
+      <span class="status-badge" id="status-badge">–</span>
+    </div>
+    <div class="actions">
+      <button id="btn-launch-all" class="btn btn-primary">Launch all</button>
+      <button id="btn-reset-all" class="btn btn-warn">Reset all</button>
+      <button id="btn-stop-all" class="btn btn-danger">Stop all</button>
+    </div>
+  </header>
+
+  <section class="totals" id="totals" aria-label="Aggregate scores"></section>
+
+  <main class="app-grid" id="app-grid" aria-label="App scores"></main>
+
+  <template id="tpl-app-card">
+    <article class="app-card">
+      <div class="app-card-header">
+        <div>
+          <h2 class="app-name"></h2>
+          <p class="app-desc"></p>
+        </div>
+        <span class="status-pill"></span>
+      </div>
+      <div class="meters"></div>
+      <div class="app-card-footer">
+        <button class="btn btn-small btn-outline btn-reset">Reset</button>
+        <button class="btn btn-small btn-outline btn-stop">Stop</button>
+        <button class="btn btn-small btn-ghost btn-events">Events <span class="event-count"></span> <span class="chev">▾</span></button>
+      </div>
+      <ul class="events-list"></ul>
+    </article>
+  </template>
+
+  <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>
