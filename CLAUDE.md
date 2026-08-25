@@ -180,6 +180,11 @@ python orchestrator/orchestrator.py
 Adding a new webapp: add one entry to `orchestrator/registry.json`, put the app under
 `webapps/<id>/`, and make sure its Dockerfile is present.
 
+**Known issues / proposed improvements:** see `orchestrator/ORCHESTRATOR_IMPROVEMENTS.md`. The
+dashboard-blocks-during-build issue is fixed (`threaded=True` added 25 August 2026); build
+failures are still silently swallowed with no stderr surfaced, and four other lower-priority
+items remain proposed but not built.
+
 ---
 
 ## Running a webapp directly (without Docker)
