@@ -1,7 +1,7 @@
 import pytest
 from app import create_app
 
-REAL_PASSWORD = 'Welcome123!'
+REAL_PASSWORD = 'trustno1'
 TARGET_USERNAME = 'mito'
 
 
