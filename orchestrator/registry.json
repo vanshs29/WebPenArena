@@ -127,6 +127,14 @@
       "path": "webapps/authn-bruteforce-easy",
       "image": "benchmark/authn-bruteforce-easy",
       "container_port": 5000
+    },
+    {
+      "id": "mass-assignment-easy",
+      "name": "Crewsheet",
+      "description": "OWASP A01:2021 — Broken Access Control: mass assignment on the profile-update endpoint allows self-escalation to admin (Easy)",
+      "path": "webapps/mass-assignment-easy",
+      "image": "benchmark/mass-assignment-easy",
+      "container_port": 5000
     }
   ]
 }

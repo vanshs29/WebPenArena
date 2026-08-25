@@ -30,7 +30,8 @@ webpen-arena/
 │   ├── outdated-components-easy/← PixSnap (OWASP A06:2021, Easy) Python/Flask       [complete]
 │   ├── blind-xss-easy/      ← DeskLine    (OWASP A03:2021, Easy) Node/Express+Playwright [planned]
 │   ├── clickjacking-easy/   ← BillFold    (OWASP A05:2021, Easy) Node/Express+Playwright [complete]
-│   └── authn-bruteforce-easy/← Alderworks (OWASP A07:2021, Easy) Python/Flask            [complete]
+│   ├── authn-bruteforce-easy/← Alderworks (OWASP A07:2021, Easy) Python/Flask            [complete]
+│   └── mass-assignment-easy/← Crewsheet   (OWASP A01:2021, Easy) Ruby/Sinatra            [complete]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -77,6 +78,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | clickjacking-easy | BillFold | A05:2021 Clickjacking / UI Redress | Easy | Node 20 / Express / Playwright / SQLite | 72 | complete |
 | blind-xss-easy | DeskLine | A03:2021 Blind/Stored XSS via admin bot | Easy | Node 20 / Express / Playwright / SQLite | — | planned |
 | authn-bruteforce-easy | Alderworks | A07:2021 OSINT username + unthrottled brute force | Easy | Python 3.12 / Flask / SQLite | 54 | complete |
+| mass-assignment-easy | Crewsheet | A01:2021 Mass assignment → self-escalation to admin | Easy | Ruby 3.3 / Sinatra / SQLite | 55 | complete |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the
@@ -229,12 +231,26 @@ export SCORE_TOKEN=$(python3 -c "import uuid; print(uuid.uuid4())")
 PATH=$PATH:$HOME/go/bin go run .
 ```
 
-**Ruby apps** (debug-easy):
+**Ruby apps** (debug-easy, mass-assignment-easy):
 ```bash
-cd webapps/debug-easy
+cd webapps/debug-easy   # or mass-assignment-easy
 bundle install
 SCORE_TOKEN=$(ruby -e "require 'securerandom'; puts SecureRandom.uuid") bundle exec ruby run.rb
 ```
+This sandbox has no local Ruby interpreter at all (`ruby`/`bundle`/`gem` all unresolved on
+`PATH`), unlike the PHP/Java cases above where the runtime is present but a specific tool is
+missing. `mass-assignment-easy` (Crewsheet) was developed and TDD'd entirely inside
+`ruby:3.3-slim` Docker containers instead: a small `massassign-dev` image
+(`ruby:3.3-slim` + `build-essential` + `libsqlite3-dev`, no Gemfile baked in) was built once,
+then every `bundle install`/`bundle exec rspec` cycle ran as
+`docker run --rm -v "$(pwd)":/app -v massassign-bundle-cache:/usr/local/bundle -w /app
+massassign-dev bash -c "..."`, with a named Docker volume (`massassign-bundle-cache`) mounted
+at `/usr/local/bundle` so gems persist across runs instead of reinstalling every time. Both
+`bcrypt` and `sqlite3` compiled cleanly from source in that image with no extra system
+packages beyond `build-essential`/`libsqlite3-dev` — resolving the open question `mass-
+assignment-easy/PLAN.md` §8 flagged about the `bcrypt` gem's native extension on this stack.
+The same container-based approach is the fallback for any future Ruby app if a local
+interpreter still isn't available.
 
 **PHP apps** (config-exposure-easy):
 ```bash
