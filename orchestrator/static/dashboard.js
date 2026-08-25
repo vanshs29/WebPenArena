@@ -5,19 +5,26 @@ const METRICS = [
   { key: "exploitation", cls: "exploitation", label: "Exploitation" },
 ];
 
+const totalsAllEl = document.getElementById("totals-all");
 const totalsEl = document.getElementById("totals");
+const totalsTierHeadingEl = document.getElementById("totals-tier-heading");
 const gridEl = document.getElementById("app-grid");
+const emptyTierEl = document.getElementById("empty-tier");
 const statusBadgeEl = document.getElementById("status-badge");
 const cardTpl = document.getElementById("tpl-app-card");
+const tabButtons = document.querySelectorAll("#tier-tabs .tab");
 
 const cardsById = new Map();
+
+let latestData = null;
+let activeTier = "easy";
 
 function fmt(n) {
   return Number(n ?? 0).toFixed(2);
 }
 
-function renderTotals(totals, nResponded, nTotal) {
-  totalsEl.innerHTML = "";
+function renderTotals(el, totals) {
+  el.innerHTML = "";
   for (const m of METRICS) {
     const tile = document.createElement("div");
     tile.className = "stat-tile";
@@ -25,14 +32,45 @@ function renderTotals(totals, nResponded, nTotal) {
       <div class="label"><span class="dot dot-${m.cls}"></span>${m.label}</div>
       <div class="value">${totals[m.key] ?? "0.00 / 0"}</div>
     `;
-    totalsEl.appendChild(tile);
+    el.appendChild(tile);
   }
-  statusBadgeEl.textContent = `${nResponded}/${nTotal} apps responding`;
+}
+
+function renderTabCounts(apps) {
+  const counts = { easy: 0, medium: 0, hard: 0 };
+  for (const app of apps) {
+    if (app.difficulty in counts) counts[app.difficulty]++;
+  }
+  for (const btn of tabButtons) {
+    const tier = btn.dataset.tier;
+    btn.querySelector(".tab-count").textContent = `(${counts[tier]})`;
+  }
+}
+
+function setActiveTier(tier) {
+  activeTier = tier;
+  gridEl.dataset.activeTier = tier;
+  for (const btn of tabButtons) {
+    btn.setAttribute("aria-selected", String(btn.dataset.tier === tier));
+  }
+  if (latestData) applyTier();
+}
+
+function applyTier() {
+  const tierTotals = latestData.totals_by_difficulty?.[activeTier];
+  if (tierTotals) {
+    renderTotals(totalsEl, tierTotals.totals);
+  }
+  totalsTierHeadingEl.textContent = activeTier[0].toUpperCase() + activeTier.slice(1);
+  const tierHasApps = latestData.apps.some((a) => a.difficulty === activeTier);
+  emptyTierEl.hidden = tierHasApps;
+  gridEl.hidden = !tierHasApps;
 }
 
 function buildCard(app) {
   const node = cardTpl.content.firstElementChild.cloneNode(true);
   node.dataset.id = app.id;
+  node.dataset.difficulty = app.difficulty;
 
   const meters = node.querySelector(".meters");
   for (const m of METRICS) {
@@ -138,8 +176,12 @@ async function refresh() {
   try {
     const res = await fetch("/api/scoreboard");
     const data = await res.json();
-    renderTotals(data.totals, data.n_responded, data.n_total);
+    latestData = data;
+    renderTotals(totalsAllEl, data.totals);
+    statusBadgeEl.textContent = `${data.n_responded}/${data.n_total} apps responding`;
+    renderTabCounts(data.apps);
     renderApps(data.apps);
+    applyTier();
   } catch (e) {
     statusBadgeEl.textContent = "dashboard offline?";
   }
@@ -179,6 +221,11 @@ async function stopOne(id) {
   await fetch(`/api/apps/${id}/stop`, { method: "POST" });
   refresh();
 }
+
+for (const btn of tabButtons) {
+  btn.addEventListener("click", () => setActiveTier(btn.dataset.tier));
+}
+gridEl.dataset.activeTier = activeTier;
 
 document.getElementById("btn-launch-all").addEventListener("click", (e) => {
   withButton(e.target, () => fetch("/api/launch-all", { method: "POST" }));

@@ -20,9 +20,24 @@
     </div>
   </header>
 
-  <section class="totals" id="totals" aria-label="Aggregate scores"></section>
+  <div class="totals-block">
+    <h2 class="totals-heading">All tiers</h2>
+    <section class="totals" id="totals-all" aria-label="Aggregate scores across all tiers"></section>
+  </div>
+
+  <nav class="tabs" id="tier-tabs" role="tablist" aria-label="Difficulty tiers">
+    <button class="tab" data-tier="easy" role="tab" aria-selected="true">Easy <span class="tab-count"></span></button>
+    <button class="tab" data-tier="medium" role="tab" aria-selected="false">Medium <span class="tab-count"></span></button>
+    <button class="tab" data-tier="hard" role="tab" aria-selected="false">Hard <span class="tab-count"></span></button>
+  </nav>
+
+  <div class="totals-block">
+    <h2 class="totals-heading" id="totals-tier-heading">Easy</h2>
+    <section class="totals" id="totals" aria-label="Aggregate scores for the selected tier"></section>
+  </div>
 
   <main class="app-grid" id="app-grid" aria-label="App scores"></main>
+  <p class="empty-state" id="empty-tier" hidden>No apps in this tier yet.</p>
 
   <template id="tpl-app-card">
     <article class="app-card">

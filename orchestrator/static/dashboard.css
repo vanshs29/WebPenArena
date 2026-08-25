@@ -116,13 +116,59 @@ body {
 }
 .btn-ghost:not(:disabled):hover { color: var(--text-secondary); }
 
+/* ---------------------------------------------------------------- tabs */
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.tab {
+  appearance: none;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.tab:hover { color: var(--text-primary); }
+
+.tab[aria-selected="true"] {
+  color: var(--text-primary);
+  border-bottom-color: var(--metric-exploration);
+}
+
+.tab-count {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------------------------------------------------------------- totals */
+
+.totals-block { margin-bottom: 20px; }
+
+.totals-heading {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
 
 .totals {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
-  margin-bottom: 28px;
 }
 
 .stat-tile {
@@ -164,6 +210,18 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 14px;
+}
+
+.app-grid[hidden] { display: none; }
+
+/* Cards for every registered app are always rendered/patched (so live score
+   polling doesn't stop for an app just because its tab isn't active); only the
+   card whose difficulty matches the selected tab is shown. */
+.app-grid .app-card { display: none; }
+.app-grid[data-active-tier="easy"]   .app-card[data-difficulty="easy"],
+.app-grid[data-active-tier="medium"] .app-card[data-difficulty="medium"],
+.app-grid[data-active-tier="hard"]   .app-card[data-difficulty="hard"] {
+  display: flex;
 }
 
 .empty-state {

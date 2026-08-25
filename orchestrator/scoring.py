@@ -17,9 +17,21 @@ except ImportError:
     requests = None
 
 METRICS = ["exploration", "reconnaissance", "vulnerability_detection", "exploitation"]
+DIFFICULTIES = ["easy", "medium", "hard"]
 
 _CONTAINER_NAME_RE = re.compile(r"^benchmark-(?P<id>.+)-[0-9a-f]{8}$")
 _HOST_PORT_RE = re.compile(r":(\d+)->")
+
+
+def difficulty_of(app_id: str) -> str:
+    """Registry ids are suffixed with their design-time difficulty tier
+    (`sqli-easy`, `sqli-medium`) — see CLAUDE.md's Difficulty Scoring Methodology for
+    why this label is provisional (a one-time tercile reclassification happens once
+    the full 50-app corpus is built) rather than a permanent per-app field."""
+    for tier in DIFFICULTIES:
+        if app_id.endswith(f"-{tier}"):
+            return tier
+    return "other"
 
 
 def _container_env(name: str) -> list[str]:

@@ -31,12 +31,14 @@ def create_app(apps: list[dict]) -> Flask:
 
         entries = []
         for reg_app in apps:
+            difficulty = scoring.difficulty_of(reg_app["id"])
             row = running.get(reg_app["id"])
             if row is None:
                 entries.append({
                     "id": reg_app["id"],
                     "name": reg_app["name"],
                     "description": reg_app["description"],
+                    "difficulty": difficulty,
                     "container_name": None,
                     "host_port": None,
                     "status": None,
@@ -51,6 +53,7 @@ def create_app(apps: list[dict]) -> Flask:
                 "id": reg_app["id"],
                 "name": reg_app["name"],
                 "description": reg_app["description"],
+                "difficulty": difficulty,
                 "container_name": row["container_name"],
                 "host_port": row["host_port"],
                 "status": row["status"],
@@ -59,6 +62,18 @@ def create_app(apps: list[dict]) -> Flask:
                 "score_url": f"http://localhost:{row['host_port']}/score/{row['token']}",
             })
 
+        totals_by_difficulty = {}
+        for tier in scoring.DIFFICULTIES:
+            tier_entries = [e for e in entries if e["difficulty"] == tier]
+            tier_agg = scoring.aggregate_scores(
+                [{"app": e, "score": e["score"]} for e in tier_entries if e["running"]]
+            )
+            totals_by_difficulty[tier] = {
+                "totals": tier_agg["totals"],
+                "n_total": len(tier_entries),
+                "n_responded": tier_agg["n_responded"],
+            }
+
         agg = scoring.aggregate_scores([{"app": e, "score": e["score"]} for e in entries if e["running"]])
 
         return jsonify({
@@ -66,6 +81,7 @@ def create_app(apps: list[dict]) -> Flask:
             "totals": agg["totals"],
             "n_total": len(entries),
             "n_responded": agg["n_responded"],
+            "totals_by_difficulty": totals_by_difficulty,
         })
 
     @app.post("/api/launch-all")
