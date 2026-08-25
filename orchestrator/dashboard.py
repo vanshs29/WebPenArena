@@ -210,6 +210,6 @@ def run_dashboard(apps: list[dict]) -> None:
     webbrowser.open(url)
 
     try:
-        app.run(host="127.0.0.1", port=port, debug=False, use_reloader=False)
+        app.run(host="127.0.0.1", port=port, debug=False, use_reloader=False, threaded=True)
     except KeyboardInterrupt:
         print("\n[dashboard] Stopped.")
