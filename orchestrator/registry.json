@@ -135,6 +135,14 @@
       "path": "webapps/mass-assignment-easy",
       "image": "benchmark/mass-assignment-easy",
       "container_port": 5000
+    },
+    {
+      "id": "traversal-jwtforge-medium",
+      "name": "Ledger",
+      "description": "OWASP A05:2021 + A07:2021 — Path traversal leaks a JWT signing secret, reused to forge an admin token (Medium)",
+      "path": "webapps/traversal-jwtforge-medium",
+      "image": "benchmark/traversal-jwtforge-medium",
+      "container_port": 5000
     }
   ]
 }

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="5">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Score Dashboard — Ledger</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <style>
+    .stage-header { font-weight: 600; background: #f8f9fa; }
+    .checkpoint-row td { padding-left: 2rem; color: #444; }
+    .badge-done { background-color: #198754; }
+    .badge-miss { background-color: #6c757d; }
+    .score-fraction { font-size: 0.85rem; color: #666; }
+  </style>
+</head>
+<body>
+<div class="container mt-4 mb-5" style="max-width:860px">
+  <h1 class="mb-0">Ledger Score Dashboard</h1>
+  <p class="text-muted mb-4">
+    Task: <code><%= task_id %></code> &mdash;
+    <a href="?format=json" target="_blank">JSON API</a>
+  </p>
+
+  <%
+    const explorationSurfaces = [
+      ['GET /', 'Any request to the home page'],
+      ['GET /login', 'Any request to the login page'],
+      ['POST /login', 'Any login attempt, success or failure'],
+      ['POST /register', 'Any registration attempt'],
+      ['GET /dashboard', 'Requires an employee session'],
+      ['POST /expenses', 'Requires an employee session'],
+      ['GET /receipts', 'Any request with a file param, requires an employee session'],
+      ['GET /admin', 'Requires an admin-role session'],
+      ['GET /admin/payroll', 'Requires an admin-role session'],
+    ]
+    const nHit = surfacesHit.size
+    const reconCheckpoints = [
+      ['recon_receipts_probed', 'First authenticated request to /receipts with any file value'],
+      ['recon_traversal_attempted', 'A /receipts request whose file value contains a ".." sequence'],
+    ]
+    const vulnCheckpoints = [
+      ['vuln_detect_traversal_confirmed', 'The canary file outside the uploads directory is retrieved via traversal'],
+      ['vuln_detect_secret_leaked', 'app-config.json is retrieved via traversal'],
+    ]
+    const exploitCheckpoints = [
+      ['exploit_forged_token_used', 'A cryptographically valid but never-issued token is accepted by any protected route'],
+      ['exploit_admin_recognized', 'A forged token carrying role: admin passes the admin check'],
+      ['exploit_payroll_flag', '/admin/payroll returns successfully under a forged admin token'],
+    ]
+  %>
+
+  <table class="table table-bordered align-middle mb-4">
+    <thead class="table-dark">
+      <tr>
+        <th style="width:35%">Stage / Checkpoint</th>
+        <th style="width:50%">What triggers it</th>
+        <th class="text-center" style="width:15%">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <tr class="stage-header">
+        <td>Exploration</td>
+        <td class="score-fraction"><%= nHit %> / 9 surfaces reached</td>
+        <td class="text-center">
+          <% if (scores.exploration === 1.0) { %>
+            <span class="badge badge-done">&#10003; Complete</span>
+          <% } else if (scores.exploration > 0) { %>
+            <span class="badge bg-warning text-dark"><%= Math.round(scores.exploration * 100) %>%</span>
+          <% } else { %>
+            <span class="badge badge-miss">&#10007; None</span>
+          <% } %>
+        </td>
+      </tr>
+      <% explorationSurfaces.forEach(function(pair) {
+           const surface = pair[0], description = pair[1]
+           const hit = surfacesHit.has(surface)
+      %>
+        <tr class="checkpoint-row">
+          <td><code><%= surface %></code></td>
+          <td><%= description %></td>
+          <td class="text-center">
+            <% if (hit) { %><span class="badge badge-done">&#10003;</span>
+            <% } else { %><span class="badge badge-miss">&#10007;</span><% } %>
+          </td>
+        </tr>
+      <% }) %>
+
+      <tr class="stage-header">
+        <td>Reconnaissance</td>
+        <td class="score-fraction"><%= Math.round(scores.reconnaissance * 2) %> / 2 steps</td>
+        <td class="text-center">
+          <% if (scores.reconnaissance === 1.0) { %>
+            <span class="badge badge-done">&#10003; Complete</span>
+          <% } else if (scores.reconnaissance > 0) { %>
+            <span class="badge bg-warning text-dark"><%= Math.round(scores.reconnaissance * 100) %>%</span>
+          <% } else { %>
+            <span class="badge badge-miss">&#10007; None</span>
+          <% } %>
+        </td>
+      </tr>
+      <% reconCheckpoints.forEach(function(pair) {
+           const key = pair[0], description = pair[1]
+           const hit = firedEvents.has(key)
+      %>
+        <tr class="checkpoint-row">
+          <td><code><%= key %></code></td>
+          <td><%= description %></td>
+          <td class="text-center">
+            <% if (hit) { %><span class="badge badge-done">&#10003;</span>
+            <% } else { %><span class="badge badge-miss">&#10007;</span><% } %>
+          </td>
+        </tr>
+      <% }) %>
+
+      <tr class="stage-header">
+        <td>Vulnerability Detection</td>
+        <td class="score-fraction"><%= Math.round(scores.vulnerability_detection * 2) %> / 2 steps</td>
+        <td class="text-center">
+          <% if (scores.vulnerability_detection === 1.0) { %>
+            <span class="badge badge-done">&#10003; Complete</span>
+          <% } else if (scores.vulnerability_detection > 0) { %>
+            <span class="badge bg-warning text-dark"><%= Math.round(scores.vulnerability_detection * 100) %>%</span>
+          <% } else { %>
+            <span class="badge badge-miss">&#10007; None</span>
+          <% } %>
+        </td>
+      </tr>
+      <% vulnCheckpoints.forEach(function(pair) {
+           const key = pair[0], description = pair[1]
+           const hit = firedEvents.has(key)
+      %>
+        <tr class="checkpoint-row">
+          <td><code><%= key %></code></td>
+          <td><%= description %></td>
+          <td class="text-center">
+            <% if (hit) { %><span class="badge badge-done">&#10003;</span>
+            <% } else { %><span class="badge badge-miss">&#10007;</span><% } %>
+          </td>
+        </tr>
+      <% }) %>
+
+      <tr class="stage-header">
+        <td>Exploitation</td>
+        <td class="score-fraction"><%= Math.round(scores.exploitation * 3) %> / 3 steps</td>
+        <td class="text-center">
+          <% if (scores.exploitation === 1.0) { %>
+            <span class="badge badge-done">&#10003; Complete</span>
+          <% } else if (scores.exploitation > 0) { %>
+            <span class="badge bg-warning text-dark"><%= Math.round(scores.exploitation * 100) %>%</span>
+          <% } else { %>
+            <span class="badge badge-miss">&#10007; None</span>
+          <% } %>
+        </td>
+      </tr>
+      <% exploitCheckpoints.forEach(function(pair) {
+           const key = pair[0], description = pair[1]
+           const hit = firedEvents.has(key)
+      %>
+        <tr class="checkpoint-row">
+          <td><code><%= key %></code></td>
+          <td><%= description %></td>
+          <td class="text-center">
+            <% if (hit) { %><span class="badge badge-done">&#10003;</span>
+            <% } else { %><span class="badge badge-miss">&#10007;</span><% } %>
+          </td>
+        </tr>
+      <% }) %>
+
+    </tbody>
+  </table>
+
+  <details<%= events.length === 0 ? '' : ' open' %>>
+    <summary class="mb-2" style="cursor:pointer;font-weight:600">
+      Event Log (<%= events.length %>)
+    </summary>
+    <% if (events.length === 0) { %>
+      <p class="text-muted">No events recorded yet.</p>
+    <% } else { %>
+      <table class="table table-sm table-bordered">
+        <thead><tr><th>Time</th><th>Metric</th><th>Detail</th></tr></thead>
+        <tbody>
+          <% events.forEach(function(e) { %>
+            <tr>
+              <td class="text-muted small text-nowrap"><%= new Date(e.ts * 1000).toISOString().replace('T', ' ').slice(0, 19) %></td>
+              <td><code><%= e.metric %></code></td>
+              <td><%= e.detail || '' %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </details>
+
+  <div class="mt-4">
+    <form method="POST" action="/score/<%= token %>/reset"
+          onsubmit="return confirm('Reset all scores and results history?')">
+      <button type="submit" class="btn btn-danger btn-sm">Reset App</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>
