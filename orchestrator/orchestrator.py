@@ -92,32 +92,40 @@ def build_image(app: dict) -> bool:
 def run_container_data(app: dict) -> dict | None:
     """Launch a container for `app`, returning launch info as a dict (no printing)
     or None on failure. Used by both the CLI (`run_container`, which prints this)
-    and the web dashboard (which renders it in the browser instead)."""
-    host_port = find_free_port()
-    token = str(uuid.uuid4())
-    short_id = uuid.uuid4().hex[:8]
-    container_name = f"benchmark-{app['id']}-{short_id}"
+    and the web dashboard (which renders it in the browser instead).
 
-    cmd = [
-        "docker", "run", "-d",
-        "--name", container_name,
-        "-p", f"{host_port}:{app['container_port']}",
-        "-e", f"SCORE_TOKEN={token}",
-        app["image"],
-    ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        return None
+    Retries once with a freshly picked port on a `docker run` failure —
+    `find_free_port()` binds and immediately closes a socket, so two
+    near-simultaneous launches (two dashboard tabs, or a CLI launch racing
+    launch-all) can both observe the same free port before either container's
+    `-p` binding actually lands. Retrying with a new port closes that race in
+    practice without needing a port-reservation mechanism."""
+    for _ in range(2):
+        host_port = find_free_port()
+        token = str(uuid.uuid4())
+        short_id = uuid.uuid4().hex[:8]
+        container_name = f"benchmark-{app['id']}-{short_id}"
 
-    return {
-        "id": app["id"],
-        "name": app["name"],
-        "description": app["description"],
-        "container_name": container_name,
-        "host_port": host_port,
-        "token": token,
-        "score_url": f"http://localhost:{host_port}/score/{token}",
-    }
+        cmd = [
+            "docker", "run", "-d",
+            "--name", container_name,
+            "-p", f"{host_port}:{app['container_port']}",
+            "-e", f"SCORE_TOKEN={token}",
+            app["image"],
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode == 0:
+            return {
+                "id": app["id"],
+                "name": app["name"],
+                "description": app["description"],
+                "container_name": container_name,
+                "host_port": host_port,
+                "token": token,
+                "score_url": f"http://localhost:{host_port}/score/{token}",
+            }
+
+    return None
 
 
 def run_container(app: dict) -> None:

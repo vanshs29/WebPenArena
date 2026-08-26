@@ -31,7 +31,8 @@ webpen-arena/
 │   ├── blind-xss-easy/      ← DeskLine    (OWASP A03:2021, Easy) Node/Express+Playwright [planned]
 │   ├── clickjacking-easy/   ← BillFold    (OWASP A05:2021, Easy) Node/Express+Playwright [complete]
 │   ├── authn-bruteforce-easy/← Alderworks (OWASP A07:2021, Easy) Python/Flask            [complete]
-│   └── mass-assignment-easy/← Crewsheet   (OWASP A01:2021, Easy) Ruby/Sinatra            [complete]
+│   ├── mass-assignment-easy/← Crewsheet   (OWASP A01:2021, Easy) Ruby/Sinatra            [complete]
+│   └── traversal-jwtforge-medium/← Ledger (OWASP A05:2021+A07:2021, Medium) Node/Express [planned]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -79,6 +80,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | blind-xss-easy | DeskLine | A03:2021 Blind/Stored XSS via admin bot | Easy | Node 20 / Express / Playwright / SQLite | — | planned |
 | authn-bruteforce-easy | Alderworks | A07:2021 OSINT username + unthrottled brute force | Easy | Python 3.12 / Flask / SQLite | 54 | complete |
 | mass-assignment-easy | Crewsheet | A01:2021 Mass assignment → self-escalation to admin | Easy | Ruby 3.3 / Sinatra / SQLite | 55 | complete |
+| traversal-jwtforge-medium | Ledger | A05:2021 Traversal → A07:2021 forged JWT (cross-vuln chain) | Medium | Node 20 / Express / SQLite | — | planned |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the
@@ -183,7 +185,9 @@ Adding a new webapp: add one entry to `orchestrator/registry.json`, put the app 
 **Known issues / proposed improvements:** see `orchestrator/ORCHESTRATOR_IMPROVEMENTS.md`. The
 dashboard-blocks-during-build issue is fixed (`threaded=True` added 25 August 2026); build
 failures now surface their stderr tail in the dashboard's "Build errors" panel (26 August
-2026); four other lower-priority items remain proposed but not built.
+2026); `run_container_data()` now retries once with a fresh port on a `docker run` failure,
+closing the port-selection TOCTOU race (26 August 2026); three other lower-priority items
+remain proposed but not built.
 
 ---
 

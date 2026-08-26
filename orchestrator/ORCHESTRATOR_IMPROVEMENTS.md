@@ -1,6 +1,6 @@
 # Orchestrator Improvements — Proposed
 
-**Status: items 1–2 implemented (25 August 2026, 26 August 2026); items 3–6 still proposed, not yet built.**
+**Status: items 1–3 implemented (25 August 2026, 26 August 2026); items 4–6 still proposed, not yet built.**
 Findings from a read-through of `orchestrator.py`, `dashboard.py`, `scoring.py`,
 `registry.json`, and the dashboard frontend on 25 August 2026. This is a prioritized list to
 work from, not a design doc for a single feature the way `ORCHESTRATOR_PLAN.md` /
@@ -54,7 +54,7 @@ streamed version) was left untouched — the user already sees live output in th
 
 ---
 
-## 3. Port selection has a real TOCTOU race
+## 3. Port selection has a real TOCTOU race — IMPLEMENTED 26 August 2026
 
 `find_free_port()` (`orchestrator.py:41-50`) binds a socket, closes it immediately, and returns
 the port number; `run_container_data()` calls `docker run` afterward, sometimes seconds later
@@ -63,9 +63,13 @@ launch racing the dashboard's launch-all) can both observe the same free port be
 container's `-p` binding actually lands, since nothing is holding the port open between the
 check and the `docker run` call. When it hits, `docker run` fails opaquely.
 
-**Fix:** on `docker run` failure in `run_container_data()`, retry once with a freshly picked
-port instead of returning `None` outright. Cheap, and closes the race in practice without
-needing a port-reservation mechanism.
+**Fix applied:** `run_container_data()` now loops up to twice: each attempt picks a fresh port,
+token, and container name, and only returns `None` if `docker run` fails on the second attempt
+too. Verified by holding a specific host port with a throwaway container, monkeypatching
+`find_free_port()` to hand back that busy port on the first call, and confirming
+`run_container_data()` transparently retried with a real free port and succeeded on the second
+attempt. No port-reservation mechanism was added — the retry is cheap and closes the race in
+practice, per the original proposal.
 
 ---
 
