@@ -203,7 +203,13 @@ def _find_running(apps: list[dict], app_id: str) -> dict | None:
 
 
 def run_dashboard(apps: list[dict]) -> None:
-    from orchestrator import find_free_port
+    from orchestrator import docker_available, find_free_port
+
+    if not docker_available():
+        sys.exit(
+            "[error] Docker is not available. Make sure Docker is installed and the "
+            "daemon is running, then try again."
+        )
 
     import flask.cli
     flask.cli.show_server_banner = lambda *a, **kw: None

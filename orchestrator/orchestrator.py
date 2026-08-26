@@ -54,6 +54,21 @@ def find_free_port(start: int = 8000, end: int = 9000) -> int:
 # Docker helpers
 # ---------------------------------------------------------------------------
 
+def docker_available() -> bool:
+    """True if the `docker` CLI is on PATH and its daemon is reachable.
+
+    Without this check, a missing `docker` binary surfaces as an uncaught
+    `FileNotFoundError` traceback, and a stopped daemon makes callers like
+    `image_exists()` return False for the wrong reason — leading into a
+    confusing "build it now?" prompt for a problem that isn't about the image
+    at all."""
+    try:
+        result = subprocess.run(["docker", "info"], capture_output=True)
+    except FileNotFoundError:
+        return False
+    return result.returncode == 0
+
+
 def image_exists(image: str) -> bool:
     result = subprocess.run(
         ["docker", "image", "inspect", image],
@@ -341,6 +356,12 @@ MENU = {
 
 
 def main() -> None:
+    if not docker_available():
+        sys.exit(
+            "[error] Docker is not available. Make sure Docker is installed and the "
+            "daemon is running, then try again."
+        )
+
     apps = load_registry()
 
     while True:

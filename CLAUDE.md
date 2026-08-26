@@ -186,8 +186,10 @@ Adding a new webapp: add one entry to `orchestrator/registry.json`, put the app 
 dashboard-blocks-during-build issue is fixed (`threaded=True` added 25 August 2026); build
 failures now surface their stderr tail in the dashboard's "Build errors" panel (26 August
 2026); `run_container_data()` now retries once with a fresh port on a `docker run` failure,
-closing the port-selection TOCTOU race (26 August 2026); three other lower-priority items
-remain proposed but not built.
+closing the port-selection TOCTOU race (26 August 2026); a `docker_available()` preflight check
+now runs at the top of both the CLI and the web dashboard, failing with a clear message instead
+of a raw traceback or a confusing image-build prompt when Docker isn't installed or the daemon
+isn't running (26 August 2026); two other lower-priority items remain proposed but not built.
 
 ---
 

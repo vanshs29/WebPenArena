@@ -1,6 +1,6 @@
 # Orchestrator Improvements — Proposed
 
-**Status: items 1–3 implemented (25 August 2026, 26 August 2026); items 4–6 still proposed, not yet built.**
+**Status: items 1–4 implemented (25 August 2026, 26 August 2026); items 5–6 still proposed, not yet built.**
 Findings from a read-through of `orchestrator.py`, `dashboard.py`, `scoring.py`,
 `registry.json`, and the dashboard frontend on 25 August 2026. This is a prioritized list to
 work from, not a design doc for a single feature the way `ORCHESTRATOR_PLAN.md` /
@@ -73,7 +73,7 @@ practice, per the original proposal.
 
 ---
 
-## 4. No preflight check that Docker itself is available
+## 4. No preflight check that Docker itself is available — IMPLEMENTED 26 August 2026
 
 Every Docker-calling function assumes the `docker` binary exists and the daemon is running. If
 it isn't, `subprocess.run(["docker", ...])` either raises `FileNotFoundError` (uncaught,
@@ -81,9 +81,14 @@ surfaces as a raw traceback) or returns a nonzero code that callers like `image_
 quietly interpret as "image not found," leading into a confusing "build it now?" prompt for a
 problem that isn't actually about the image.
 
-**Fix:** one check at the top of `main()` (CLI) and `run_dashboard()` (web), e.g. `docker info`,
-with a clear message if it fails. Worth doing since this tool is meant to be handed to whoever
-is running baseline agents, not just the person who wrote it.
+**Fix applied:** added `docker_available()` (`orchestrator.py`) — runs `docker info`, catching
+`FileNotFoundError` for a missing binary and treating any nonzero exit (daemon not running) as
+unavailable too. Called at the top of `main()` (CLI) and `dashboard.run_dashboard()` (web),
+each `sys.exit`-ing with a clear one-line message instead of a confusing image-build prompt or a
+raw traceback. Verified directly: a real running daemon returns `True`; monkeypatching
+`subprocess.run` to raise `FileNotFoundError` or to return a nonzero-code result both correctly
+return `False`; both `main()` and `run_dashboard()` were confirmed to exit cleanly with the
+intended message when `docker_available()` reports unavailable.
 
 ---
 
