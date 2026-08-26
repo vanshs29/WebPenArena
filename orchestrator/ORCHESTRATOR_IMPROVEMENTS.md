@@ -1,6 +1,6 @@
 # Orchestrator Improvements — Proposed
 
-**Status: items 1–4 implemented (25 August 2026, 26 August 2026); items 5–6 still proposed, not yet built.**
+**Status: items 1–5 implemented (25 August 2026, 26 August 2026); item 6 still proposed, not yet built.**
 Findings from a read-through of `orchestrator.py`, `dashboard.py`, `scoring.py`,
 `registry.json`, and the dashboard frontend on 25 August 2026. This is a prioritized list to
 work from, not a design doc for a single feature the way `ORCHESTRATOR_PLAN.md` /
@@ -92,9 +92,9 @@ intended message when `docker_available()` reports unavailable.
 
 ---
 
-## 5. CLI and web dashboard duplicate "what's running," and the CLI version is worse
+## 5. CLI and web dashboard duplicate "what's running," and the CLI version is worse — IMPLEMENTED 26 August 2026
 
-`action_show_running` / `action_stop` / `action_stop_all` (`orchestrator.py:255-300`) call the
+`action_show_running` / `action_stop` / `action_stop_all` (`orchestrator.py:255-300`) called the
 raw `get_running_containers()`: container name, ports, status only. The web dashboard's
 `scoring.discover_running_apps()` (`scoring.py:39-74`) cross-references the registry and
 recovers the app name, description, and score token from the same `docker ps` data. The CLI's
@@ -102,8 +102,15 @@ stop/show menus could call `scoring.discover_running_apps(apps)` instead and sho
 ("ShopLite — running on :8003") rather than raw `benchmark-sqli-easy-a1b2c3d4` container
 strings.
 
-**Fix:** route the CLI's show/stop actions through `scoring.discover_running_apps()`. Removes
-duplicate logic, keeps one source of truth, and matches the dashboard's UX.
+**Fix applied:** all three actions now take `apps` and call `scoring.discover_running_apps(apps)`
+instead of the raw `get_running_containers()`. `action_show_running` prints an
+`APP / PORT / STATUS` table by app name; `action_stop`'s picker and `action_stop_all`'s listing
+both use a new `_running_label()` helper (`"ShopLite  —  running on :8000
+(benchmark-sqli-easy-9e0b70e6)"`), and both still stop by the real `container_name` recovered
+from `discover_running_apps()`. `main()`'s dispatch loop no longer special-cases these three
+actions — every `MENU` entry now takes `apps` uniformly. Verified against a real launched
+`sqli-easy` container: `action_show_running` printed "ShopLite" with its port instead of the raw
+container string, and the recovered `container_name` correctly stopped and removed it.
 
 ---
 

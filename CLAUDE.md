@@ -189,7 +189,10 @@ failures now surface their stderr tail in the dashboard's "Build errors" panel (
 closing the port-selection TOCTOU race (26 August 2026); a `docker_available()` preflight check
 now runs at the top of both the CLI and the web dashboard, failing with a clear message instead
 of a raw traceback or a confusing image-build prompt when Docker isn't installed or the daemon
-isn't running (26 August 2026); two other lower-priority items remain proposed but not built.
+isn't running (26 August 2026); the CLI's show/stop menus now route through
+`scoring.discover_running_apps()` like the dashboard does, showing app names ("ShopLite —
+running on :8000") instead of raw container strings (26 August 2026); one lower-priority item
+(registry OWASP/difficulty/weight fields) remains proposed but not built.
 
 ---
 

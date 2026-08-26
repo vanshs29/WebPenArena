@@ -281,42 +281,54 @@ def action_launch_all(apps: list[dict]) -> None:
         run_container(app)
 
 
-def action_show_running() -> None:
-    rows = get_running_containers()
+def _running_label(row: dict) -> str:
+    port = f":{row['host_port']}" if row["host_port"] is not None else "?"
+    return f"{row['app']['name']}  —  running on {port}  ({row['container_name']})"
+
+
+def action_show_running(apps: list[dict]) -> None:
+    import scoring
+
+    rows = scoring.discover_running_apps(apps)
     if not rows:
         print("\n[info] No benchmark containers are currently running.")
         return
 
-    print(f"\n{'CONTAINER':<40} {'PORTS':<30} {'STATUS'}")
-    print("-" * 80)
+    print(f"\n{'APP':<20} {'PORT':<8} {'STATUS'}")
+    print("-" * 60)
     for r in rows:
-        print(f"{r['name']:<40} {r['ports']:<30} {r['status']}")
+        port = f":{r['host_port']}" if r["host_port"] is not None else "?"
+        print(f"{r['app']['name']:<20} {port:<8} {r['status']}")
 
 
-def action_stop() -> None:
-    rows = get_running_containers()
+def action_stop(apps: list[dict]) -> None:
+    import scoring
+
+    rows = scoring.discover_running_apps(apps)
     if not rows:
         print("\n[info] No benchmark containers are running.")
         return
 
-    choices = {r["name"]: r for r in rows}
+    choices = {_running_label(r): r for r in rows}
     answer = questionary.select(
         "Which container to stop?", choices=list(choices.keys())
     ).ask()
     if answer is None:
         return
-    stop_container(answer)
+    stop_container(choices[answer]["container_name"])
 
 
-def action_stop_all() -> None:
-    rows = get_running_containers()
+def action_stop_all(apps: list[dict]) -> None:
+    import scoring
+
+    rows = scoring.discover_running_apps(apps)
     if not rows:
         print("\n[info] No benchmark containers are running.")
         return
 
     print(f"\nRunning containers ({len(rows)}):")
     for r in rows:
-        print(f"  - {r['name']}")
+        print(f"  - {_running_label(r)}")
 
     confirmed = questionary.confirm(
         f"Stop and remove all {len(rows)} running benchmark container(s)?", default=False
@@ -326,7 +338,7 @@ def action_stop_all() -> None:
         return
 
     for r in rows:
-        stop_container(r["name"])
+        stop_container(r["container_name"])
 
 
 # ---------------------------------------------------------------------------
@@ -375,10 +387,7 @@ def main() -> None:
             break
 
         action = MENU[choice]
-        if action in (action_show_running, action_stop, action_stop_all):
-            action()
-        else:
-            action(apps)
+        action(apps)
 
 
 if __name__ == "__main__":
