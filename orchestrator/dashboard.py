@@ -96,8 +96,13 @@ def create_app(apps: list[dict]) -> Flask:
                 skipped.append(reg_app["id"])
                 continue
             if not image_exists(reg_app["image"]):
-                if not build_image_data(reg_app):
-                    errors.append({"id": reg_app["id"], "error": "image build failed"})
+                build = build_image_data(reg_app)
+                if not build["ok"]:
+                    errors.append({
+                        "id": reg_app["id"],
+                        "error": "image build failed",
+                        "stderr": build["stderr"],
+                    })
                     continue
             info = run_container_data(reg_app)
             if info is None:
@@ -117,8 +122,14 @@ def create_app(apps: list[dict]) -> Flask:
         if _find_running(apps, app_id) is not None:
             return jsonify({"ok": False, "error": "already running"}), 409
 
-        if not image_exists(reg_app["image"]) and not build_image_data(reg_app):
-            return jsonify({"ok": False, "error": "image build failed"}), 500
+        if not image_exists(reg_app["image"]):
+            build = build_image_data(reg_app)
+            if not build["ok"]:
+                return jsonify({
+                    "ok": False,
+                    "error": "image build failed",
+                    "stderr": build["stderr"],
+                }), 500
 
         info = run_container_data(reg_app)
         if info is None:
@@ -142,8 +153,7 @@ def create_app(apps: list[dict]) -> Flask:
         if reg_app is None:
             return jsonify({"ok": False, "error": "unknown app"}), 404
 
-        ok = build_image_data(reg_app)
-        return jsonify({"ok": ok})
+        return jsonify(build_image_data(reg_app))
 
     @app.post("/api/apps/<app_id>/reset")
     def api_reset_one(app_id):

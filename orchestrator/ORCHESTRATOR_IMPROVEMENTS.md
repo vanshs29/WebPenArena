@@ -1,6 +1,6 @@
 # Orchestrator Improvements — Proposed
 
-**Status: item 1 implemented (25 August 2026); items 2–6 still proposed, not yet built.**
+**Status: items 1–2 implemented (25 August 2026, 26 August 2026); items 3–6 still proposed, not yet built.**
 Findings from a read-through of `orchestrator.py`, `dashboard.py`, `scoring.py`,
 `registry.json`, and the dashboard frontend on 25 August 2026. This is a prioritized list to
 work from, not a design doc for a single feature the way `ORCHESTRATOR_PLAN.md` /
@@ -32,18 +32,25 @@ button state tied to it in `dashboard.js`) still spans the full build duration.
 
 ---
 
-## 2. Build failures are silently swallowed
+## 2. Build failures are silently swallowed — IMPLEMENTED 26 August 2026
 
-`build_image_data()` (`orchestrator.py:65-74`) runs `docker build` with `capture_output=True`
-and returns only `True`/`False`; stderr is discarded. When a rebuild fails via the web
-dashboard, the user gets a red "FAILED" with no diagnostic at all. Given how build-fragile this
+`build_image_data()` (`orchestrator.py:65-74`) ran `docker build` with `capture_output=True`
+and returned only `True`/`False`; stderr was discarded. When a rebuild failed via the web
+dashboard, the user got a red "FAILED" with no diagnostic at all. Given how build-fragile this
 corpus already is (Node ABI breaks, JDK-vs-JRE, the sandbox's `ignore-scripts`/`bin-links`
-npmrc gotchas documented in the main `CLAUDE.md`), losing the error text is the difference
+npmrc gotchas documented in the main `CLAUDE.md`), losing the error text was the difference
 between a fast fix and a guess-and-rerun loop.
 
-**Fix:** return `result.stderr` (or the tail of it) alongside the boolean, and surface it in the
-dashboard's event log or a dedicated error panel. The CLI's `build_image()` already streams
-output live and doesn't need this.
+**Fix applied:** `build_image_data()` now returns `{"ok": bool, "stderr": str}` — the last 4000
+chars of `docker build`'s stderr, populated only on failure. All four dashboard endpoints that
+call it (`/api/launch-all`, `/api/apps/<id>/launch`, `/api/rebuild-all`,
+`/api/apps/<id>/rebuild`) thread `stderr` through into their JSON responses. The frontend
+(`dashboard.js`/`.html`/`.css`) adds a dismissible "Build errors" panel above the tier tabs:
+each failed build/launch appends an entry (app id, timestamp, scrollable `<pre>` of the stderr
+tail), capped at the last 20, with a "Clear" button. Verified by simulating a `docker build`
+against a deliberately broken Dockerfile (`RUN this-command-does-not-exist`) and confirming the
+captured stderr tail contains the actual Docker/shell error text. `build_image()` (the CLI's
+streamed version) was left untouched — the user already sees live output in the terminal there.
 
 ---
 

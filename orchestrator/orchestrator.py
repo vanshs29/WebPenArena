@@ -62,16 +62,22 @@ def image_exists(image: str) -> bool:
     return result.returncode == 0
 
 
-def build_image_data(app: dict) -> bool:
+def build_image_data(app: dict) -> dict:
     """Build `app`'s image with no streamed output to the caller's stdout/stderr —
     used by the web dashboard, which must not leak subprocess output to the
-    terminal. `build_image()` is the CLI-facing wrapper that streams it."""
+    terminal. Returns {"ok": bool, "stderr": str}; `stderr` is the tail of
+    docker build's stderr, populated only on failure, so the dashboard can show
+    a diagnostic instead of a bare FAILED with no detail. `build_image()` is the
+    CLI-facing wrapper that streams output live and doesn't need this."""
     context = str(REPO_ROOT / app["path"])
     result = subprocess.run(
         ["docker", "build", "-t", app["image"], context],
         capture_output=True,
+        text=True,
     )
-    return result.returncode == 0
+    ok = result.returncode == 0
+    stderr = "" if ok else result.stderr[-4000:]
+    return {"ok": ok, "stderr": stderr}
 
 
 def build_image(app: dict) -> bool:

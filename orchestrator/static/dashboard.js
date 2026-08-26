@@ -16,8 +16,42 @@ const tabButtons = document.querySelectorAll("#tier-tabs .tab");
 
 const cardsById = new Map();
 
+const buildErrorsEl = document.getElementById("build-errors");
+const buildErrorsListEl = document.getElementById("build-errors-list");
+
 let latestData = null;
 let activeTier = "easy";
+let buildErrors = [];
+
+function addBuildError(id, stderr) {
+  if (!stderr) return;
+  buildErrors.unshift({ id, stderr, time: new Date().toLocaleTimeString() });
+  buildErrors = buildErrors.slice(0, 20);
+  renderBuildErrors();
+}
+
+function renderBuildErrors() {
+  buildErrorsEl.hidden = buildErrors.length === 0;
+  buildErrorsListEl.innerHTML = "";
+  for (const err of buildErrors) {
+    const li = document.createElement("li");
+    li.className = "build-error-item";
+    li.innerHTML = `
+      <div class="build-error-title">
+        <span>${err.id} — build failed</span>
+        <span class="build-error-time">${err.time}</span>
+      </div>
+      <pre></pre>
+    `;
+    li.querySelector("pre").textContent = err.stderr;
+    buildErrorsListEl.appendChild(li);
+  }
+}
+
+document.getElementById("btn-clear-errors").addEventListener("click", () => {
+  buildErrors = [];
+  renderBuildErrors();
+});
 
 function fmt(n) {
   return Number(n ?? 0).toFixed(2);
@@ -201,12 +235,16 @@ async function withButton(btn, fn) {
 }
 
 async function launchOne(id) {
-  await fetch(`/api/apps/${id}/launch`, { method: "POST" });
+  const res = await fetch(`/api/apps/${id}/launch`, { method: "POST" });
+  const data = await res.json();
+  if (!data.ok) addBuildError(id, data.stderr);
   refresh();
 }
 
 async function rebuildOne(id) {
-  await fetch(`/api/apps/${id}/rebuild`, { method: "POST" });
+  const res = await fetch(`/api/apps/${id}/rebuild`, { method: "POST" });
+  const data = await res.json();
+  if (!data.ok) addBuildError(id, data.stderr);
   refresh();
 }
 
@@ -228,11 +266,21 @@ for (const btn of tabButtons) {
 gridEl.dataset.activeTier = activeTier;
 
 document.getElementById("btn-launch-all").addEventListener("click", (e) => {
-  withButton(e.target, () => fetch("/api/launch-all", { method: "POST" }));
+  withButton(e.target, async () => {
+    const res = await fetch("/api/launch-all", { method: "POST" });
+    const data = await res.json();
+    for (const err of data.errors ?? []) addBuildError(err.id, err.stderr);
+  });
 });
 
 document.getElementById("btn-rebuild-all").addEventListener("click", (e) => {
-  withButton(e.target, () => fetch("/api/rebuild-all", { method: "POST" }));
+  withButton(e.target, async () => {
+    const res = await fetch("/api/rebuild-all", { method: "POST" });
+    const data = await res.json();
+    for (const [id, result] of Object.entries(data.results ?? {})) {
+      if (!result.ok) addBuildError(id, result.stderr);
+    }
+  });
 });
 
 document.getElementById("btn-reset-all").addEventListener("click", (e) => {
