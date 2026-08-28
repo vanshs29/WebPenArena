@@ -21,7 +21,6 @@ public class SessionCookieCodec {
 
     public UserSession decode(String cookieValue) throws Exception {
         byte[] bytes = Base64.getDecoder().decode(cookieValue);
-        // INTENTIONAL VULNERABILITY — do not fix
         try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
             return (UserSession) ois.readObject();
         }

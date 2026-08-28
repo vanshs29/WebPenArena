@@ -92,7 +92,7 @@ class Crewsheet < Sinatra::Base
     WRITABLE_ATTRIBUTES.each do |attr|
       next unless updates.key?(attr)
 
-      candidate[attr] = updates[attr] # INTENTIONAL VULNERABILITY — do not fix
+      candidate[attr] = updates[attr]
     end
     role_changed = updates.key?('role') && candidate['role'] != old_role
     candidate['role_self_modified'] = 1 if role_changed

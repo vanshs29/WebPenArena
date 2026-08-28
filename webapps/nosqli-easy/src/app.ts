@@ -65,7 +65,6 @@ export async function buildApp(opts: BuildOptions): Promise<FastifyInstance> {
       recordEvent(sqlite, 'reconnaissance', 'POST /api/login (non-string credential field)')
     }
 
-    // INTENTIONAL VULNERABILITY — do not fix
     const user = await mongo.collection('users').findOne({ username, password })
 
     if (!user) {

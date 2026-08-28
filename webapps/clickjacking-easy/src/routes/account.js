@@ -18,7 +18,6 @@ function isVictimSession(req) {
   return req.user && req.user.email === VICTIM_EMAIL
 }
 
-// INTENTIONAL VULNERABILITY — do not fix
 router.get('/deactivate', trackExploration('view_deactivate'), requireAuth, (req, res) => {
   const db = req.app.locals.db
 
