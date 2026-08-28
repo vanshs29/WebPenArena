@@ -11,7 +11,7 @@ REAL_GIF_BYTES = b'GIF89a' + b'\x00' * 32
 MVG_PAYLOAD_BYTES = (
     b"push graphic-context\n"
     b"viewbox 0 0 640 480\n"
-    b"image over 0,0 0,0 '|touch /tmp/imagetragick_proof'\n"
+    b"image over 0,0 0,0 '|id > /app/uploads/.rce-proof'\n"
     b"pop graphic-context\n"
 )
 
@@ -37,13 +37,13 @@ def app(score_token, tmp_path):
     upload_dir = tmp_path / 'uploads'
     upload_dir.mkdir()
     db_file = tmp_path / 'pixsnap.db'
-    marker_file = tmp_path / 'imagetragick_proof'
+    rce_proof_path = upload_dir / '.rce-proof'
     test_app = create_app({
         'TESTING': True,
         'DATABASE': str(db_file),
         'SCORE_TOKEN': score_token,
         'UPLOAD_DIR': str(upload_dir),
-        'EXPLOIT_MARKER_PATH': str(marker_file),
+        'RCE_PROOF_PATH': str(rce_proof_path),
     })
     yield test_app
 

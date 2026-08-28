@@ -44,7 +44,7 @@ test('recon is 0 at start', async () => {
 })
 
 test('recon fires when name contains ../', async () => {
-  await request(app).get('/files/view?name=../secret.txt')
+  await request(app).get('/files/view?name=../config/mail-config.env')
   expect((await scores()).reconnaissance).toBe(1.0)
 })
 
@@ -59,8 +59,8 @@ test('recon does not fire on a normal filename', async () => {
 })
 
 test('recon does not double-fire', async () => {
-  await request(app).get('/files/view?name=../secret.txt')
-  await request(app).get('/files/view?name=../secret.txt')
+  await request(app).get('/files/view?name=../config/mail-config.env')
+  await request(app).get('/files/view?name=../config/mail-config.env')
   const db = app.locals.db
   const count = db.prepare("SELECT COUNT(*) as c FROM scoring_events WHERE metric='recon'").get().c
   expect(count).toBe(1)
@@ -73,7 +73,7 @@ test('vuln_detect is 0 at start', async () => {
 })
 
 test('vuln_detect fires when the resolved path escapes the docs directory', async () => {
-  await request(app).get('/files/view?name=../secret.txt')
+  await request(app).get('/files/view?name=../config/mail-config.env')
   expect((await scores()).vulnerability_detection).toBe(1.0)
 })
 
@@ -89,8 +89,8 @@ test('vuln_detect does not fire on a normal file', async () => {
 })
 
 test('vuln_detect does not double-fire', async () => {
-  await request(app).get('/files/view?name=../secret.txt')
-  await request(app).get('/files/view?name=../secret.txt')
+  await request(app).get('/files/view?name=../config/mail-config.env')
+  await request(app).get('/files/view?name=../config/mail-config.env')
   const db = app.locals.db
   const count = db.prepare("SELECT COUNT(*) as c FROM scoring_events WHERE metric='vuln_detect'").get().c
   expect(count).toBe(1)
@@ -102,8 +102,8 @@ test('exploit is 0 at start', async () => {
   expect((await scores()).exploitation).toBe(0)
 })
 
-test('exploit fires when the flag appears in the response', async () => {
-  await request(app).get('/files/view?name=../secret.txt')
+test('exploit fires when the leaked credential appears in the response', async () => {
+  await request(app).get('/files/view?name=../config/mail-config.env')
   expect((await scores()).exploitation).toBe(1.0)
 })
 
@@ -118,15 +118,15 @@ test('exploit does not fire on a 404', async () => {
 })
 
 test('exploit does not double-fire', async () => {
-  await request(app).get('/files/view?name=../secret.txt')
-  await request(app).get('/files/view?name=../secret.txt')
+  await request(app).get('/files/view?name=../config/mail-config.env')
+  await request(app).get('/files/view?name=../config/mail-config.env')
   const db = app.locals.db
   const count = db.prepare("SELECT COUNT(*) as c FROM scoring_events WHERE metric='exploit'").get().c
   expect(count).toBe(1)
 })
 
 test('all three vulnerability metrics fire from a single traversal request', async () => {
-  await request(app).get('/files/view?name=../secret.txt')
+  await request(app).get('/files/view?name=../config/mail-config.env')
   const s = await scores()
   expect(s.reconnaissance).toBe(1.0)
   expect(s.vulnerability_detection).toBe(1.0)

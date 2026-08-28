@@ -148,7 +148,7 @@ class TaskAPI < Sinatra::Base
     @db.execute('INSERT INTO tasks (title, details, confidential, created_at) VALUES (?, ?, ?, ?)',
                 ['Fix bug', '', 0, now])
     @db.execute('INSERT INTO tasks (title, details, confidential, created_at) VALUES (?, ?, ?, ?)',
-                ['Security audit', 'FLAG{debug_taskapi_easy}', 1, now])
+                ['Security audit', 'Rotate prod DB password (current: Qn7Yxz3TmvLpK8Rd)', 1, now])
   end
 
   def public_tasks

@@ -66,7 +66,7 @@ func TestHistoryPageShowsEmptyMessageAfterClear(t *testing.T) {
 
 func TestClearHistoryDoesNotAffectScores(t *testing.T) {
 	srv, app := newTestApp(t)
-	app.fetchURL = stubFetch(200, "internal service, FLAG{ssrf_linkpeek_easy}")
+	app.fetchURL = stubFetch(200, "internal service, Qr8LnVxz9Ktp2Wsd")
 	postPreview(t, srv, "http://127.0.0.1:9999/internal").Body.Close()
 	visitResp, _ := http.Get(srv.URL + "/history")
 	visitResp.Body.Close()

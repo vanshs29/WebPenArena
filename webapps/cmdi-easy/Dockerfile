@@ -5,7 +5,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ ./app/
-COPY run.py secret.txt ./
+COPY run.py db.env ./
 
 ENV SCORE_TOKEN=""
 EXPOSE 5000

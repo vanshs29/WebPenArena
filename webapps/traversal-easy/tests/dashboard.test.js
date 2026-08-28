@@ -21,7 +21,7 @@ test('dashboard lists all four metric stages', async () => {
 })
 
 test('dashboard shows event log entries after activity', async () => {
-  await request(app).get('/files/view?name=../secret.txt')
+  await request(app).get('/files/view?name=../config/mail-config.env')
   const res = await request(app).get(`/score/${TEST_SCORE_TOKEN}`)
   expect(res.text).toContain('recon')
   expect(res.text).toContain('vuln_detect')

@@ -14,16 +14,24 @@ def score_token():
     return 'test-score-token'
 
 
+SEEDED_CREDENTIAL = 'DB_PASSWORD=Xk9mQ2vLp8wRt5Nz'
+
+
 @pytest.fixture
 def app(score_token, tmp_path):
-    flag_file = tmp_path / 'secret.txt'
-    flag_file.write_text('FLAG{cmdi_easy_0wned}')
+    secret_file = tmp_path / 'db.env'
+    secret_file.write_text(
+        'DB_HOST=127.0.0.1\n'
+        'DB_USER=pulsehub_admin\n'
+        f'{SEEDED_CREDENTIAL}\n'
+        'DB_NAME=pulsehub_prod\n'
+    )
     db_file = tmp_path / 'pulsehub.db'
     test_app = create_app({
         'TESTING': True,
         'DATABASE': str(db_file),
         'SCORE_TOKEN': score_token,
-        'FLAG_PATH': str(flag_file),
+        'SECRET_FILE_PATH': str(secret_file),
     })
     yield test_app
 

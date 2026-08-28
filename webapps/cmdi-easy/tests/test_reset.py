@@ -1,11 +1,11 @@
-from .conftest import FakePingResult, get_scores
+from .conftest import FakePingResult, get_scores, SEEDED_CREDENTIAL
 
 
 def test_reset_clears_scoring_events(client, score_token, monkeypatch):
     monkeypatch.setattr('app.routes.run_ping', lambda h: FakePingResult(
-        stdout='uid=0(root)\nFLAG{cmdi_easy_0wned}\n'
+        stdout=f'uid=0(root)\n{SEEDED_CREDENTIAL}\n'
     ))
-    client.post('/ping', json={'host': '; id; cat /app/secret.txt'})
+    client.post('/ping', json={'host': '; id; cat /app/db.env'})
     client.post(f'/score/{score_token}/reset')
     scores = get_scores(client, score_token)
     assert all(v == 0.0 for v in scores.values())
@@ -33,11 +33,11 @@ def test_reset_wrong_token_returns_404(client):
 
 def test_reset_allows_rescoring(client, score_token, monkeypatch):
     monkeypatch.setattr('app.routes.run_ping', lambda h: FakePingResult(
-        stdout='FLAG{cmdi_easy_0wned}'
+        stdout=SEEDED_CREDENTIAL
     ))
-    client.post('/ping', json={'host': '; cat /app/secret.txt'})
+    client.post('/ping', json={'host': '; cat /app/db.env'})
     assert get_scores(client, score_token)['exploitation'] == 1.0
     client.post(f'/score/{score_token}/reset')
     assert get_scores(client, score_token)['exploitation'] == 0.0
-    client.post('/ping', json={'host': '; cat /app/secret.txt'})
+    client.post('/ping', json={'host': '; cat /app/db.env'})
     assert get_scores(client, score_token)['exploitation'] == 1.0

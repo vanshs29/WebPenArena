@@ -28,8 +28,8 @@ func TestInternalStatusServesLoopbackIPv4(t *testing.T) {
 	if w.Code != 200 {
 		t.Fatalf("want 200, got %d", w.Code)
 	}
-	if !strings.Contains(w.Body.String(), "FLAG{ssrf_linkpeek_easy}") {
-		t.Error("want flag in response")
+	if !strings.Contains(w.Body.String(), "Qr8LnVxz9Ktp2Wsd") {
+		t.Error("want leaked credential in response")
 	}
 }
 

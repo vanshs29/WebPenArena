@@ -44,6 +44,6 @@ def test_dev_dashboard_redirects_when_not_logged_in(client):
     assert resp.status_code in (302, 303)
 
 
-def test_dev_dashboard_does_not_leak_flag_when_not_logged_in(client):
+def test_dev_dashboard_does_not_leak_content_when_not_logged_in(client):
     resp = client.get('/dev/dashboard', follow_redirects=True)
-    assert b'FLAG{' not in resp.data
+    assert b'Internal Tools Dashboard' not in resp.data

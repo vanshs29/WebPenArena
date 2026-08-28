@@ -4,7 +4,7 @@ const path = require('path')
 const { writeEvent, getScores, getEvents, resetDb } = require('./db')
 
 const TRAVERSAL_PROBE = /\.\./
-const FLAG_PATTERN = /FLAG\{[a-zA-Z0-9_]+\}/
+const SEEDED_CREDENTIAL = 'SMTP_PASSWORD=Nt9vQz3Lm7Bxk1Rf'
 
 const EXPLORATION_MAP = {
   'GET /': 'GET /',
@@ -74,8 +74,8 @@ router.get('/files/view', trackExploration, (req, res) => {
     return res.status(404).send('File not found')
   }
 
-  if (FLAG_PATTERN.test(content)) {
-    writeEvent(db, 'exploit', 'flag retrieved')
+  if (content.includes(SEEDED_CREDENTIAL)) {
+    writeEvent(db, 'exploit', 'leaked credential retrieved')
   }
 
   res.render('view', { name, content })

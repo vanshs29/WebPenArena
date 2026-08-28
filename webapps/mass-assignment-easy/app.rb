@@ -119,14 +119,9 @@ class Crewsheet < Sinatra::Base
       halt 403, json_body(error: 'forbidden')
     end
 
-    if current_user['role_self_modified'] == 1
-      write_event('exploitation', 'admin export accessed via self-escalated role')
-      content_type :json
-      { flag: 'FLAG{crewsheet_massassign_easy}', roster: admin_export_entries }.to_json
-    else
-      content_type :json
-      { roster: admin_export_entries }.to_json
-    end
+    write_event('exploitation', 'admin export accessed via self-escalated role') if current_user['role_self_modified'] == 1
+    content_type :json
+    { roster: admin_export_entries }.to_json
   end
 
   get '/score/:token' do

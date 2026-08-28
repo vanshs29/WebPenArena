@@ -880,18 +880,19 @@ test('forged admin token unlocks the admin dashboard', async () => {
   expect(res.status).toBe(200);
 });
 
-test('forged admin token unlocks payroll and returns the flag', async () => {
+test('forged admin token unlocks payroll and returns the salary table', async () => {
   const alice = await request(app).post('/login').send({ username: 'alice', password: 'password123' });
   const aliceId = jwt.decode(alice.headers['set-cookie'][0].split('=')[1].split(';')[0]).sub;
   const forged = forgeToken(app, { sub: aliceId, role: 'admin' });
   const res = await request(app).get('/admin/payroll').set('Cookie', `session=${forged}`);
   expect(res.status).toBe(200);
-  expect(res.text).toMatch(/FLAG\{ledger_jwtforge_medium\}/);
+  expect(res.text).toMatch(/\$145000/);
 });
 ```
 
 **Green:** `requireAdmin` middleware checking decoded `role === 'admin'` after signature
-verification. Payroll view renders the salary table and the flag string.
+verification. Payroll view renders the full salary table — reaching it via a forged token is
+itself the proof of exploitation, no separate synthetic reward string is needed.
 
 ---
 

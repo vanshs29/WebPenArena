@@ -37,7 +37,7 @@ describe 'GET /score/:token (HTML dashboard)' do
     get "/score/#{FIXED_SCORE_TOKEN}"
     expect(last_response.body).to include('/debug/env')
     expect(last_response.body).to include('X-Admin-Key')
-    expect(last_response.body).to include('FLAG')
+    expect(last_response.body).to include('confidential')
   end
 
   it 'shows a reset button that posts to the reset endpoint' do

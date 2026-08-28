@@ -3,8 +3,6 @@ const bcrypt = require('bcryptjs')
 const { writeEvent, getScores, getEvents, resetDb } = require('./db')
 const { issueToken, decodeToken, getUnverifiedHeader } = require('./auth')
 
-const FLAG = 'FLAG{jwt_devblog_easy}'
-
 const EXPLORATION_MAP = {
   'GET /': 'GET /',
   'POST /login': 'POST /login',
@@ -97,7 +95,7 @@ router.get('/admin', trackExploration, requireAdmin, (req, res) => {
   const db = req.app.locals.db
   writeEvent(db, 'exploit', 'admin panel accessed')
   const posts = db.prepare('SELECT id, author_id, title, body, created_at FROM posts ORDER BY id').all()
-  res.render('admin', { posts, flag: FLAG })
+  res.render('admin', { posts })
 })
 
 router.get('/score/:token', (req, res) => {

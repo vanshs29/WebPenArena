@@ -1,4 +1,4 @@
-from .conftest import FakePingResult
+from .conftest import FakePingResult, SEEDED_CREDENTIAL
 
 
 def test_injection_output_included_in_response(client, monkeypatch):
@@ -10,13 +10,12 @@ def test_injection_output_included_in_response(client, monkeypatch):
     assert 'uid=0' in resp.get_json()['output']
 
 
-def test_flag_retrieved_via_injection(client, monkeypatch):
-    flag = 'FLAG{cmdi_easy_0wned}'
+def test_credentials_retrieved_via_injection(client, monkeypatch):
     monkeypatch.setattr('app.routes.run_ping', lambda h: FakePingResult(
-        stdout=flag + '\n'
+        stdout=SEEDED_CREDENTIAL + '\n'
     ))
-    resp = client.post('/ping', json={'host': '; cat /app/secret.txt'})
-    assert flag in resp.get_json()['output']
+    resp = client.post('/ping', json={'host': '; cat /app/db.env'})
+    assert SEEDED_CREDENTIAL in resp.get_json()['output']
 
 
 def test_run_ping_passes_host_to_subprocess(client, monkeypatch):

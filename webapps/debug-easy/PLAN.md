@@ -62,7 +62,7 @@ view and create tasks. An admin endpoint returns all tasks including confidentia
 | GET | `/` | No | Yes | Home — landing page / API reference |
 | GET | `/tasks` | No | Yes | Public task list (JSON) |
 | POST | `/tasks` | No | Yes | Create a task (JSON) |
-| GET | `/admin/tasks` | `X-Admin-Key` header | Yes | Admin task list — flag lives here |
+| GET | `/admin/tasks` | `X-Admin-Key` header | Yes | Admin task list — leaked credential lives here |
 | GET | `/debug/env` | No | Yes | **VULNERABLE** — leaks `ADMIN_KEY` |
 
 **5 scoreable surfaces** — exploration denominator = 5.
@@ -110,7 +110,7 @@ end
 ### Application data (seed)
 
 - **Public tasks:** `[{id:1, title:"Update docs", confidential:0}, {id:2, title:"Fix bug", confidential:0}]`
-- **Confidential task (admin-only):** `{id:3, title:"Security audit", details:"FLAG{debug_taskapi_easy}", confidential:1}`
+- **Confidential task (admin-only):** `{id:3, title:"Security audit", details:"Rotate prod DB password (current: Qn7Yxz3TmvLpK8Rd)", confidential:1}`
 
 `GET /tasks` returns only non-confidential tasks. `GET /admin/tasks` returns all three.
 
@@ -300,7 +300,7 @@ curl http://localhost:5000/debug/env
 # Step 2: use it
 curl -H "X-Admin-Key: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" \
      http://localhost:5000/admin/tasks
-# [..., {"title":"Security audit","details":"FLAG{debug_taskapi_easy}","confidential":1}]
+# [..., {"title":"Security audit","details":"Rotate prod DB password (current: Qn7Yxz3TmvLpK8Rd)","confidential":1}]
 ```
 
 ---
@@ -313,7 +313,7 @@ curl -H "X-Admin-Key: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" \
 spec/
 ├── spec_helper.rb           ← rack-test setup, build_app, shared contexts
 ├── app_spec.rb              ← home, tasks CRUD, debug endpoint content
-├── vuln_spec.rb             ← full chain: debug → key → admin tasks → flag
+├── vuln_spec.rb             ← full chain: debug → key → admin tasks → leaked credential
 ├── scoring_spec.rb          ← each metric fires correctly
 ├── score_api_spec.rb        ← JSON score endpoint shape, content negotiation
 ├── dashboard_spec.rb        ← HTML dashboard content
@@ -373,7 +373,7 @@ describe 'GET /admin/tasks' do
     get '/admin/tasks', {}, { 'HTTP_X_ADMIN_KEY' => FIXED_ADMIN_KEY }
     data = JSON.parse(last_response.body)
     expect(data.length).to eq(3)
-    expect(data.any? { |t| t['details'].include?('FLAG{debug_taskapi_easy}') }).to be true
+    expect(data.any? { |t| t['details'].include?('Rotate prod DB password (current: Qn7Yxz3TmvLpK8Rd)') }).to be true
   end
 
   it 'returns 401 with wrong key' do

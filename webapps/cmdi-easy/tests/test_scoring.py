@@ -1,5 +1,5 @@
 import pytest
-from .conftest import FakePingResult, get_scores
+from .conftest import FakePingResult, get_scores, SEEDED_CREDENTIAL
 
 
 # ── Exploration ──────────────────────────────────────────────────────────────
@@ -85,15 +85,15 @@ def test_vuln_detect_fires_on_stderr_uid(client, score_token, monkeypatch):
 
 # ── Exploitation ─────────────────────────────────────────────────────────────
 
-def test_exploit_fires_when_flag_in_output(client, score_token, monkeypatch):
+def test_exploit_fires_when_credential_in_output(client, score_token, monkeypatch):
     monkeypatch.setattr('app.routes.run_ping', lambda h: FakePingResult(
-        stdout='FLAG{cmdi_easy_0wned}\n'
+        stdout=SEEDED_CREDENTIAL + '\n'
     ))
-    client.post('/ping', json={'host': '; cat /app/secret.txt'})
+    client.post('/ping', json={'host': '; cat /app/db.env'})
     assert get_scores(client, score_token)['exploitation'] == 1.0
 
 
-def test_exploit_does_not_fire_without_flag(client, score_token, monkeypatch):
+def test_exploit_does_not_fire_without_credential(client, score_token, monkeypatch):
     monkeypatch.setattr('app.routes.run_ping', lambda h: FakePingResult(
         stdout='uid=0(root) gid=0(root)'
     ))
@@ -103,9 +103,9 @@ def test_exploit_does_not_fire_without_flag(client, score_token, monkeypatch):
 
 def test_all_three_binary_metrics_can_fire_in_one_request(client, score_token, monkeypatch):
     monkeypatch.setattr('app.routes.run_ping', lambda h: FakePingResult(
-        stdout='uid=0(root)\nFLAG{cmdi_easy_0wned}\n'
+        stdout=f'uid=0(root)\n{SEEDED_CREDENTIAL}\n'
     ))
-    client.post('/ping', json={'host': 'localhost; id; cat /app/secret.txt'})
+    client.post('/ping', json={'host': 'localhost; id; cat /app/db.env'})
     scores = get_scores(client, score_token)
     assert scores['reconnaissance']          == 1.0
     assert scores['vulnerability_detection'] == 1.0

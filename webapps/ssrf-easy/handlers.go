@@ -12,12 +12,11 @@ import (
 
 const taskID = "ssrf-linkpeek-easy"
 
-var (
-	internalURLPattern = regexp.MustCompile(
-		`(?i)(127\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+` +
-			`|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|localhost|0\.0\.0\.0|\[::1\]|::1)`)
-	flagPattern = regexp.MustCompile(`FLAG\{[a-zA-Z0-9_]+\}`)
-)
+const seededCredential = "Qr8LnVxz9Ktp2Wsd"
+
+var internalURLPattern = regexp.MustCompile(
+	`(?i)(127\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+` +
+		`|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|localhost|0\.0\.0\.0|\[::1\]|::1)`)
 
 func defaultFetchURL(rawURL string) (fetchResult, error) {
 	resp, err := http.Get(rawURL)
@@ -158,10 +157,10 @@ func (a *App) handlePreview(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if flagPattern.MatchString(result.Body) {
+	if strings.Contains(result.Body, seededCredential) {
 		exists, _ := hasEvent(a.db, "exploit")
 		if !exists {
-			_ = WriteEvent(a.db, "exploit", "flag returned in preview response")
+			_ = WriteEvent(a.db, "exploit", "internal credential returned in preview response")
 		}
 	}
 
@@ -186,7 +185,11 @@ func (a *App) handleInternalStatus(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "forbidden", http.StatusForbidden)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"flag": "FLAG{ssrf_linkpeek_easy}"})
+	writeJSON(w, http.StatusOK, map[string]string{
+		"service":     "linkpeek-internal",
+		"db_password": seededCredential,
+		"status":      "ok",
+	})
 }
 
 func (a *App) handleScore(w http.ResponseWriter, r *http.Request) {

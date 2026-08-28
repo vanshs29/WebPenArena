@@ -14,7 +14,7 @@ bp = Blueprint('main', __name__)
 
 CMDI_PROBE_PATTERN   = re.compile(r'[;|&`$\\(]')
 EXEC_CONFIRM_PATTERN = re.compile(r'uid=\d+\(')
-FLAG_PATTERN         = re.compile(r'FLAG\{[a-zA-Z0-9_]+\}')
+SEEDED_CREDENTIAL    = 'DB_PASSWORD=Xk9mQ2vLp8wRt5Nz'
 
 SCOREABLE_ENDPOINTS = {
     ('GET',  '/'),
@@ -81,12 +81,12 @@ def ping():
         if existing is None:
             write_event(db, 'vuln_detect', 'uid= in output')
 
-    if FLAG_PATTERN.search(combined):
+    if SEEDED_CREDENTIAL in combined:
         existing = db.execute(
             "SELECT id FROM scoring_events WHERE metric='exploit'"
         ).fetchone()
         if existing is None:
-            write_event(db, 'exploit', 'FLAG in output')
+            write_event(db, 'exploit', 'db credential in output')
 
     db.execute(
         'INSERT INTO results (tool, target, output, created_at) VALUES (?, ?, ?, ?)',

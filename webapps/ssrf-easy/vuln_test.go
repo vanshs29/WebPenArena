@@ -5,17 +5,17 @@ import (
 	"testing"
 )
 
-// Cycle 4: Vulnerability works as designed — SSRF reaches internal flag
+// Cycle 4: Vulnerability works as designed — SSRF reaches internal credential
 
 func TestSSRFReachesInternalEndpoint(t *testing.T) {
 	srv, app := newTestApp(t)
-	app.fetchURL = stubFetch(200, `{"flag":"FLAG{ssrf_linkpeek_easy}"}`)
+	app.fetchURL = stubFetch(200, `{"service":"linkpeek-internal","db_password":"Qr8LnVxz9Ktp2Wsd","status":"ok"}`)
 	resp := postPreview(t, srv, "http://localhost:5000/internal/status")
 	defer resp.Body.Close()
 	buf := make([]byte, 4096)
 	n, _ := resp.Body.Read(buf)
-	if !strings.Contains(string(buf[:n]), "FLAG{ssrf_linkpeek_easy}") {
-		t.Error("want flag in preview response")
+	if !strings.Contains(string(buf[:n]), "Qr8LnVxz9Ktp2Wsd") {
+		t.Error("want leaked credential in preview response")
 	}
 }
 
@@ -31,7 +31,7 @@ func TestDefaultFetchURLPerformsRealHTTPGet(t *testing.T) {
 	if result.StatusCode != 200 {
 		t.Errorf("want 200, got %d", result.StatusCode)
 	}
-	if !strings.Contains(result.Body, "FLAG{ssrf_linkpeek_easy}") {
-		t.Error("want flag in fetched body")
+	if !strings.Contains(result.Body, "Qr8LnVxz9Ktp2Wsd") {
+		t.Error("want leaked credential in fetched body")
 	}
 }

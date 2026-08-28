@@ -10,7 +10,7 @@ describe 'GET /admin/tasks' do
     get '/admin/tasks', {}, { 'HTTP_X_ADMIN_KEY' => FIXED_ADMIN_KEY }
     data = JSON.parse(last_response.body)
     expect(data.length).to eq(3)
-    expect(data.any? { |t| t['details'].include?('FLAG{debug_taskapi_easy}') }).to be true
+    expect(data.any? { |t| t['details'].include?('Qn7Yxz3TmvLpK8Rd') }).to be true
   end
 
   it 'returns 401 with wrong key' do

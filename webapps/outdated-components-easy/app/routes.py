@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import time
 import uuid
@@ -16,6 +17,7 @@ bp = Blueprint('main', __name__)
 
 IMAGE_MAGIC_PREFIXES = (b'\xff\xd8\xff', b'\x89PNG\r\n\x1a\n', b'GIF87a', b'GIF89a')
 SCRIPT_CONTENT_SIGNATURES = (b'push graphic-context', b'viewbox')
+RCE_OUTPUT_PATTERN = re.compile(r'uid=\d+\(')
 
 EXPLORATION_SURFACES = [
     ('GET',  '/',                          'Visit the gallery'),
@@ -154,13 +156,17 @@ def _check_score_token(token: str) -> bool:
 
 
 def _check_exploit_marker(db):
-    marker_path = current_app.config['EXPLOIT_MARKER_PATH']
-    if os.path.exists(marker_path):
+    proof_path = current_app.config['RCE_PROOF_PATH']
+    if not os.path.exists(proof_path):
+        return
+    with open(proof_path) as f:
+        content = f.read()
+    if RCE_OUTPUT_PATTERN.search(content):
         existing = db.execute(
             "SELECT id FROM scoring_events WHERE metric='exploit'"
         ).fetchone()
         if existing is None:
-            write_event(db, 'exploit', 'exploit marker file found')
+            write_event(db, 'exploit', 'command output captured via RCE proof file')
 
 
 @bp.route('/score/<token>')
@@ -208,7 +214,7 @@ def score_reset(token):
         db,
         current_app.config['UPLOAD_DIR'],
         current_app.config['SEEDS_DIR'],
-        current_app.config['EXPLOIT_MARKER_PATH'],
+        current_app.config['RCE_PROOF_PATH'],
     )
     db.close()
 

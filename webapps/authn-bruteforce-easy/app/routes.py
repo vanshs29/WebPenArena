@@ -12,7 +12,6 @@ from .scoring import (
 
 bp = Blueprint('main', __name__)
 
-FLAG = 'FLAG{authn_alderworks_easy}'
 FAILED_ATTEMPT_THRESHOLD = 5
 
 SCOREABLE_ENDPOINTS = {
@@ -146,7 +145,7 @@ def dev_dashboard():
     _write_event_once(db, 'exploit', 'dashboard served to authenticated session')
     db.close()
 
-    return render_template('dev_dashboard.html', flag=FLAG)
+    return render_template('dev_dashboard.html')
 
 
 def _check_score_token(token: str) -> bool:

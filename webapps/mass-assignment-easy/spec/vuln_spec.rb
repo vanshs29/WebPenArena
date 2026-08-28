@@ -59,19 +59,19 @@ describe 'GET /admin/export' do
     expect(last_response.status).to eq(403)
   end
 
-  it 'does not return the flag for a member who has not escalated' do
+  it 'does not leak the roster for a member who has not escalated' do
     register(name: 'Alex Chen', email: 'alex@example.com', password: 'secret123')
     patch_profile({ role: 'member' })
     get '/admin/export'
-    expect(last_response.body).not_to include('FLAG{')
+    expect(last_response.body).not_to include('roster')
   end
 
-  it 'returns the flag once role has been self-escalated to admin' do
+  it 'returns the roster once role has been self-escalated to admin' do
     register(name: 'Alex Chen', email: 'alex@example.com', password: 'secret123')
     patch_profile({ role: 'admin' })
     get '/admin/export'
     expect(last_response.status).to eq(200)
-    expect(last_response.body).to include('FLAG{crewsheet_massassign_easy}')
+    expect(JSON.parse(last_response.body)['roster']).not_to be_empty
   end
 
   it 'includes email addresses not present in the public directory' do

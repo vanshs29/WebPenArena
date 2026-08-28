@@ -7,7 +7,6 @@ const { writeConfig, generateSecret } = require('./config')
 const { resetDb } = require('./db')
 const { seedDataFiles } = require('./seedFiles')
 
-const FLAG = 'FLAG{ledger_jwtforge_medium}'
 const TASK_ID = 'traversal-jwtforge-medium'
 
 const PARENT_DIR_SEQUENCE = /\.\.[/\\]/
@@ -144,7 +143,7 @@ router.get('/admin/payroll', trackExploration, requireAdmin, (req, res) => {
     writeEvent(db, 'exploit_payroll_flag', 'Payroll data retrieved under a forged admin token')
   }
   const salaries = db.prepare('SELECT username, salary FROM users ORDER BY id').all()
-  res.render('adminPayroll', { salaries, flag: FLAG })
+  res.render('adminPayroll', { salaries })
 })
 
 router.get('/score/:token', (req, res) => {

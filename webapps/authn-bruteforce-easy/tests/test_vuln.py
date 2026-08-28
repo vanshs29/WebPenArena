@@ -11,7 +11,7 @@ def test_login_with_correct_credentials_grants_dashboard_access(client):
     submit_login(client, TARGET_USERNAME, REAL_PASSWORD)
     resp = client.get('/dev/dashboard')
     assert resp.status_code == 200
-    assert b'FLAG{authn_alderworks_easy}' in resp.data
+    assert b'Internal Tools Dashboard' in resp.data
 
 
 def test_login_with_wrong_password_returns_generic_error(client):

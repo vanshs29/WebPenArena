@@ -204,7 +204,8 @@ condition on a real account).
 
 **Exploitation** — fires inside the `/dev/dashboard` handler, after the session check passes,
 when the dashboard is actually served to a session created via a successful `mito` login.
-Response body contains `FLAG{authn_alderworks_easy}`.
+Reaching the authenticated-only dashboard content is itself the proof of exploitation; no
+separate synthetic reward string is needed.
 
 ### Score computation
 

@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class AppController {
 
     private static final String SESSION_COOKIE_NAME = "session";
-    private static final String FLAG = "FLAG{sessionstore_deser_easy}";
 
     private final ScoreService scoreService;
     private final IssuedSessionTracker issuedSessionTracker;
@@ -80,7 +79,6 @@ public class AppController {
         model.addAttribute("role", role);
         model.addAttribute("theme", theme);
         model.addAttribute("exploited", scoreService.hasExploited());
-        model.addAttribute("flag", scoreService.hasExploited() ? FLAG : null);
 
         return "dashboard";
     }

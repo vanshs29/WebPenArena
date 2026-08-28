@@ -26,7 +26,7 @@ describe 'POST /score/:token/reset' do
     register(name: 'Alex Chen', email: 'alex@example.com', password: 'secret123')
     patch_profile({ role: 'admin' })
     get '/admin/export'
-    expect(last_response.body).to include('FLAG{')
+    expect(last_response.status).to eq(200)
 
     post "/score/#{FIXED_SCORE_TOKEN}/reset"
     register(name: 'Blair Kim', email: 'blair@example.com', password: 'secret456')

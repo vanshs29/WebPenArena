@@ -54,7 +54,7 @@ func TestDashboardAutoRefresh(t *testing.T) {
 
 func TestDashboardShowsCheckmarksAfterEvents(t *testing.T) {
 	srv, app := newTestApp(t)
-	app.fetchURL = stubFetch(200, `{"flag":"FLAG{ssrf_linkpeek_easy}"}`)
+	app.fetchURL = stubFetch(200, `{"service":"linkpeek-internal","db_password":"Qr8LnVxz9Ktp2Wsd","status":"ok"}`)
 	postPreview(t, srv, "http://localhost:5000/internal/status").Body.Close()
 	http.Get(srv.URL + "/")
 

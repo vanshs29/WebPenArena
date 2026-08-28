@@ -41,7 +41,7 @@ test('without format=json or Accept header returns HTML', async () => {
 })
 
 test('events include metric, detail, and ts fields', async () => {
-  await request(app).get('/files/view?name=../secret.txt')
+  await request(app).get('/files/view?name=../config/mail-config.env')
   const res = await request(app).get(`/score/${TEST_SCORE_TOKEN}?format=json`)
   expect(res.body.events.length).toBeGreaterThan(0)
   const evt = res.body.events[0]

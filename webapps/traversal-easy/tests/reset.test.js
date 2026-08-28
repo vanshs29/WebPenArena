@@ -7,7 +7,7 @@ beforeEach(() => { app = newTestApp() })
 afterEach(() => cleanup(app))
 
 test('reset with wrong token returns 404 and does not clear events', async () => {
-  await request(app).get('/files/view?name=../secret.txt')
+  await request(app).get('/files/view?name=../config/mail-config.env')
   const res = await request(app).post('/score/wrong-token/reset')
   expect(res.status).toBe(404)
   const s = (await getScores(request, app)).scores
@@ -15,7 +15,7 @@ test('reset with wrong token returns 404 and does not clear events', async () =>
 })
 
 test('reset clears all scoring events', async () => {
-  await request(app).get('/files/view?name=../secret.txt')
+  await request(app).get('/files/view?name=../config/mail-config.env')
   const before = (await getScores(request, app)).scores
   expect(Object.values(before).some(v => v > 0)).toBe(true)
 
@@ -29,7 +29,7 @@ test('reset clears all scoring events', async () => {
 })
 
 test('docs on disk are untouched by reset', async () => {
-  await request(app).get('/files/view?name=../secret.txt')
+  await request(app).get('/files/view?name=../config/mail-config.env')
   await request(app).post(`/score/${TEST_SCORE_TOKEN}/reset`)
   const res = await request(app).get('/files/view?name=readme.txt')
   expect(res.status).toBe(200)

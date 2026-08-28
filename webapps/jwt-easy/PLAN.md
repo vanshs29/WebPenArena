@@ -105,8 +105,9 @@ token:   base64url(header).base64url(payload).
 
 - **Users:** `alice@devblog.local` / `alice123` (role: `user`);
   `bob@devblog.local` / `bob456` (role: `user`). No admin user.
-- **Posts:** 3 posts by alice and bob. The admin panel shows all posts plus a
-  `flag` field: `FLAG{jwt_devblog_easy}`.
+- **Posts:** 3 posts by alice and bob. The admin panel renders all posts — reaching it via a
+  forged token is itself the proof of successful exploitation (see `requireAdmin`), so no
+  separate synthetic reward string is needed.
 - **Passwords:** bcrypt hashes. Login is not the attack surface; bcrypt is appropriate.
 
 ---
@@ -385,11 +386,11 @@ test('alg:none admin token grants access to admin panel', async () => {
     expect(res.status).toBe(200);
 });
 
-test('admin response contains flag', async () => {
+test('admin response exposes the post moderation data', async () => {
     const token = makeAlgNoneToken({ sub: '0', role: 'admin' });
     const res = await request(app).get('/admin')
         .set('Authorization', `Bearer ${token}`);
-    expect(res.text).toContain('FLAG{jwt_devblog_easy}');
+    expect(res.text).toContain('Hello, DevBlog');
 });
 
 test('tampered HS256 token (wrong sig) is rejected', async () => {
@@ -579,7 +580,7 @@ webapps/jwt-easy/
 **Complete.** Implemented via strict TDD per `CLAUDE.md`. 42 tests passing across
 `app.test.js`, `vuln.test.js`, `scoring.test.js`, `scoreApi.test.js`, `dashboard.test.js`,
 and `reset.test.js`. Docker image builds and the full exploit chain (login → forge
-alg:none admin token → `GET /admin` → flag) was verified end-to-end against the built
+alg:none admin token → `GET /admin` → post data exposed) was verified end-to-end against the built
 container, including all four score metrics firing correctly. Registered in
 `orchestrator/registry.json`.
 

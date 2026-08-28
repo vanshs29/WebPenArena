@@ -13,7 +13,12 @@ function newTestApp() {
   fs.writeFileSync(path.join(docsDir, 'readme.txt'), 'DocVault user guide.')
   fs.writeFileSync(path.join(docsDir, 'terms.txt'), 'Terms of service.')
   fs.writeFileSync(path.join(docsDir, 'faq.txt'), 'Frequently asked questions.')
-  fs.writeFileSync(path.join(tmpDir, 'secret.txt'), 'FLAG{traversal_docvault_easy}')
+  const configDir = path.join(tmpDir, 'config')
+  fs.mkdirSync(configDir)
+  fs.writeFileSync(
+    path.join(configDir, 'mail-config.env'),
+    'SMTP_HOST=mail.docvault.internal\nSMTP_USER=notifications@docvault.internal\nSMTP_PASSWORD=Nt9vQz3Lm7Bxk1Rf\n'
+  )
 
   const dbPath = path.join(tmpDir, 'test.db')
   const app = createApp({ scoreToken: TEST_SCORE_TOKEN, docsDir, dbPath })

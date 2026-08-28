@@ -28,8 +28,8 @@ def create_app(test_config=None):
         app.config['DATABASE'] = os.path.join(app.instance_path, 'pixsnap.db')
         app.config['SCORE_TOKEN'] = os.environ.get('SCORE_TOKEN', '')
         app.config['UPLOAD_DIR'] = os.path.join(app.instance_path, 'uploads')
-        app.config['EXPLOIT_MARKER_PATH'] = os.environ.get(
-            'EXPLOIT_MARKER_PATH', '/tmp/imagetragick_proof',
+        app.config['RCE_PROOF_PATH'] = os.environ.get(
+            'RCE_PROOF_PATH', os.path.join(app.config['UPLOAD_DIR'], '.rce-proof'),
         )
         os.makedirs(app.instance_path, exist_ok=True)
         os.makedirs(app.config['UPLOAD_DIR'], exist_ok=True)

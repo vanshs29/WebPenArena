@@ -38,12 +38,12 @@ describe('admin routes', () => {
     expect(res.status).toBe(200)
   })
 
-  test('forged admin token unlocks payroll and returns the flag', async () => {
+  test('forged admin token unlocks payroll and returns the salary table', async () => {
     const alice = await request(app).post('/login').send({ username: 'alice', password: 'password123' })
     const aliceId = jwt.decode(alice.headers['set-cookie'][0].split('=')[1].split(';')[0]).sub
     const forged = forgeToken(app, { sub: aliceId, role: 'admin' })
     const res = await request(app).get('/admin/payroll').set('Cookie', `session=${forged}`)
     expect(res.status).toBe(200)
-    expect(res.text).toMatch(/FLAG\{ledger_jwtforge_medium\}/)
+    expect(res.text).toMatch(/\$145000/)
   })
 })

@@ -9,11 +9,11 @@ describe('JWT alg:none forgery', () => {
     expect(res.status).toBe(200)
   })
 
-  test('admin response contains flag', async () => {
+  test('admin response exposes the post moderation data', async () => {
     const app = newTestApp()
     const token = makeAlgNoneToken({ sub: '0', role: 'admin' })
     const res = await request(app).get('/admin').set('Authorization', `Bearer ${token}`)
-    expect(res.text).toContain('FLAG{jwt_devblog_easy}')
+    expect(res.text).toContain('Hello, DevBlog')
   })
 
   test('tampered HS256 token (wrong signature) is rejected', async () => {
