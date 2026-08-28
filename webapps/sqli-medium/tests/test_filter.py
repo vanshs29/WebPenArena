@@ -28,7 +28,7 @@ def test_or_without_comment_not_blocked_by_filter(client, score_token):
         "username": SQLI_USERNAME, "password": SQLI_PASSWORD
     })
     scores = _get_scores(client, score_token)
-    assert scores["vulnerability_detection"] >= 0.5
+    assert scores["vulnerability_detection"] >= 2
 
 
 def test_single_quote_not_blocked_by_filter(client):
