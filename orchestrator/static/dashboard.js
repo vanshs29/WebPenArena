@@ -22,6 +22,7 @@ const buildErrorsListEl = document.getElementById("build-errors-list");
 let latestData = null;
 let activeTier = "easy";
 let buildErrors = [];
+let showPercent = false;
 
 function addBuildError(id, stderr) {
   if (!stderr) return;
@@ -57,6 +58,15 @@ function fmt(n) {
   return Number(n ?? 0).toFixed(2);
 }
 
+function formatTotal(t) {
+  if (!t) return showPercent ? "0%" : "0.00 / 0.00";
+  if (showPercent) {
+    const pct = t.max > 0 ? (t.achieved / t.max) * 100 : 0;
+    return `${pct.toFixed(0)}%`;
+  }
+  return `${fmt(t.achieved)} / ${fmt(t.max)}`;
+}
+
 function renderTotals(el, totals) {
   el.innerHTML = "";
   for (const m of METRICS) {
@@ -64,7 +74,7 @@ function renderTotals(el, totals) {
     tile.className = "stat-tile";
     tile.innerHTML = `
       <div class="label"><span class="dot dot-${m.cls}"></span>${m.label}</div>
-      <div class="value">${totals[m.key] ?? "0.00 / 0"}</div>
+      <div class="value">${formatTotal(totals[m.key])}</div>
     `;
     el.appendChild(tile);
   }
@@ -154,16 +164,18 @@ function patchCard(node, app) {
   node.classList.toggle("is-offline", !app.running || score === null);
 
   const scores = score ? score.scores : {};
+  const maxScores = score ? (score.max_score || {}) : {};
   for (const m of METRICS) {
     const fill = node.querySelector(`.meter-fill[data-metric="${m.key}"]`);
     const val = node.querySelector(`[data-metric-value="${m.key}"]`);
     const v = scores[m.key];
+    const max = maxScores[m.key] ?? 1;
     if (v === undefined) {
       fill.style.width = "0%";
       val.textContent = "–";
     } else {
-      fill.style.width = `${Math.min(v, 1) * 100}%`;
-      val.textContent = fmt(v);
+      fill.style.width = `${Math.min(v / max, 1) * 100}%`;
+      val.textContent = showPercent ? `${((v / max) * 100).toFixed(0)}%` : `${fmt(v)} / ${fmt(max)}`;
     }
   }
 
@@ -291,6 +303,16 @@ document.getElementById("btn-reset-all").addEventListener("click", (e) => {
 document.getElementById("btn-stop-all").addEventListener("click", (e) => {
   if (!confirm("Stop and remove ALL running benchmark containers?")) return;
   withButton(e.target, () => fetch("/api/stop-all", { method: "POST" }));
+});
+
+const toggleViewBtn = document.getElementById("btn-toggle-percent");
+toggleViewBtn.addEventListener("click", () => {
+  showPercent = !showPercent;
+  toggleViewBtn.textContent = showPercent ? "Show points" : "Show %";
+  if (!latestData) return;
+  renderTotals(totalsAllEl, latestData.totals);
+  applyTier();
+  renderApps(latestData.apps);
 });
 
 refresh();

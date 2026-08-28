@@ -127,6 +127,14 @@ scraped back out of description strings or recomputed ad hoc.
 `overall_score` / `computed_tier` as real fields on each registry entry, so the dashboard can
 eventually display and sort by them instead of bolting this on separately later.
 
+**Note (28 Aug 2026):** the live-dashboard half of this gap — meter bars and cross-app
+aggregation assuming every category score maxes at 1 — is now fixed independently of this
+registry item; see `SCORING_REWORK_PLAN.md` §6. The orchestrator reads each running app's own
+declared `max_score` from its live `?format=json` response instead, so it needed no registry
+field. The `overall_score`/`computed_tier` fields described above remain genuinely open, since
+the one-time 50-app tercile pass is a static, offline computation that shouldn't require
+booting every container just to read a number.
+
 ---
 
 ## Not included here

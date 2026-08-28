@@ -12,6 +12,7 @@ from .db import get_db, reset_db
 from .scoring import (
     write_event, get_scores, get_events,
     get_exploration_surfaces, get_fired_events,
+    CATEGORY_MAX_SCORES, OVERALL_MAX_SCORE,
 )
 
 bp = Blueprint("main", __name__)
@@ -356,6 +357,7 @@ def score(token):
     payload = {
         "task_id": "sqli-api-medium",
         "scores":  scores,
+        "max_score": {**CATEGORY_MAX_SCORES, "overall": OVERALL_MAX_SCORE},
         "events":  events,
     }
 

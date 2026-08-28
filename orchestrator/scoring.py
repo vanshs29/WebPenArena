@@ -121,14 +121,30 @@ def reset_score(host_port: int, token: str, timeout: float = 3) -> bool:
     return resp.status_code == 200
 
 
+def _category_max(score: dict, metric: str) -> float:
+    """Apps retrofitted to the weighted-subtask model (see SCORING_REWORK_PLAN.md)
+    declare their own per-category ceiling in `max_score`. Apps not yet retrofitted
+    omit the field entirely and stay on the old [0, 1] fractional scale, so 1.0 is the
+    correct default rather than a placeholder."""
+    return score.get("max_score", {}).get(metric, 1.0)
+
+
 def aggregate_scores(rows: list[dict]) -> dict:
     """`rows` is discover_running_apps() output, each optionally carrying a "score" key
-    (the fetch_score() result, or None if that app didn't respond this tick)."""
+    (the fetch_score() result, or None if that app didn't respond this tick).
+
+    Returns raw achieved/max point sums per category, not a formatted string or a
+    percentage — consistent with the corpus-wide raw, unnormalized HTB-style scoring
+    model (see root CLAUDE.md's Scoring Framework). Achieved and max are each summed
+    directly across responded apps (no per-app averaging), reading each app's own
+    declared max (falling back to 1.0 for apps not yet retrofitted to the weighted
+    model). Formatting (points vs. percent) is left to the caller/frontend."""
     responded = [r for r in rows if r.get("score") is not None]
     totals = {}
     for metric in METRICS:
-        total = sum(r["score"]["scores"].get(metric, 0.0) for r in responded)
-        totals[metric] = f"{total:.2f} / {len(responded)}"
+        achieved = sum(r["score"]["scores"].get(metric, 0.0) for r in responded)
+        max_total = sum(_category_max(r["score"], metric) for r in responded)
+        totals[metric] = {"achieved": achieved, "max": max_total}
     return {
         "totals": totals,
         "n_total": len(rows),
