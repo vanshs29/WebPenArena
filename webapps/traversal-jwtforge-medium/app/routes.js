@@ -111,7 +111,6 @@ router.get('/receipts', trackExploration, requireAuth, (req, res) => {
   const uploadsDir = req.app.locals.uploadsDir
   const configDir = req.app.locals.configDir
 
-  // INTENTIONAL VULNERABILITY — do not fix
   const target = path.join(uploadsDir, file)
 
   fs.readFile(target, (err, data) => {
