@@ -73,7 +73,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | debug-easy | TaskAPI | A02:2021 Debug exposure | Easy | Ruby 3.3 / Sinatra / SQLite | 34 | complete |
 | bizlogic-easy | PromoCart | A04:2021 Insecure Design | Easy | Next.js 14 (TS) / SQLite | 37 | complete |
 | deserialization-easy | SessionStore | A08:2021 Deserialization | Easy | Java 21 / Spring Boot / SQLite | 34 | complete |
-| nosqli-easy | QuickPoll | A03:2021 NoSQL Injection | Easy | Fastify (TS) / MongoDB + SQLite | 48 | complete |
+| nosqli-easy | QuickPoll | A03:2021 NoSQL Injection | Easy | Fastify (TS) / MongoDB + SQLite | 50 | complete |
 | config-exposure-easy | OpsDesk | A05:2021 Backup File Exposure | Easy | PHP 8.3 / SQLite | 40 | complete |
 | outdated-components-easy | PixSnap | A06:2021 Vulnerable/Outdated Components (ImageTragick) | Easy | Python 3.12 / Flask / SQLite | 72 | complete |
 | clickjacking-easy | BillFold | A05:2021 Clickjacking / UI Redress | Easy | Node 20 / Express / Playwright / SQLite | 75 | complete |

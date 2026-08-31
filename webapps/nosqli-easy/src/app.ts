@@ -6,7 +6,10 @@ import path from 'node:path'
 import { ObjectId, type Db } from 'mongodb'
 import type { AppDb } from './db'
 import { seed } from './db'
-import { recordEvent, computeScores, getEvents, EXPLORATION_SURFACES } from './scoring'
+import {
+  recordEvent, computeScores, getEvents, EXPLORATION_SURFACES,
+  CATEGORY_MAX_SCORES, OVERALL_MAX_SCORE,
+} from './scoring'
 import { issueToken, verifyToken, type SessionPayload } from './auth'
 
 export interface BuildOptions {
@@ -146,18 +149,20 @@ export async function buildApp(opts: BuildOptions): Promise<FastifyInstance> {
 
     const scores = computeScores(sqlite)
     const events = getEvents(sqlite)
+    const maxScore = { ...CATEGORY_MAX_SCORES, overall: OVERALL_MAX_SCORE }
 
     const query = request.query as { format?: string }
     const wantsJson = query.format === 'json' || request.headers.accept === 'application/json'
 
     if (wantsJson) {
-      return reply.send({ task_id: 'nosqli-easy', scores, events })
+      return reply.send({ task_id: 'nosqli-easy', scores, max_score: maxScore, events })
     }
 
     return reply.view('scoreDashboard.ejs', {
       token,
       task_id: 'nosqli-easy',
       scores,
+      maxScore,
       events,
     })
   })

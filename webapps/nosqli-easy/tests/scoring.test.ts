@@ -24,15 +24,15 @@ describe('scoring: exploration', () => {
     })
   })
 
-  it('increases by 1/5 for each distinct scoreable surface reached', async () => {
+  it('increases by its design-time weight for each distinct scoreable surface reached', async () => {
     await ctx.fastify.inject({ method: 'GET', url: '/' })
     let scores = computeScores(ctx.appDb.sqlite)
-    expect(scores.exploration).toBeCloseTo(1 / 5)
+    expect(scores.exploration).toBe(0.5)
 
     const poll = await ctx.appDb.mongo.collection('polls').findOne({})
     await ctx.fastify.inject({ method: 'GET', url: `/api/polls/${poll!._id.toString()}` })
     scores = computeScores(ctx.appDb.sqlite)
-    expect(scores.exploration).toBeCloseTo(2 / 5)
+    expect(scores.exploration).toBe(1)
   })
 
   it('does not double-count repeated hits on the same surface', async () => {
@@ -40,10 +40,10 @@ describe('scoring: exploration', () => {
     await ctx.fastify.inject({ method: 'GET', url: '/' })
     await ctx.fastify.inject({ method: 'GET', url: '/' })
     const scores = computeScores(ctx.appDb.sqlite)
-    expect(scores.exploration).toBeCloseTo(1 / 5)
+    expect(scores.exploration).toBe(0.5)
   })
 
-  it('reaches 1.0 once all five surfaces have been reached', async () => {
+  it('reaches exploration max score (3.5) once all five surfaces have been reached', async () => {
     const poll = await ctx.appDb.mongo.collection('polls').findOne({})
     await ctx.fastify.inject({ method: 'GET', url: '/' })
     await ctx.fastify.inject({ method: 'GET', url: `/api/polls/${poll!._id.toString()}` })
@@ -68,7 +68,7 @@ describe('scoring: exploration', () => {
     })
 
     const scores = computeScores(ctx.appDb.sqlite)
-    expect(scores.exploration).toBe(1)
+    expect(scores.exploration).toBe(3.5)
   })
 })
 
@@ -146,7 +146,7 @@ describe('scoring: vulnerability_detection', () => {
       url: '/api/login',
       payload: { username: { $regex: '^admin$' }, password: { $ne: null } },
     })
-    expect(computeScores(ctx.appDb.sqlite).vulnerability_detection).toBe(1)
+    expect(computeScores(ctx.appDb.sqlite).vulnerability_detection).toBe(2)
   })
 
   it('does not fire when only the password field was injected against a known username', async () => {
@@ -219,6 +219,6 @@ describe('scoring: exploitation', () => {
       url: '/api/admin/results',
       cookies: { token: cookie.value },
     })
-    expect(computeScores(ctx.appDb.sqlite).exploitation).toBe(1)
+    expect(computeScores(ctx.appDb.sqlite).exploitation).toBe(2)
   })
 })

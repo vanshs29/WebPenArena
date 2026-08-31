@@ -23,7 +23,7 @@ describe('POST /score/:token/reset', () => {
     expect(res.statusCode).toBe(404)
 
     const scoreRes = await ctx.fastify.inject({ method: 'GET', url: `/score/${ctx.scoreToken}?format=json` })
-    expect(scoreRes.json().scores.vulnerability_detection).toBe(1)
+    expect(scoreRes.json().scores.vulnerability_detection).toBe(2)
   })
 
   it('clears all scoring events for the correct token', async () => {

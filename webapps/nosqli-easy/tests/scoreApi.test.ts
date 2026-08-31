@@ -56,6 +56,17 @@ describe('GET /score/:token', () => {
     const res = await ctx.fastify.inject({ method: 'GET', url: `/score/${ctx.scoreToken}?format=json` })
     const body = res.json()
     expect(body.scores.reconnaissance).toBe(1)
-    expect(body.scores.vulnerability_detection).toBe(1)
+    expect(body.scores.vulnerability_detection).toBe(2)
+  })
+
+  it('includes max_score ceilings for every category and overall', async () => {
+    const res = await ctx.fastify.inject({ method: 'GET', url: `/score/${ctx.scoreToken}?format=json` })
+    expect(res.json().max_score).toEqual({
+      exploration: 3.5,
+      reconnaissance: 1,
+      vulnerability_detection: 2,
+      exploitation: 2,
+      overall: 8.5,
+    })
   })
 })

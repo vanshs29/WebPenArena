@@ -53,4 +53,10 @@ describe('score dashboard HTML', () => {
     const res = await ctx.fastify.inject({ method: 'GET', url: `/score/${ctx.scoreToken}` })
     expect(res.body).toMatch(/&#10007;|not yet|None/i)
   })
+
+  it('shows per-checkpoint weights and the overall point ceiling', async () => {
+    const res = await ctx.fastify.inject({ method: 'GET', url: `/score/${ctx.scoreToken}` })
+    expect(res.body).toContain('0.0 / 3.5 pts')
+    expect(res.body).toContain('/ 8.5 pts')
+  })
 })
