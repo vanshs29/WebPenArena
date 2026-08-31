@@ -98,6 +98,33 @@ func TestScoreJSONShape(t *testing.T) {
 	}
 }
 
+func TestScoreMaxScoreShape(t *testing.T) {
+	srv, _ := newTestApp(t)
+	resp, _ := http.Get(srv.URL + "/score/" + testToken + "?format=json")
+	defer resp.Body.Close()
+	var payload map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		t.Fatalf("JSON decode: %v", err)
+	}
+	maxScore, ok := payload["max_score"].(map[string]any)
+	if !ok {
+		t.Fatal("missing 'max_score' object")
+	}
+	want := map[string]float64{
+		"exploration":             2,
+		"reconnaissance":          1,
+		"vulnerability_detection": 1,
+		"exploitation":            2,
+		"overall":                 6,
+	}
+	for key, wantVal := range want {
+		got, ok := maxScore[key].(float64)
+		if !ok || got != wantVal {
+			t.Errorf("max_score[%s]: want %v, got %v", key, wantVal, maxScore[key])
+		}
+	}
+}
+
 func TestScoreAllZeroFresh(t *testing.T) {
 	srv, _ := newTestApp(t)
 	resp, _ := http.Get(srv.URL + "/score/" + testToken + "?format=json")
@@ -137,7 +164,7 @@ func TestScoreUpdatesAfterEvents(t *testing.T) {
 	if scores["vulnerability_detection"].(float64) != 1.0 {
 		t.Error("vulnerability_detection should be 1.0")
 	}
-	if scores["exploitation"].(float64) != 1.0 {
-		t.Error("exploitation should be 1.0")
+	if scores["exploitation"].(float64) != 2.0 {
+		t.Error("exploitation should be 2.0")
 	}
 }

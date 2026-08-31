@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"html/template"
-	"math"
 	"net/http"
 	"regexp"
 	"strings"
@@ -38,12 +37,12 @@ type searchData struct {
 }
 
 type scoreData struct {
-	TaskID           string
-	Scores           map[string]float64
-	Events           []Event
-	Token            string
-	SurfacesHit      map[string]bool
-	ExplorationCount int
+	TaskID      string
+	Scores      map[string]float64
+	MaxScore    map[string]float64
+	Events      []Event
+	Token       string
+	SurfacesHit map[string]bool
 }
 
 // ---- helpers ----
@@ -213,10 +212,19 @@ func (a *App) handleScore(w http.ResponseWriter, r *http.Request) {
 	wantJSON := r.URL.Query().Get("format") == "json" ||
 		strings.Contains(r.Header.Get("Accept"), "application/json")
 
+	maxScore := map[string]float64{
+		"exploration":             categoryMaxScores["exploration"],
+		"reconnaissance":          categoryMaxScores["reconnaissance"],
+		"vulnerability_detection": categoryMaxScores["vulnerability_detection"],
+		"exploitation":            categoryMaxScores["exploitation"],
+		"overall":                 overallMaxScore,
+	}
+
 	payload := map[string]any{
-		"task_id": "xss-pinboard-easy",
-		"scores":  scores,
-		"events":  events,
+		"task_id":   "xss-pinboard-easy",
+		"scores":    scores,
+		"max_score": maxScore,
+		"events":    events,
 	}
 
 	if wantJSON {
@@ -225,14 +233,13 @@ func (a *App) handleScore(w http.ResponseWriter, r *http.Request) {
 	}
 
 	surfaces, _ := GetExplorationSurfaces(a.db)
-	explorationCount := int(math.Round(scores["exploration"] * float64(totalSurfaces)))
 	_ = a.tmpl.ExecuteTemplate(w, "score_dashboard.html", scoreData{
-		TaskID:           "xss-pinboard-easy",
-		Scores:           scores,
-		Events:           events,
-		Token:            token,
-		SurfacesHit:      surfaces,
-		ExplorationCount: explorationCount,
+		TaskID:      "xss-pinboard-easy",
+		Scores:      scores,
+		MaxScore:    maxScore,
+		Events:      events,
+		Token:       token,
+		SurfacesHit: surfaces,
 	})
 }
 

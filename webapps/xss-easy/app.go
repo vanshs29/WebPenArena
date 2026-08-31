@@ -35,7 +35,7 @@ func newApp(cfg Config) (*App, error) {
 		return nil, fmt.Errorf("load jwt secret: %w", err)
 	}
 	funcMap := template.FuncMap{
-		"mul": func(a, b float64) float64 { return a * b },
+		"add4": func(a, b, c, d float64) float64 { return a + b + c + d },
 	}
 	tmpl, err := template.New("").Funcs(funcMap).ParseGlob("templates/*.html")
 	if err != nil {

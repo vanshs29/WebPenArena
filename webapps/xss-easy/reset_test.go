@@ -119,8 +119,8 @@ func TestResetScoresCanBeRebuiltAfterReset(t *testing.T) {
 	json.NewDecoder(resp.Body).Decode(&payload)
 	scores := payload["scores"].(map[string]any)
 
-	if scores["exploitation"].(float64) != 1.0 {
-		t.Error("exploitation should reach 1.0 again after reset + replay")
+	if scores["exploitation"].(float64) != 2.0 {
+		t.Error("exploitation should reach 2.0 again after reset + replay")
 	}
 	// Confirm events list is not empty
 	events, ok := payload["events"].([]any)

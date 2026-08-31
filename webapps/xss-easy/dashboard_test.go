@@ -70,3 +70,17 @@ func TestDashboardAutoRefresh(t *testing.T) {
 		t.Error("dashboard should have auto-refresh meta tag")
 	}
 }
+
+func TestDashboardShowsWeightsAndOverallCeiling(t *testing.T) {
+	srv, _ := newTestApp(t)
+	resp, _ := http.Get(srv.URL + "/score/" + testToken)
+	body, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	bodyStr := string(body)
+	if !strings.Contains(bodyStr, "0.0 / 2") {
+		t.Error("dashboard should show the exploration card as 0.0 / 2")
+	}
+	if !strings.Contains(bodyStr, "/ 6 pts") {
+		t.Error("dashboard should show the overall point ceiling as / 6 pts")
+	}
+}

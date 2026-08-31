@@ -59,8 +59,8 @@ func TestExplorationAllFourSurfaces(t *testing.T) {
 	http.Get(srv.URL + "/admin")
 	http.Get(srv.URL + "/search")
 	scores, _ := GetScores(app.db)
-	if scores["exploration"] != 1.0 {
-		t.Errorf("all 4 surfaces: want 1.0, got %f", scores["exploration"])
+	if scores["exploration"] != 2.0 {
+		t.Errorf("all 4 surfaces: want exploration max score 2.0, got %f", scores["exploration"])
 	}
 }
 
@@ -69,7 +69,7 @@ func TestExplorationPartialScore(t *testing.T) {
 	http.Get(srv.URL + "/")
 	http.Get(srv.URL + "/admin")
 	scores, _ := GetScores(app.db)
-	want := 2.0 / 4.0
+	want := 1.0 // GET / (0.5) + GET /admin (0.5)
 	if scores["exploration"] != want {
 		t.Errorf("2 surfaces: want %f, got %f", want, scores["exploration"])
 	}
