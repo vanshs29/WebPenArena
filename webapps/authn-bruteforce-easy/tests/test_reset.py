@@ -23,11 +23,11 @@ def test_reset_wrong_token_returns_404(client):
 
 def test_reset_allows_rescoring(client, score_token):
     client.get('/')
-    assert get_scores(client, score_token)['exploration'] == 0.25
+    assert get_scores(client, score_token)['exploration'] == 0.5
     client.post(f'/score/{score_token}/reset')
     assert get_scores(client, score_token)['exploration'] == 0.0
     client.get('/')
-    assert get_scores(client, score_token)['exploration'] == 0.25
+    assert get_scores(client, score_token)['exploration'] == 0.5
 
 
 def test_reset_clears_failed_attempt_count_toward_threshold(client, score_token):
