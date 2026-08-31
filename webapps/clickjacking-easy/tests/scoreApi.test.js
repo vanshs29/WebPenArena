@@ -38,6 +38,17 @@ test('GET /score/:token without json request returns the HTML dashboard', async 
   expect(res.headers['content-type']).toMatch(/html/)
 })
 
+test('GET /score/:token?format=json includes max_score ceilings for every category and overall', async () => {
+  const res = await request(app).get(`/score/${TEST_SCORE_TOKEN}?format=json`)
+  expect(res.body.max_score).toEqual({
+    exploration: 5.5,
+    reconnaissance: 1,
+    vulnerability_detection: 2,
+    exploitation: 2,
+    overall: 10.5,
+  })
+})
+
 test('all scores start at zero on a fresh app', async () => {
   const res = await request(app).get(`/score/${TEST_SCORE_TOKEN}?format=json`)
   expect(res.body.scores.exploration).toBe(0)

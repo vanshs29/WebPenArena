@@ -130,7 +130,7 @@ test('SCORING: vuln_detect fires when the victim session requests the route with
     .set('Sec-Fetch-Dest', 'iframe')
   expect(res.status).toBe(200)
   const scores = await getScores(app)
-  expect(scores.vulnerability_detection).toBe(1)
+  expect(scores.vulnerability_detection).toBe(2)
 })
 
 test('SCORING: exploitation fires and subscription flips off when the victim session POSTs from an iframe context', async () => {
@@ -141,7 +141,7 @@ test('SCORING: exploitation fires and subscription flips off when the victim ses
     .set('Sec-Fetch-Dest', 'iframe')
   expect(res.status).toBe(200)
   const scores = await getScores(app)
-  expect(scores.exploitation).toBe(1)
+  expect(scores.exploitation).toBe(2)
 
   const dashboard = await request(app)
     .get(`/score/${TEST_SCORE_TOKEN}`)

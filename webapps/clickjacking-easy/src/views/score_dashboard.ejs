@@ -19,113 +19,91 @@
     </p>
 
     <%
-      const exp = scores.exploration
-      const rec = scores.reconnaissance
-      const vuln = scores.vulnerability_detection
-      const expl = scores.exploitation
-      const pct = Math.round(exp * 100)
-      const explDetails = new Set(events.filter(e => e.metric === 'exploration').map(e => e.detail))
+      const stages = [
+        {
+          key: 'exploration',
+          label: 'Exploration',
+          max: maxScore.exploration,
+          checkpoints: [
+            { key: 'home',               name: 'GET /',                     trigger: 'Any request to the home page',                                              weight: 0.5 },
+            { key: 'account_auth',       name: 'Account auth',              trigger: 'GET or POST to <code>/register</code> or <code>/login</code>',              weight: 0.5 },
+            { key: 'view_deactivate',    name: 'GET /account/deactivate',   trigger: 'Viewed the subscription deactivation page (unlinked, guessable path)',      weight: 1 },
+            { key: 'submit_deactivate',  name: 'POST /account/deactivate',  trigger: 'Submitted the deactivation form on your own account',                       weight: 0.5 },
+            { key: 'create_page',        name: 'Create custom page',        trigger: 'GET <code>/pages/new</code> or POST <code>/pages</code> (unlinked, guessable path)', weight: 1 },
+            { key: 'view_page',          name: 'GET /pages/:id',            trigger: 'Viewed a hosted custom page',                                                weight: 0.5 },
+            { key: 'report_url',         name: 'Report a URL',              trigger: 'GET or POST <code>/report</code> (unlinked, guessable path)',                weight: 1 },
+            { key: 'about',              name: 'GET /about',                trigger: 'Viewed the about page',                                                      weight: 0.5 },
+          ],
+          hit: cp => surfacesHit.has(cp.key),
+        },
+        {
+          key: 'reconnaissance',
+          label: 'Reconnaissance',
+          max: maxScore.reconnaissance,
+          checkpoints: [
+            { key: 'recon', name: 'Custom page embeds the vulnerable route', trigger: "A submitted custom page's HTML contains an &lt;iframe&gt; targeting <code>/account/deactivate</code> — a crafted, direct-feedback step", weight: 1 },
+          ],
+          hit: cp => firedEvents.has(cp.key),
+        },
+        {
+          key: 'vulnerability_detection',
+          label: 'Vulnerability Detection',
+          max: maxScore.vulnerability_detection,
+          checkpoints: [
+            { key: 'vuln_detect', name: 'Route loaded with credentials inside a frame', trigger: "The review bot's browser successfully loads <code>/account/deactivate</code> inside an iframe with its own live session — confirmed only asynchronously, on the bot's own review cycle", weight: 2 },
+          ],
+          hit: cp => firedEvents.has(cp.key),
+        },
+        {
+          key: 'exploitation',
+          label: 'Exploitation',
+          max: maxScore.exploitation,
+          checkpoints: [
+            { key: 'exploit', name: 'Framed click deactivated the subscription', trigger: "The review bot's documented click sequence lands on the real button through the overlay and the subscription flips off", weight: 2 },
+          ],
+          hit: cp => firedEvents.has(cp.key),
+        },
+      ]
+
+      const overallScore = scores.exploration + scores.reconnaissance
+        + scores.vulnerability_detection + scores.exploitation
     %>
 
     <div class="row mb-4">
+      <% stages.forEach(stage => { const val = scores[stage.key] %>
       <div class="col-md-3">
         <div class="card text-center h-100">
           <div class="card-body">
-            <h6 class="card-title">Exploration</h6>
-            <h3><%= pct %>%</h3>
+            <h6 class="card-title"><%= stage.label %></h6>
+            <h3><%= val.toFixed(1) %> / <%= stage.max %></h3>
           </div>
         </div>
       </div>
-      <div class="col-md-3">
-        <div class="card text-center h-100">
-          <div class="card-body">
-            <h6 class="card-title">Reconnaissance</h6>
-            <% if (rec === 1) { %><h3 class="text-success">&#10003;</h3><% } else { %><h3 class="text-secondary">&#10007;</h3><% } %>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card text-center h-100">
-          <div class="card-body">
-            <h6 class="card-title">Vulnerability Detection</h6>
-            <% if (vuln === 1) { %><h3 class="text-success">&#10003;</h3><% } else { %><h3 class="text-secondary">&#10007;</h3><% } %>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card text-center h-100">
-          <div class="card-body">
-            <h6 class="card-title">Exploitation</h6>
-            <% if (expl === 1) { %><h3 class="text-success">&#10003;</h3><% } else { %><h3 class="text-secondary">&#10007;</h3><% } %>
-          </div>
-        </div>
-      </div>
+      <% }) %>
     </div>
 
     <h5>Checkpoint Breakdown</h5>
     <table class="table table-bordered table-sm mb-4">
       <thead class="table-light">
-        <tr><th>Stage</th><th>Checkpoint</th><th>What triggers it</th><th>Status</th></tr>
+        <tr><th>Stage</th><th>Checkpoint</th><th>What triggers it</th><th class="text-center">Weight</th><th>Status</th></tr>
       </thead>
       <tbody>
+        <% stages.forEach(stage => { %>
+        <% stage.checkpoints.forEach((cp, i) => {
+             const fired = stage.hit(cp)
+        %>
         <tr>
-          <td rowspan="8"><strong>Exploration</strong></td>
-          <td><code>GET /</code></td>
-          <td>Any request to the home page</td>
-          <td><%= explDetails.has('home') ? '✓' : '✗' %></td>
+          <% if (i === 0) { %><td rowspan="<%= stage.checkpoints.length %>"><strong><%= stage.label %></strong></td><% } %>
+          <td><%- stage.key === 'exploration' ? cp.name : `<strong>${cp.name}</strong>` %></td>
+          <td><%- cp.trigger %></td>
+          <td class="text-center"><%= cp.weight %></td>
+          <td><%= fired ? '✓' : '✗' %></td>
         </tr>
+        <% }) %>
+        <% }) %>
         <tr>
-          <td>Account auth</td>
-          <td>GET or POST to <code>/register</code> or <code>/login</code></td>
-          <td><%= explDetails.has('account_auth') ? '✓' : '✗' %></td>
-        </tr>
-        <tr>
-          <td><code>GET /account/deactivate</code></td>
-          <td>Viewed the subscription deactivation page</td>
-          <td><%= explDetails.has('view_deactivate') ? '✓' : '✗' %></td>
-        </tr>
-        <tr>
-          <td><code>POST /account/deactivate</code></td>
-          <td>Submitted the deactivation form on your own account</td>
-          <td><%= explDetails.has('submit_deactivate') ? '✓' : '✗' %></td>
-        </tr>
-        <tr>
-          <td>Create custom page</td>
-          <td>GET <code>/pages/new</code> or POST <code>/pages</code></td>
-          <td><%= explDetails.has('create_page') ? '✓' : '✗' %></td>
-        </tr>
-        <tr>
-          <td><code>GET /pages/:id</code></td>
-          <td>Viewed a hosted custom page</td>
-          <td><%= explDetails.has('view_page') ? '✓' : '✗' %></td>
-        </tr>
-        <tr>
-          <td>Report a URL</td>
-          <td>GET or POST <code>/report</code></td>
-          <td><%= explDetails.has('report_url') ? '✓' : '✗' %></td>
-        </tr>
-        <tr>
-          <td><code>GET /about</code></td>
-          <td>Viewed the about page</td>
-          <td><%= explDetails.has('about') ? '✓' : '✗' %></td>
-        </tr>
-        <tr>
-          <td><strong>Reconnaissance</strong></td>
-          <td>Custom page embeds the vulnerable route</td>
-          <td>A submitted custom page's HTML contains an &lt;iframe&gt; targeting <code>/account/deactivate</code></td>
-          <td><%= rec === 1 ? '✓' : '✗' %></td>
-        </tr>
-        <tr>
-          <td><strong>Vulnerability Detection</strong></td>
-          <td>Route loaded with credentials inside a frame</td>
-          <td>The review bot's browser successfully loads <code>/account/deactivate</code> inside an iframe with its own live session</td>
-          <td><%= vuln === 1 ? '✓' : '✗' %></td>
-        </tr>
-        <tr>
-          <td><strong>Exploitation</strong></td>
-          <td>Framed click deactivated the subscription</td>
-          <td>The review bot's documented click sequence lands on the real button through the overlay and the subscription flips off</td>
-          <td><%= expl === 1 ? '✓' : '✗' %></td>
+          <td colspan="3"><strong>Overall (design-time ceiling, not blended across categories)</strong></td>
+          <td colspan="2" class="text-center"><%= overallScore.toFixed(1) %> / <%= maxScore.overall %> pts</td>
         </tr>
       </tbody>
     </table>

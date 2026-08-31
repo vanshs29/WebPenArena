@@ -31,21 +31,32 @@ describe('writeEvent', () => {
 })
 
 describe('getScores', () => {
-  it('reports exploration as a fraction of the 8 named surfaces', () => {
+  it('reports exploration as the raw sum of hit surfaces\' weights', () => {
     const db = makeDb()
     writeEvent(db, 'exploration', 'home')
     writeEvent(db, 'exploration', 'about')
     const scores = getScores(db)
-    expect(scores.exploration).toBeCloseTo(2 / 8)
+    expect(scores.exploration).toBe(1)
   })
 
-  it('caps exploration at 1.0 even with unexpected extra details', () => {
+  it('ignores unexpected extra details not in the weight map', () => {
     const db = makeDb()
     for (const label of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']) {
       writeEvent(db, 'exploration', label)
     }
     const scores = getScores(db)
-    expect(scores.exploration).toBe(1.0)
+    expect(scores.exploration).toBe(0)
+  })
+
+  it('reaches exploration max score (5.5) once all 8 named surfaces are hit', () => {
+    const db = makeDb()
+    const surfaces = [
+      'home', 'account_auth', 'create_page', 'view_page',
+      'report_url', 'about', 'view_deactivate', 'submit_deactivate',
+    ]
+    for (const s of surfaces) writeEvent(db, 'exploration', s)
+    const scores = getScores(db)
+    expect(scores.exploration).toBe(5.5)
   })
 
   it('reports reconnaissance/vulnerability_detection/exploitation as 0 until fired', () => {
@@ -56,14 +67,14 @@ describe('getScores', () => {
     expect(scores.exploitation).toBe(0)
   })
 
-  it('reports reconnaissance/vulnerability_detection/exploitation as 1 once fired', () => {
+  it('reports reconnaissance/vulnerability_detection/exploitation at their design-time weights once fired', () => {
     const db = makeDb()
     writeEvent(db, 'recon')
     writeEvent(db, 'vuln_detect')
     writeEvent(db, 'exploit')
     const scores = getScores(db)
     expect(scores.reconnaissance).toBe(1)
-    expect(scores.vulnerability_detection).toBe(1)
-    expect(scores.exploitation).toBe(1)
+    expect(scores.vulnerability_detection).toBe(2)
+    expect(scores.exploitation).toBe(2)
   })
 })

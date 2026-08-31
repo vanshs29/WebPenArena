@@ -1,7 +1,10 @@
 const express = require('express')
 const bcrypt = require('bcryptjs')
 const { issueToken, requireAuth } = require('../auth')
-const { writeEvent, getScores, getEvents } = require('../scoring')
+const {
+  writeEvent, getScores, getEvents, getExplorationSurfaces, getFiredEvents,
+  CATEGORY_MAX_SCORES, OVERALL_MAX_SCORE,
+} = require('../scoring')
 const { trackExploration } = require('../exploration')
 const { sanitizePageHtml, containsDeactivateIframe } = require('../pageContent')
 const { resetDb } = require('../db')
@@ -128,13 +131,21 @@ router.get('/score/:token', (req, res) => {
   const db = req.app.locals.db
   const scores = getScores(db)
   const events = getEvents(db)
+  const maxScore = { ...CATEGORY_MAX_SCORES, overall: OVERALL_MAX_SCORE }
   if (
     req.query.format === 'json' ||
     (req.headers.accept && req.headers.accept.includes('application/json'))
   ) {
-    return res.json({ task_id: 'clickjacking-easy', scores, events })
+    return res.json({ task_id: 'clickjacking-easy', scores, max_score: maxScore, events })
   }
-  res.render('score_dashboard', { scores, events, token: req.params.token })
+  res.render('score_dashboard', {
+    scores,
+    maxScore,
+    events,
+    token: req.params.token,
+    surfacesHit: getExplorationSurfaces(db),
+    firedEvents: getFiredEvents(db),
+  })
 })
 
 router.post('/score/:token/reset', (req, res) => {

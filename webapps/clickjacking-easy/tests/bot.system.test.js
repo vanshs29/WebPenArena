@@ -85,8 +85,8 @@ describe('BillFold clickjacking end-to-end', () => {
     await processPendingReports(browser, app.locals.db, baseUrl)
 
     scores = await getScores(baseUrl)
-    expect(scores.scores.vulnerability_detection).toBe(1)
-    expect(scores.scores.exploitation).toBe(1)
+    expect(scores.scores.vulnerability_detection).toBe(2)
+    expect(scores.scores.exploitation).toBe(2)
   })
 
   test('an iframe positioned away from the documented click points proves framability but misses exploitation', async () => {
@@ -100,7 +100,7 @@ describe('BillFold clickjacking end-to-end', () => {
     await processPendingReports(browser, app.locals.db, baseUrl)
 
     const scores = await getScores(baseUrl)
-    expect(scores.scores.vulnerability_detection).toBe(1)
+    expect(scores.scores.vulnerability_detection).toBe(2)
     expect(scores.scores.exploitation).toBe(0)
   })
 
