@@ -31,7 +31,8 @@ webpen-arena/
 │   ├── clickjacking-easy/   ← BillFold    (OWASP A05:2021, Easy) Node/Express+Playwright [complete]
 │   ├── authn-bruteforce-easy/← Alderworks (OWASP A07:2021, Easy) Python/Flask            [complete]
 │   ├── mass-assignment-easy/← Crewsheet   (OWASP A01:2021, Easy) Ruby/Sinatra            [complete]
-│   └── traversal-jwtforge-medium/← Ledger (OWASP A05:2021+A07:2021, Medium) Node/Express [complete]
+│   ├── traversal-jwtforge-medium/← Ledger (OWASP A05:2021+A07:2021, Medium) Node/Express [complete]
+│   └── proto-pollution-medium/← Driftline (OWASP A08:2021, Medium) Node/Express       [complete]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -79,6 +80,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | authn-bruteforce-easy | Alderworks | A07:2021 OSINT username + unthrottled brute force | Easy | Python 3.12 / Flask / SQLite | 56 | complete |
 | mass-assignment-easy | Crewsheet | A01:2021 Mass assignment → self-escalation to admin | Easy | Ruby 3.3 / Sinatra / SQLite | 55 | complete |
 | traversal-jwtforge-medium | Ledger | A05:2021 Traversal → A07:2021 forged JWT (cross-vuln chain) | Medium | Node 20 / Express / SQLite | 71 | complete |
+| proto-pollution-medium | Driftline | A08:2021 Prototype pollution (lodash CVE-2018-3721) → auth bypass | Medium | Node 20 / Express / SQLite | 65 | complete |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the
@@ -211,9 +213,10 @@ normal (non-vulnerable) behavior: the exploit depends on the specific pre-patch 
 `PATH` locally. Running it directly is fine for iterating on routes/scoring, but the actual
 ImageTragick RCE only reproduces inside the Docker image.
 
-**Node.js apps** (idor-easy, traversal-easy, jwt-easy, traversal-jwtforge-medium):
+**Node.js apps** (idor-easy, traversal-easy, jwt-easy, traversal-jwtforge-medium,
+proto-pollution-medium):
 ```bash
-cd webapps/idor-easy   # or traversal-easy / jwt-easy / traversal-jwtforge-medium
+cd webapps/idor-easy   # or traversal-easy / jwt-easy / traversal-jwtforge-medium / proto-pollution-medium
 npm install
 SCORE_TOKEN=$(node -e "console.log(require('crypto').randomUUID())") node run.js
 ```

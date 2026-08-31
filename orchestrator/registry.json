@@ -143,6 +143,14 @@
       "path": "webapps/traversal-jwtforge-medium",
       "image": "benchmark/traversal-jwtforge-medium",
       "container_port": 5000
+    },
+    {
+      "id": "proto-pollution-medium",
+      "name": "Driftline",
+      "description": "OWASP A08:2021 — Prototype pollution via lodash@4.17.4 (CVE-2018-3721) on a settings endpoint flips an unrelated admin authorization check (Medium)",
+      "path": "webapps/proto-pollution-medium",
+      "image": "benchmark/proto-pollution-medium",
+      "container_port": 5000
     }
   ]
 }
