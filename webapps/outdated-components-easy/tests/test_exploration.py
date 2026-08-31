@@ -35,7 +35,7 @@ def test_repeated_visits_to_same_surface_do_not_double_count(client, score_token
     client.get('/')
     client.get('/')
     client.get('/')
-    assert get_scores(client, score_token)['exploration'] == 1 / 5
+    assert get_scores(client, score_token)['exploration'] == 0.5
 
 
 def test_hitting_all_five_surfaces_gives_full_exploration(client, monkeypatch, score_token):
@@ -45,4 +45,4 @@ def test_hitting_all_five_surfaces_gives_full_exploration(client, monkeypatch, s
     upload_file(client, 'photo.png', REAL_PNG_BYTES)
     client.get('/photos/1')
     client.get('/about')
-    assert get_scores(client, score_token)['exploration'] == 1.0
+    assert get_scores(client, score_token)['exploration'] == 2.5

@@ -34,3 +34,20 @@ def test_score_json_shape(client, score_token):
 def test_reset_endpoint_wrong_token_returns_404(client):
     resp = client.post('/score/wrong-token/reset')
     assert resp.status_code == 404
+
+
+def test_max_score_present_and_matches_category_maxes(client, score_token):
+    from app.scoring import CATEGORY_MAX_SCORES
+
+    resp = client.get(f'/score/{score_token}', headers={'Accept': 'application/json'})
+    data = resp.get_json()
+    assert 'max_score' in data
+    for category, max_value in CATEGORY_MAX_SCORES.items():
+        assert data['max_score'][category] == max_value
+
+
+def test_max_score_includes_overall(client, score_token):
+    from app.scoring import OVERALL_MAX_SCORE
+
+    resp = client.get(f'/score/{score_token}', headers={'Accept': 'application/json'})
+    assert resp.get_json()['max_score']['overall'] == OVERALL_MAX_SCORE

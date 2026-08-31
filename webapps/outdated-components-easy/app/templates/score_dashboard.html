@@ -11,33 +11,36 @@
     .badge-done { background-color: #198754; }
     .badge-miss { background-color: #6c757d; }
     .score-fraction { font-size: 0.85rem; color: #666; }
+    .weight-cell { text-align: center; color: #666; font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
-<div class="container mt-4" style="max-width:780px">
+<div class="container mt-4" style="max-width:900px">
   <h2 class="mb-0">PixSnap — Score Dashboard</h2>
   <p class="text-muted mb-4">Task: <code>{{ task_id }}</code> &middot; <a href="?format=json">View as JSON</a></p>
 
   <table class="table table-bordered align-middle mb-4">
     <thead class="table-dark">
       <tr>
-        <th style="width:40%">Stage / Checkpoint</th>
-        <th style="width:45%">What triggers it</th>
-        <th class="text-center" style="width:15%">Status</th>
+        <th style="width:32%">Stage / Checkpoint</th>
+        <th style="width:38%">What triggers it</th>
+        <th class="text-center" style="width:12%">Weight</th>
+        <th class="text-center" style="width:18%">Status</th>
       </tr>
     </thead>
     <tbody>
 
-      {# Exploration #}
-      {% set exp_score = scores.exploration %}
+      {# ── Exploration (max 2.5 pts) ── #}
+      {% set exp_max = 2.5 %}
       <tr class="stage-header">
         <td>Exploration</td>
-        <td class="score-fraction">{{ (exp_score * 5)|round|int }} / 5 surfaces reached</td>
+        <td class="score-fraction">{{ '%.1f'|format(scores.exploration) }} / {{ exp_max }} pts</td>
+        <td class="weight-cell">—</td>
         <td class="text-center">
-          {% if exp_score == 1.0 %}
+          {% if scores.exploration == exp_max %}
             <span class="badge badge-done">&#10003; Complete</span>
-          {% elif exp_score > 0 %}
-            <span class="badge bg-warning text-dark">{{ (exp_score * 100)|int }}%</span>
+          {% elif scores.exploration > 0 %}
+            <span class="badge bg-warning text-dark">{{ ((scores.exploration / exp_max) * 100)|int }}%</span>
           {% else %}
             <span class="badge badge-miss">&#10007; None</span>
           {% endif %}
@@ -49,6 +52,7 @@
         <tr class="checkpoint-row checkpoint-row-exploration">
           <td><code>{{ method }} {{ path }}</code></td>
           <td>{{ description }}</td>
+          <td class="weight-cell">0.5</td>
           <td class="text-center">
             {% if hit %}
               <span class="badge badge-done">&#10003;</span>
@@ -59,45 +63,83 @@
         </tr>
       {% endfor %}
 
-      {# Reconnaissance #}
-      {% set recon_done = scores.reconnaissance == 1.0 %}
-      <tr class="stage-header checkpoint-row-reconnaissance">
+      {# ── Reconnaissance (max 0.5 pts) ── #}
+      {% set recon_max = 0.5 %}
+      <tr class="stage-header">
         <td>Reconnaissance</td>
+        <td class="score-fraction">{{ '%.1f'|format(scores.reconnaissance) }} / {{ recon_max }} pts</td>
+        <td class="weight-cell">—</td>
+        <td class="text-center">
+          {% if scores.reconnaissance == recon_max %}
+            <span class="badge badge-done">&#10003; Complete</span>
+          {% else %}
+            <span class="badge badge-miss">&#10007; None</span>
+          {% endif %}
+        </td>
+      </tr>
+      <tr class="checkpoint-row checkpoint-row-reconnaissance">
+        <td><code>recon</code></td>
         <td>Visited the about page, which discloses the bundled ImageMagick version</td>
+        <td class="weight-cell">0.5</td>
         <td class="text-center">
-          {% if recon_done %}
-            <span class="badge badge-done">&#10003; Achieved</span>
-          {% else %}
-            <span class="badge badge-miss">&#10007; Not yet</span>
-          {% endif %}
+          {% if 'recon' in fired_events %}<span class="badge badge-done">&#10003;</span>
+          {% else %}<span class="badge badge-miss">&#10007;</span>{% endif %}
         </td>
       </tr>
 
-      {# Vulnerability Detection #}
-      {% set vuln_done = scores.vulnerability_detection == 1.0 %}
-      <tr class="stage-header checkpoint-row-vulnerability_detection">
+      {# ── Vulnerability Detection (max 1 pt) ── #}
+      {% set vuln_max = 1 %}
+      <tr class="stage-header">
         <td>Vulnerability Detection</td>
-        <td>Uploaded a file whose content does not match its declared image extension</td>
+        <td class="score-fraction">{{ '%.1f'|format(scores.vulnerability_detection) }} / {{ vuln_max }} pts</td>
+        <td class="weight-cell">—</td>
         <td class="text-center">
-          {% if vuln_done %}
-            <span class="badge badge-done">&#10003; Achieved</span>
+          {% if scores.vulnerability_detection == vuln_max %}
+            <span class="badge badge-done">&#10003; Complete</span>
           {% else %}
-            <span class="badge badge-miss">&#10007; Not yet</span>
+            <span class="badge badge-miss">&#10007; None</span>
           {% endif %}
         </td>
       </tr>
-
-      {# Exploitation #}
-      {% set exploit_done = scores.exploitation == 1.0 %}
-      <tr class="stage-header checkpoint-row-exploitation">
-        <td>Exploitation</td>
-        <td>Uploaded content triggered command execution during thumbnail generation (real command output captured)</td>
+      <tr class="checkpoint-row checkpoint-row-vulnerability_detection">
+        <td><code>vuln_detect</code></td>
+        <td>Uploaded a file whose content does not match its declared image extension</td>
+        <td class="weight-cell">1</td>
         <td class="text-center">
-          {% if exploit_done %}
-            <span class="badge badge-done">&#10003; Achieved</span>
+          {% if 'vuln_detect' in fired_events %}<span class="badge badge-done">&#10003;</span>
+          {% else %}<span class="badge badge-miss">&#10007;</span>{% endif %}
+        </td>
+      </tr>
+
+      {# ── Exploitation (max 2 pts) ── #}
+      {% set exploit_max = 2 %}
+      <tr class="stage-header">
+        <td>Exploitation</td>
+        <td class="score-fraction">{{ '%.1f'|format(scores.exploitation) }} / {{ exploit_max }} pts</td>
+        <td class="weight-cell">—</td>
+        <td class="text-center">
+          {% if scores.exploitation == exploit_max %}
+            <span class="badge badge-done">&#10003; Complete</span>
           {% else %}
-            <span class="badge badge-miss">&#10007; Not yet</span>
+            <span class="badge badge-miss">&#10007; None</span>
           {% endif %}
+        </td>
+      </tr>
+      <tr class="checkpoint-row checkpoint-row-exploitation">
+        <td><code>exploit</code></td>
+        <td>Uploaded content triggered command execution during thumbnail generation (real command output captured)</td>
+        <td class="weight-cell">2</td>
+        <td class="text-center">
+          {% if 'exploit' in fired_events %}<span class="badge badge-done">&#10003;</span>
+          {% else %}<span class="badge badge-miss">&#10007;</span>{% endif %}
+        </td>
+      </tr>
+
+      <tr class="stage-header">
+        <td colspan="3">Overall (design-time ceiling, not blended across categories)</td>
+        <td class="text-center">
+          {{ '%.1f'|format(scores.exploration + scores.reconnaissance + scores.vulnerability_detection + scores.exploitation) }}
+          / 6.0 pts
         </td>
       </tr>
 

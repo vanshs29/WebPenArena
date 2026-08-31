@@ -11,7 +11,11 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 from .db import get_db, reset_db
-from .scoring import write_event, get_scores, get_events, get_exploration_surfaces
+from .scoring import (
+    write_event, get_scores, get_events,
+    get_exploration_surfaces, get_fired_events,
+    CATEGORY_MAX_SCORES, OVERALL_MAX_SCORE,
+)
 
 bp = Blueprint('main', __name__)
 
@@ -179,6 +183,7 @@ def score(token):
     scores = get_scores(db)
     events = get_events(db)
     surfaces_hit = get_exploration_surfaces(db)
+    fired_events = get_fired_events(db)
     db.close()
 
     want_json = (
@@ -189,6 +194,7 @@ def score(token):
     payload = {
         'task_id': 'outdated-components-easy',
         'scores': scores,
+        'max_score': {**CATEGORY_MAX_SCORES, 'overall': OVERALL_MAX_SCORE},
         'events': events,
     }
 
@@ -199,6 +205,7 @@ def score(token):
         'score_dashboard.html',
         token=token,
         surfaces_hit=surfaces_hit,
+        fired_events=fired_events,
         exploration_surfaces=EXPLORATION_SURFACES,
         **payload,
     )
