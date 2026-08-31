@@ -8,7 +8,7 @@ test('reset with wrong token returns 404 and does not clear events', async () =>
   const res = await request(app).post('/score/wrong-token/reset')
   expect(res.status).toBe(404)
   const scores = await getScores(request, app)
-  expect(scores.exploitation).toBe(1.0)
+  expect(scores.exploitation).toBe(2)
 })
 
 test('reset clears all scoring events', async () => {

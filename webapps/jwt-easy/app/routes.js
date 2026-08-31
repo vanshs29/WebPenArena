@@ -1,6 +1,9 @@
 const express = require('express')
 const bcrypt = require('bcryptjs')
-const { writeEvent, getScores, getEvents, resetDb } = require('./db')
+const {
+  writeEvent, getScores, getEvents, getExplorationSurfaces, getFiredEvents,
+  CATEGORY_MAX_SCORES, OVERALL_MAX_SCORE, resetDb,
+} = require('./db')
 const { issueToken, decodeToken, getUnverifiedHeader } = require('./auth')
 
 const EXPLORATION_MAP = {
@@ -105,14 +108,23 @@ router.get('/score/:token', (req, res) => {
   const db = req.app.locals.db
   const scores = getScores(db)
   const events = getEvents(db)
+  const maxScore = { ...CATEGORY_MAX_SCORES, overall: OVERALL_MAX_SCORE }
   const wantsJson =
     req.query.format === 'json' ||
     (req.headers.accept && req.headers.accept.includes('application/json'))
 
   if (wantsJson) {
-    return res.json({ task_id: 'jwt-devblog-easy', scores, events })
+    return res.json({ task_id: 'jwt-devblog-easy', scores, max_score: maxScore, events })
   }
-  res.render('scoreDashboard', { scores, events, token: req.params.token, task_id: 'jwt-devblog-easy' })
+  res.render('scoreDashboard', {
+    scores,
+    maxScore,
+    events,
+    token: req.params.token,
+    task_id: 'jwt-devblog-easy',
+    surfacesHit: getExplorationSurfaces(db),
+    firedEvents: getFiredEvents(db),
+  })
 })
 
 router.post('/score/:token/reset', (req, res) => {

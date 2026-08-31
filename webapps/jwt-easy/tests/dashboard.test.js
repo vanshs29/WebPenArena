@@ -38,3 +38,10 @@ test('dashboard auto-refreshes', async () => {
   const res = await request(app).get(`/score/${TEST_SCORE_TOKEN}`)
   expect(res.text).toMatch(/http-equiv="refresh"/)
 })
+
+test('dashboard shows per-checkpoint weights and the overall point ceiling', async () => {
+  const app = newTestApp()
+  const res = await request(app).get(`/score/${TEST_SCORE_TOKEN}`)
+  expect(res.text).toContain('0.0 / 4 pts')
+  expect(res.text).toContain('/ 9 pts')
+})

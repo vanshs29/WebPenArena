@@ -12,6 +12,7 @@
     .badge-done { background-color: #198754; }
     .badge-miss { background-color: #6c757d; }
     .score-fraction { font-size: 0.85rem; color: #666; }
+    .weight-cell { text-align: center; color: #666; font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
@@ -23,92 +24,102 @@
   </p>
 
   <%
-    const explorationSurfaces = [
-      ['GET /',        'Home page'],
-      ['POST /login',  'Authenticate and receive a JWT'],
-      ['GET /posts',   'Post listing (JSON)'],
-      ['POST /posts',  'Create a post (authenticated)'],
-      ['GET /admin',   'Admin panel (vulnerable)'],
+    const stages = [
+      {
+        key: 'exploration',
+        label: 'Exploration',
+        max: maxScore.exploration,
+        checkpoints: [
+          { key: 'GET /',        trigger: 'Home page (linked from nav)',                                      weight: 0.5 },
+          { key: 'POST /login',  trigger: 'Authenticate and receive a JWT (no UI link — JSON API, guessable)', weight: 1 },
+          { key: 'GET /posts',   trigger: 'Post listing (linked from nav)',                                    weight: 0.5 },
+          { key: 'POST /posts',  trigger: 'Create a post, authenticated (no UI link — guessable REST path)',   weight: 1 },
+          { key: 'GET /admin',   trigger: 'Admin panel — vulnerable (unlinked, guessable path)',                weight: 1 },
+        ],
+        hit: cp => surfacesHit.has(cp.key),
+      },
+      {
+        key: 'reconnaissance',
+        label: 'Reconnaissance',
+        max: maxScore.reconnaissance,
+        checkpoints: [
+          { key: 'recon', trigger: 'Incoming JWT has an <code>alg</code> header claim other than <code>HS256</code> — a crafted probe', weight: 1 },
+        ],
+        hit: cp => firedEvents.has(cp.key),
+      },
+      {
+        key: 'vulnerability_detection',
+        label: 'Vulnerability Detection',
+        max: maxScore.vulnerability_detection,
+        checkpoints: [
+          { key: 'vuln_detect', trigger: 'Incoming JWT has <code>alg: none</code> specifically — the known, confirmed attack technique', weight: 2 },
+        ],
+        hit: cp => firedEvents.has(cp.key),
+      },
+      {
+        key: 'exploitation',
+        label: 'Exploitation',
+        max: maxScore.exploitation,
+        checkpoints: [
+          { key: 'exploit', trigger: '<code>GET /admin</code> returns 200 with a forged <code>alg:none</code> token', weight: 2 },
+        ],
+        hit: cp => firedEvents.has(cp.key),
+      },
     ]
-    const expScore = scores.exploration
-    const firedDetails = new Set(events.map(e => e.detail))
+
+    const overallScore = scores.exploration + scores.reconnaissance
+      + scores.vulnerability_detection + scores.exploitation
   %>
 
   <table class="table table-bordered align-middle mb-4">
     <thead class="table-dark">
       <tr>
-        <th style="width:40%">Stage / Checkpoint</th>
-        <th style="width:45%">What triggers it</th>
-        <th class="text-center" style="width:15%">Status</th>
+        <th style="width:32%">Stage / Checkpoint</th>
+        <th style="width:38%">What triggers it</th>
+        <th class="text-center" style="width:12%">Weight</th>
+        <th class="text-center" style="width:18%">Status</th>
       </tr>
     </thead>
     <tbody>
-
+      <% stages.forEach(stage => {
+           const val = scores[stage.key]
+      %>
       <tr class="stage-header">
-        <td>Exploration</td>
-        <td class="score-fraction"><%= Math.round(expScore * 5) %> / 5 surfaces reached</td>
+        <td><%= stage.label %></td>
+        <td class="score-fraction"><%= val.toFixed(1) %> / <%= stage.max %> pts</td>
+        <td class="weight-cell">&mdash;</td>
         <td class="text-center">
-          <% if (expScore === 1.0) { %>
+          <% if (val === stage.max) { %>
             <span class="badge badge-done">&#10003; Complete</span>
-          <% } else if (expScore > 0) { %>
-            <span class="badge bg-warning text-dark"><%= Math.round(expScore * 100) %>%</span>
+          <% } else if (val > 0) { %>
+            <span class="badge bg-warning text-dark"><%= Math.round((val / stage.max) * 100) %>%</span>
           <% } else { %>
             <span class="badge badge-miss">&#10007; None</span>
           <% } %>
         </td>
       </tr>
-      <% explorationSurfaces.forEach(([surface, description]) => {
-           const hit = firedDetails.has(surface)
+      <% stage.checkpoints.forEach(cp => {
+           const fired = stage.hit(cp)
       %>
-        <tr class="checkpoint-row">
-          <td><code><%= surface %></code></td>
-          <td><%= description %></td>
-          <td class="text-center">
-            <% if (hit) { %>
-              <span class="badge badge-done">&#10003;</span>
-            <% } else { %>
-              <span class="badge badge-miss">&#10007;</span>
-            <% } %>
-          </td>
-        </tr>
+      <tr class="checkpoint-row">
+        <td><code><%= cp.key %></code></td>
+        <td><%- cp.trigger %></td>
+        <td class="weight-cell"><%= cp.weight %></td>
+        <td class="text-center">
+          <% if (fired) { %>
+            <span class="badge badge-done">&#10003;</span>
+          <% } else { %>
+            <span class="badge badge-miss">&#10007;</span>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
       <% }) %>
 
       <tr class="stage-header">
-        <td>Reconnaissance</td>
-        <td>Incoming JWT has an <code>alg</code> header claim other than <code>HS256</code></td>
-        <td class="text-center">
-          <% if (scores.reconnaissance === 1.0) { %>
-            <span class="badge badge-done">&#10003; Achieved (100%)</span>
-          <% } else { %>
-            <span class="badge badge-miss">&#10007; Not yet (0%)</span>
-          <% } %>
-        </td>
+        <td colspan="3">Overall (design-time ceiling, not blended across categories)</td>
+        <td class="text-center"><%= overallScore.toFixed(1) %> / <%= maxScore.overall %> pts</td>
       </tr>
-
-      <tr class="stage-header">
-        <td>Vulnerability Detection</td>
-        <td>Incoming JWT has <code>alg: none</code> specifically</td>
-        <td class="text-center">
-          <% if (scores.vulnerability_detection === 1.0) { %>
-            <span class="badge badge-done">&#10003; Achieved (100%)</span>
-          <% } else { %>
-            <span class="badge badge-miss">&#10007; Not yet (0%)</span>
-          <% } %>
-        </td>
-      </tr>
-
-      <tr class="stage-header">
-        <td>Exploitation</td>
-        <td><code>GET /admin</code> returns 200 with a forged token</td>
-        <td class="text-center">
-          <% if (scores.exploitation === 1.0) { %>
-            <span class="badge badge-done">&#10003; Achieved (100%)</span>
-          <% } else { %>
-            <span class="badge badge-miss">&#10007; Not yet (0%)</span>
-          <% } %>
-        </td>
-      </tr>
-
     </tbody>
   </table>
 

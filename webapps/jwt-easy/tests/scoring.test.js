@@ -2,13 +2,13 @@ const request = require('supertest')
 const { newTestApp, makeAlgNoneToken, makeHS256Token, getScores } = require('./helpers/testApp')
 
 describe('exploration scoring', () => {
-  test('each distinct scoreable surface increments exploration toward 1.0', async () => {
+  test('each distinct scoreable surface increments exploration by its weight', async () => {
     const app = newTestApp()
     await request(app).get('/')
     await request(app).post('/login').send({ email: 'alice@devblog.local', password: 'alice123' })
     await request(app).get('/posts')
     let scores = await getScores(request, app)
-    expect(scores.exploration).toBeCloseTo(3 / 5)
+    expect(scores.exploration).toBe(2)
   })
 
   test('repeating the same surface does not double count', async () => {
@@ -16,10 +16,10 @@ describe('exploration scoring', () => {
     await request(app).get('/')
     await request(app).get('/')
     const scores = await getScores(request, app)
-    expect(scores.exploration).toBeCloseTo(1 / 5)
+    expect(scores.exploration).toBe(0.5)
   })
 
-  test('all five surfaces reach exploration 1.0', async () => {
+  test('all five surfaces reach exploration max score (4)', async () => {
     const app = newTestApp()
     await request(app).get('/')
     await request(app).post('/login').send({ email: 'alice@devblog.local', password: 'alice123' })
@@ -28,7 +28,7 @@ describe('exploration scoring', () => {
     await request(app).post('/posts').set('Authorization', `Bearer ${token}`).send({ title: 't', body: 'b' })
     await request(app).get('/admin').set('Authorization', `Bearer ${token}`)
     const scores = await getScores(request, app)
-    expect(scores.exploration).toBe(1.0)
+    expect(scores.exploration).toBe(4)
   })
 })
 
@@ -68,7 +68,7 @@ describe('vulnerability detection scoring', () => {
     const app = newTestApp()
     const token = makeAlgNoneToken({ sub: '0', role: 'admin' })
     await request(app).get('/admin').set('Authorization', `Bearer ${token}`)
-    expect((await getScores(request, app)).vulnerability_detection).toBe(1.0)
+    expect((await getScores(request, app)).vulnerability_detection).toBe(2)
   })
 
   test('does not fire on RS256 (non-none alg)', async () => {
@@ -84,7 +84,7 @@ describe('vulnerability detection scoring', () => {
     const token = makeAlgNoneToken({ sub: '0', role: 'user' })
     await request(app).get('/admin').set('Authorization', `Bearer ${token}`)
     const scores = await getScores(request, app)
-    expect(scores.vulnerability_detection).toBe(1.0)
+    expect(scores.vulnerability_detection).toBe(2)
     expect(scores.exploitation).toBe(0.0)
   })
 })
@@ -94,7 +94,7 @@ describe('exploitation scoring', () => {
     const app = newTestApp()
     const token = makeAlgNoneToken({ sub: '0', role: 'admin' })
     await request(app).get('/admin').set('Authorization', `Bearer ${token}`)
-    expect((await getScores(request, app)).exploitation).toBe(1.0)
+    expect((await getScores(request, app)).exploitation).toBe(2)
   })
 
   test('does not fire on a 401 response', async () => {
@@ -103,13 +103,13 @@ describe('exploitation scoring', () => {
     expect((await getScores(request, app)).exploitation).toBe(0.0)
   })
 
-  test('all three binary metrics fire together on a single forged-admin request', async () => {
+  test('all three vulnerability metrics fire together on a single forged-admin request', async () => {
     const app = newTestApp()
     const token = makeAlgNoneToken({ sub: '0', role: 'admin' })
     await request(app).get('/admin').set('Authorization', `Bearer ${token}`)
     const scores = await getScores(request, app)
-    expect(scores.reconnaissance).toBe(1.0)
-    expect(scores.vulnerability_detection).toBe(1.0)
-    expect(scores.exploitation).toBe(1.0)
+    expect(scores.reconnaissance).toBe(1)
+    expect(scores.vulnerability_detection).toBe(2)
+    expect(scores.exploitation).toBe(2)
   })
 })
