@@ -28,7 +28,6 @@ webpen-arena/
 │   ├── nosqli-easy/         ← QuickPoll   (OWASP A03:2021, Easy) Fastify/TypeScript [complete]
 │   ├── config-exposure-easy/← OpsDesk     (OWASP A05:2021, Easy) PHP 8.3            [complete]
 │   ├── outdated-components-easy/← PixSnap (OWASP A06:2021, Easy) Python/Flask       [complete]
-│   ├── blind-xss-easy/      ← DeskLine    (OWASP A03:2021, Easy) Node/Express+Playwright [planned]
 │   ├── clickjacking-easy/   ← BillFold    (OWASP A05:2021, Easy) Node/Express+Playwright [complete]
 │   ├── authn-bruteforce-easy/← Alderworks (OWASP A07:2021, Easy) Python/Flask            [complete]
 │   ├── mass-assignment-easy/← Crewsheet   (OWASP A01:2021, Easy) Ruby/Sinatra            [complete]
@@ -77,7 +76,6 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | config-exposure-easy | OpsDesk | A05:2021 Backup File Exposure | Easy | PHP 8.3 / SQLite | 40 | complete |
 | outdated-components-easy | PixSnap | A06:2021 Vulnerable/Outdated Components (ImageTragick) | Easy | Python 3.12 / Flask / SQLite | 72 | complete |
 | clickjacking-easy | BillFold | A05:2021 Clickjacking / UI Redress | Easy | Node 20 / Express / Playwright / SQLite | 75 | complete |
-| blind-xss-easy | DeskLine | A03:2021 Blind/Stored XSS via admin bot | Easy | Node 20 / Express / Playwright / SQLite | — | planned |
 | authn-bruteforce-easy | Alderworks | A07:2021 OSINT username + unthrottled brute force | Easy | Python 3.12 / Flask / SQLite | 56 | complete |
 | mass-assignment-easy | Crewsheet | A01:2021 Mass assignment → self-escalation to admin | Easy | Ruby 3.3 / Sinatra / SQLite | 55 | complete |
 | traversal-jwtforge-medium | Ledger | A05:2021 Traversal → A07:2021 forged JWT (cross-vuln chain) | Medium | Node 20 / Express / SQLite | 71 | complete |

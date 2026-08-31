@@ -23,9 +23,7 @@ line with.
 ## 2. Audit (current state, verified against source)
 
 **No flag anywhere, no change needed:** sqli-easy, idor-easy, sqli-medium, xss-easy,
-bizlogic-easy, nosqli-easy, config-exposure-easy, clickjacking-easy. (`blind-xss-easy` is
-still only a `PLAN.md`, not built; when it is built, follow the no-flag pattern from the
-start rather than retrofitting it later.)
+bizlogic-easy, nosqli-easy, config-exposure-easy, clickjacking-easy.
 
 **Group A — flag is load-bearing.** The server regex-matches the literal `FLAG\{...\}`
 pattern in output to decide whether `exploit`/`exploitation` fires. Removing the string

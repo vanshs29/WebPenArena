@@ -48,8 +48,7 @@ deliberately varies its stack so the corpus isn't dominated by one language or f
 | nosqli-easy | QuickPoll | A03:2021 NoSQL Injection | Easy | Fastify / TypeScript / MongoDB | complete |
 | config-exposure-easy | OpsDesk | A05:2021 Backup File Exposure | Easy | PHP 8.3 | complete |
 | outdated-components-easy | PixSnap | A06:2021 Vulnerable/Outdated Components | Easy | Python / Flask | complete |
-| blind-xss-easy | DeskLine | A03:2021 Blind/Stored XSS | Easy | Node.js / Express / Playwright | planned |
-| clickjacking-easy | BillFold | A05:2021 Clickjacking / UI Redress | Easy | Node.js / Express / Playwright | planned |
+| clickjacking-easy | BillFold | A05:2021 Clickjacking / UI Redress | Easy | Node.js / Express / Playwright | complete |
 
 See `CLAUDE.md` for the full repository layout and per-app implementation notes.
 

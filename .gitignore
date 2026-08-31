@@ -8,3 +8,5 @@ instance/
 node_modules/
 vendor/
 .bundle/
+.claude/settings.local.json
+orchestrator/.claude/settings.local.json
