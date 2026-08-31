@@ -40,6 +40,18 @@ test('without format=json or Accept header returns HTML', async () => {
   expect(res.headers['content-type']).toMatch(/html/)
 })
 
+test('correct token with format=json includes max_score ceilings for every category and overall', async () => {
+  const res = await request(app).get(`/score/${TEST_SCORE_TOKEN}?format=json`)
+  expect(res.status).toBe(200)
+  expect(res.body.max_score).toEqual({
+    exploration: 3,
+    reconnaissance: 1,
+    vulnerability_detection: 2,
+    exploitation: 2,
+    overall: 8,
+  })
+})
+
 test('events include metric, detail, and ts fields', async () => {
   await request(app).get('/files/view?name=../config/mail-config.env')
   const res = await request(app).get(`/score/${TEST_SCORE_TOKEN}?format=json`)

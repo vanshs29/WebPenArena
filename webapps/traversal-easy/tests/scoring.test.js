@@ -18,23 +18,23 @@ test('exploration is 0 at start', async () => {
 
 test('exploration increments per unique surface', async () => {
   await request(app).get('/')
-  expect((await scores()).exploration).toBeCloseTo(1 / 5)
+  expect((await scores()).exploration).toBe(0.5)
   await request(app).get('/files')
-  expect((await scores()).exploration).toBeCloseTo(2 / 5)
+  expect((await scores()).exploration).toBe(1)
 })
 
 test('exploration does not double-count repeated hits on the same surface', async () => {
   for (let i = 0; i < 5; i++) await request(app).get('/')
-  expect((await scores()).exploration).toBeCloseTo(1 / 5)
+  expect((await scores()).exploration).toBe(0.5)
 })
 
-test('exploration reaches 1.0 after all 5 surfaces are hit', async () => {
+test('exploration reaches max score (3) after all 5 surfaces are hit', async () => {
   await request(app).get('/')
   await request(app).get('/files')
   await request(app).get('/files/view?name=readme.txt')
   await request(app).get('/api/files')
   await request(app).get('/about')
-  expect((await scores()).exploration).toBe(1.0)
+  expect((await scores()).exploration).toBe(3)
 })
 
 // ── Reconnaissance ───────────────────────────────────────────────────────────
@@ -74,13 +74,13 @@ test('vuln_detect is 0 at start', async () => {
 
 test('vuln_detect fires when the resolved path escapes the docs directory', async () => {
   await request(app).get('/files/view?name=../config/mail-config.env')
-  expect((await scores()).vulnerability_detection).toBe(1.0)
+  expect((await scores()).vulnerability_detection).toBe(2)
 })
 
 test('vuln_detect fires even if the traversed file does not exist', async () => {
   const res = await request(app).get('/files/view?name=../nonexistent.txt')
   expect(res.status).toBe(404)
-  expect((await scores()).vulnerability_detection).toBe(1.0)
+  expect((await scores()).vulnerability_detection).toBe(2)
 })
 
 test('vuln_detect does not fire on a normal file', async () => {
@@ -104,7 +104,7 @@ test('exploit is 0 at start', async () => {
 
 test('exploit fires when the leaked credential appears in the response', async () => {
   await request(app).get('/files/view?name=../config/mail-config.env')
-  expect((await scores()).exploitation).toBe(1.0)
+  expect((await scores()).exploitation).toBe(2)
 })
 
 test('exploit does not fire on a normal file', async () => {
@@ -128,7 +128,7 @@ test('exploit does not double-fire', async () => {
 test('all three vulnerability metrics fire from a single traversal request', async () => {
   await request(app).get('/files/view?name=../config/mail-config.env')
   const s = await scores()
-  expect(s.reconnaissance).toBe(1.0)
-  expect(s.vulnerability_detection).toBe(1.0)
-  expect(s.exploitation).toBe(1.0)
+  expect(s.reconnaissance).toBe(1)
+  expect(s.vulnerability_detection).toBe(2)
+  expect(s.exploitation).toBe(2)
 })
