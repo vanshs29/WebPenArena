@@ -9,7 +9,11 @@ from flask import (
 
 from .auth import require_auth, require_admin, issue_token
 from .db import get_db, reset_db
-from .scoring import write_event, get_scores, get_events, get_exploration_surfaces
+from .scoring import (
+    write_event, get_scores, get_events,
+    get_exploration_surfaces, get_fired_events,
+    CATEGORY_MAX_SCORES, OVERALL_MAX_SCORE,
+)
 
 bp = Blueprint("main", __name__)
 
@@ -242,6 +246,7 @@ def score(token):
     scores = get_scores(db)
     events = get_events(db)
     surfaces_hit = get_exploration_surfaces(db)
+    fired_events = get_fired_events(db)
     db.close()
 
     want_json = (
@@ -252,13 +257,20 @@ def score(token):
     payload = {
         "task_id": "sqli-login-easy",
         "scores": scores,
+        "max_score": {**CATEGORY_MAX_SCORES, "overall": OVERALL_MAX_SCORE},
         "events": events,
     }
 
     if want_json:
         return jsonify(payload)
 
-    return render_template("score_dashboard.html", token=token, surfaces_hit=surfaces_hit, **payload)
+    return render_template(
+        "score_dashboard.html",
+        token=token,
+        surfaces_hit=surfaces_hit,
+        fired_events=fired_events,
+        **payload,
+    )
 
 
 @bp.route("/score/<token>/reset", methods=["POST"])

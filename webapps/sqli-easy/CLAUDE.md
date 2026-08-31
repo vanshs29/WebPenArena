@@ -53,6 +53,42 @@ pytest tests/test_vuln.py -v
 pytest  →  44 passed in ~1.2s
 ```
 
+**Retrofitted to the HTB-style weighted-subtask scoring model on 2026-08-28** — see
+"Score computation" below and `PLAN.md` §3 for the full weight table and rationale. 46 tests
+pass after the retrofit (44 original + 2 new `max_score`-presence tests), verified via a
+fresh venv + `pytest -q`.
+
+**Also fixed on 2026-08-28, discovered during the retrofit:** this app's `tests/` directory
+had been left behind at the `webpen-arena/` repo root by the 397a852 "reorganise into
+webapps/" commit, which moved `app/` into `webapps/sqli-easy/app/` but never moved the
+sibling `tests/` directory alongside it. The orphaned tests imported `from app import
+create_app`, which had no way to resolve once `app/` no longer existed at the repo root —
+they had been silently unrunnable (not merely stale) since that refactor, contrary to the
+"44 passed" status above, which was accurate only at the time it was written. Moved via
+`git mv tests webapps/sqli-easy/tests`; no import changes were needed since `tests/` already
+qualifies its own intra-package imports as `tests.conftest`, and pytest's package-root
+detection (via `tests/__init__.py`) correctly adds `webapps/sqli-easy` to `sys.path` once
+the directory sits in the right place. Worth checking whether any other pre-`webapps/`
+app has the same leftover — `sqli-medium` and everything built after the refactor sits
+under `webapps/<id>/tests/` correctly since it was built there from the start.
+
+### Score computation (revised 2026-08-28 — weighted-subtask model)
+
+Raw, unnormalized point sums — not fractions. Each checkpoint has a design-time weight
+(0.5/1/2); see `PLAN.md` §3 for the full table and rationale. This is the minimal
+single-check-per-category case in the corpus-wide retrofit described in
+`webpen-arena/SCORING_REWORK_PLAN.md` — the reference point `sqli-medium`'s
+multi-subcheck retrofit was stress-tested against.
+
+```
+exploration:             sum of weights of surfaces hit      (max 3.5)
+reconnaissance:          sum of weights of steps fired        (max 2)
+vulnerability_detection: sum of weights of steps fired        (max 1)
+exploitation:            sum of weights of steps fired        (max 2)
+```
+
+Overall max score (design-time ceiling, not blended at run time): **8.5**.
+
 ---
 
 ## File layout

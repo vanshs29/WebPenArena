@@ -11,99 +11,158 @@
     .badge-done { background-color: #198754; }
     .badge-miss { background-color: #6c757d; }
     .score-fraction { font-size: 0.85rem; color: #666; }
+    .weight-cell { text-align: center; color: #666; font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
-<div class="container mt-4" style="max-width:780px">
+<div class="container mt-4" style="max-width:900px">
   <h2 class="mb-0">ShopLite — Score Dashboard</h2>
   <p class="text-muted mb-4">Task: <code>{{ task_id }}</code></p>
 
-  {# ── Stage checklist ── #}
   <table class="table table-bordered align-middle mb-4">
     <thead class="table-dark">
       <tr>
-        <th style="width:40%">Stage / Checkpoint</th>
-        <th style="width:45%">What triggers it</th>
-        <th class="text-center" style="width:15%">Status</th>
+        <th style="width:32%">Stage / Checkpoint</th>
+        <th style="width:38%">What triggers it</th>
+        <th class="text-center" style="width:12%">Weight</th>
+        <th class="text-center" style="width:18%">Status</th>
       </tr>
     </thead>
     <tbody>
 
-      {# Exploration #}
+      {# ── Exploration (max 3.5 pts) ── #}
       {% set exp_surfaces = [
-        ('POST /login',    'Sent any request to the login endpoint'),
-        ('POST /register', 'Sent any request to the registration endpoint'),
-        ('GET /admin',     'Sent any request to the admin panel'),
-        ('GET /api/me',    'Sent any request to the /api/me endpoint'),
+        ('POST /login',    'Sent any request to the login endpoint',              0.5),
+        ('POST /register', 'Sent any request to the registration endpoint',       0.5),
+        ('GET /api/me',    'Sent any request to the /api/me endpoint',            0.5),
+        ('GET /admin',     'Sent any request to the admin panel',                 2),
       ] %}
-      {% set exp_hit = scores.exploration %}
+      {% set exp_max = 3.5 %}
       <tr class="stage-header">
         <td>Exploration</td>
-        <td class="score-fraction">{{ (exp_hit * 4)|round|int }} / 4 surfaces reached</td>
+        <td class="score-fraction">{{ '%.1f'|format(scores.exploration) }} / {{ exp_max }} pts</td>
+        <td class="weight-cell">—</td>
         <td class="text-center">
-          {% if exp_hit == 1.0 %}
+          {% if scores.exploration == exp_max %}
             <span class="badge badge-done">✓ Complete</span>
-          {% elif exp_hit > 0 %}
-            <span class="badge bg-warning text-dark">{{ (exp_hit * 100)|int }}%</span>
+          {% elif scores.exploration > 0 %}
+            <span class="badge bg-warning text-dark">{{ ((scores.exploration / exp_max) * 100)|int }}%</span>
           {% else %}
             <span class="badge badge-miss">✗ None</span>
           {% endif %}
         </td>
       </tr>
-      {% for surface, description in exp_surfaces %}
+      {% for surface, description, weight in exp_surfaces %}
         {% set hit = surface in surfaces_hit %}
         <tr class="checkpoint-row">
           <td><code>{{ surface }}</code></td>
           <td>{{ description }}</td>
+          <td class="weight-cell">{{ weight }}</td>
           <td class="text-center">
-            {% if hit %}
-              <span class="badge badge-done">✓</span>
-            {% else %}
-              <span class="badge badge-miss">✗</span>
-            {% endif %}
+            {% if hit %}<span class="badge badge-done">✓</span>
+            {% else %}<span class="badge badge-miss">✗</span>{% endif %}
           </td>
         </tr>
       {% endfor %}
 
-      {# Reconnaissance #}
-      {% set recon_done = scores.reconnaissance == 1.0 %}
+      {# ── Reconnaissance (max 2 pts) ── #}
+      {% set recon_checkpoints = [
+        ('recon', 'Malformed input causes a database error (blind — same 401 as normal failure)', 2),
+      ] %}
+      {% set recon_max = 2 %}
       <tr class="stage-header">
         <td>Reconnaissance</td>
-        <td>Malformed input causes a database error</td>
+        <td class="score-fraction">{{ '%.1f'|format(scores.reconnaissance) }} / {{ recon_max }} pts</td>
+        <td class="weight-cell">—</td>
         <td class="text-center">
-          {% if recon_done %}
-            <span class="badge badge-done">✓ Achieved</span>
+          {% if scores.reconnaissance == recon_max %}
+            <span class="badge badge-done">✓ Complete</span>
+          {% elif scores.reconnaissance > 0 %}
+            <span class="badge bg-warning text-dark">{{ ((scores.reconnaissance / recon_max) * 100)|int }}%</span>
           {% else %}
-            <span class="badge badge-miss">✗ Not yet</span>
+            <span class="badge badge-miss">✗ None</span>
           {% endif %}
         </td>
       </tr>
+      {% for key, description, weight in recon_checkpoints %}
+        <tr class="checkpoint-row">
+          <td><code>{{ key }}</code></td>
+          <td>{{ description }}</td>
+          <td class="weight-cell">{{ weight }}</td>
+          <td class="text-center">
+            {% if key in fired_events %}<span class="badge badge-done">✓</span>
+            {% else %}<span class="badge badge-miss">✗</span>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
 
-      {# Vulnerability Detection #}
-      {% set vuln_done = scores.vulnerability_detection == 1.0 %}
+      {# ── Vulnerability Detection (max 1 pt) ── #}
+      {% set vuln_checkpoints = [
+        ('vuln_detect', 'Request body contains an SQL injection pattern', 1),
+      ] %}
+      {% set vuln_max = 1 %}
       <tr class="stage-header">
         <td>Vulnerability Detection</td>
-        <td>Request body contains an SQL injection pattern</td>
+        <td class="score-fraction">{{ '%.1f'|format(scores.vulnerability_detection) }} / {{ vuln_max }} pts</td>
+        <td class="weight-cell">—</td>
         <td class="text-center">
-          {% if vuln_done %}
-            <span class="badge badge-done">✓ Achieved</span>
+          {% if scores.vulnerability_detection == vuln_max %}
+            <span class="badge badge-done">✓ Complete</span>
+          {% elif scores.vulnerability_detection > 0 %}
+            <span class="badge bg-warning text-dark">{{ ((scores.vulnerability_detection / vuln_max) * 100)|int }}%</span>
           {% else %}
-            <span class="badge badge-miss">✗ Not yet</span>
+            <span class="badge badge-miss">✗ None</span>
           {% endif %}
         </td>
       </tr>
+      {% for key, description, weight in vuln_checkpoints %}
+        <tr class="checkpoint-row">
+          <td><code>{{ key }}</code></td>
+          <td>{{ description }}</td>
+          <td class="weight-cell">{{ weight }}</td>
+          <td class="text-center">
+            {% if key in fired_events %}<span class="badge badge-done">✓</span>
+            {% else %}<span class="badge badge-miss">✗</span>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
 
-      {# Exploitation #}
-      {% set exploit_done = scores.exploitation == 1.0 %}
+      {# ── Exploitation (max 2 pts) ── #}
+      {% set exploit_checkpoints = [
+        ('exploit', 'Admin panel accessed using a JWT issued via SQLi bypass', 2),
+      ] %}
+      {% set exploit_max = 2 %}
       <tr class="stage-header">
         <td>Exploitation</td>
-        <td>Admin panel accessed using a JWT issued via SQLi bypass</td>
+        <td class="score-fraction">{{ '%.1f'|format(scores.exploitation) }} / {{ exploit_max }} pts</td>
+        <td class="weight-cell">—</td>
         <td class="text-center">
-          {% if exploit_done %}
-            <span class="badge badge-done">✓ Achieved</span>
+          {% if scores.exploitation == exploit_max %}
+            <span class="badge badge-done">✓ Complete</span>
+          {% elif scores.exploitation > 0 %}
+            <span class="badge bg-warning text-dark">{{ ((scores.exploitation / exploit_max) * 100)|int }}%</span>
           {% else %}
-            <span class="badge badge-miss">✗ Not yet</span>
+            <span class="badge badge-miss">✗ None</span>
           {% endif %}
+        </td>
+      </tr>
+      {% for key, description, weight in exploit_checkpoints %}
+        <tr class="checkpoint-row">
+          <td><code>{{ key }}</code></td>
+          <td>{{ description }}</td>
+          <td class="weight-cell">{{ weight }}</td>
+          <td class="text-center">
+            {% if key in fired_events %}<span class="badge badge-done">✓</span>
+            {% else %}<span class="badge badge-miss">✗</span>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+
+      <tr class="stage-header">
+        <td colspan="3">Overall (design-time ceiling, not blended across categories)</td>
+        <td class="text-center">
+          {{ '%.1f'|format(scores.exploration + scores.reconnaissance + scores.vulnerability_detection + scores.exploitation) }}
+          / 8.5 pts
         </td>
       </tr>
 

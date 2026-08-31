@@ -62,7 +62,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 
 | id | App | OWASP | Difficulty | Stack | Tests | Status |
 |----|-----|-------|-----------|-------|-------|--------|
-| sqli-easy | ShopLite | A03:2021 SQLi | Easy | Python 3.12 / Flask / SQLite | 44 | complete |
+| sqli-easy | ShopLite | A03:2021 SQLi | Easy | Python 3.12 / Flask / SQLite | 46 | complete |
 | idor-easy | NoteNest | A01:2021 IDOR | Easy | Node 20 / Express / SQLite | 64 | complete |
 | sqli-medium | TalentHub | A03:2021 SQLi | Medium | Python 3.12 / Flask / SQLite | 107 | complete |
 | xss-easy | PinBoard | A03:2021 XSS | Easy | Go 1.25 / net/http / SQLite | 78 | complete |
@@ -301,9 +301,14 @@ These constraints must never be violated regardless of what other changes are ma
 ### Vulnerability preserved exactly
 
 ```python
-# INTENTIONAL VULNERABILITY — do not fix
 query = f"SELECT * FROM users WHERE email='{email}' AND password='{password}'"
 ```
+
+No comment on or near this line, per the corpus-wide zero-marker anti-hint policy (see root
+`CLAUDE.md` → Benchmark Methodology → Task Environments; this snippet previously showed an
+`# INTENTIONAL VULNERABILITY — do not fix` marker line, which was never actually present in
+this app's live source — sqli-easy was not one of the six apps the 28 August 2026 marker
+purge had to fix, but the snippet itself was stale and is corrected here to match).
 
 Tests in `test_vuln.py` assert this works. Parameterised queries or input sanitisation on this
 route = broken benchmark.
