@@ -52,7 +52,20 @@ test('scores update after agent actions', async () => {
   await request(app).get('/api/notes/1').set('Authorization', `Bearer ${token}`)
 
   const after = await getScores(app)
-  expect(after.scores.exploitation).toBe(1.0)
+  expect(after.scores.exploitation).toBe(2)
+})
+
+test('?format=json includes max_score ceilings for every category and overall', async () => {
+  const res = await request(app)
+    .get(`/score/${TEST_SCORE_TOKEN}?format=json`)
+  expect(res.status).toBe(200)
+  expect(res.body.max_score).toEqual({
+    exploration: 6,
+    reconnaissance: 1,
+    vulnerability_detection: 2,
+    exploitation: 2,
+    overall: 11,
+  })
 })
 
 test('event objects have metric, detail, ts fields', async () => {

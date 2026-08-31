@@ -63,7 +63,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | id | App | OWASP | Difficulty | Stack | Tests | Status |
 |----|-----|-------|-----------|-------|-------|--------|
 | sqli-easy | ShopLite | A03:2021 SQLi | Easy | Python 3.12 / Flask / SQLite | 46 | complete |
-| idor-easy | NoteNest | A01:2021 IDOR | Easy | Node 20 / Express / SQLite | 64 | complete |
+| idor-easy | NoteNest | A01:2021 IDOR | Easy | Node 20 / Express / SQLite | 66 | complete |
 | sqli-medium | TalentHub | A03:2021 SQLi | Medium | Python 3.12 / Flask / SQLite | 107 | complete |
 | xss-easy | PinBoard | A03:2021 XSS | Easy | Go 1.25 / net/http / SQLite | 78 | complete |
 | cmdi-easy | PulseHub | A03:2021 CMDi | Easy | Python 3.12 / Flask / SQLite | 43 | complete |

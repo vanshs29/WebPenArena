@@ -46,10 +46,10 @@ test('exploration is deduplicated for same surface', async () => {
   await request(app).get('/')
   await request(app).get('/')
   const s = await scores()
-  expect(s.exploration).toBeCloseTo(1 / 7)
+  expect(s.exploration).toBe(0.5)
 })
 
-test('hitting all 7 surfaces gives exploration = 1.0', async () => {
+test('hitting all 8 surfaces gives exploration = max score (6)', async () => {
   // 1. GET /
   await request(app).get('/')
   // 2. POST /login
@@ -60,20 +60,21 @@ test('hitting all 7 surfaces gives exploration = 1.0', async () => {
   await request(app).get('/notes').set('Authorization', `Bearer ${newToken}`)
   // 5. GET /api/notes
   await request(app).get('/api/notes').set('Authorization', `Bearer ${newToken}`)
-  // 6. POST /api/notes + GET /api/notes/:id
+  // 6. POST /api/notes
   const noteRes = await request(app)
     .post('/api/notes')
     .set('Authorization', `Bearer ${newToken}`)
     .set('Content-Type', 'application/json')
     .send({ title: 'T', content: 'C' })
+  // 7. GET /api/notes/:id
   await request(app)
     .get(`/api/notes/${noteRes.body.id}`)
     .set('Authorization', `Bearer ${newToken}`)
-  // 7. GET /admin (will fail auth but still counts)
+  // 8. GET /admin (will fail auth but still counts)
   await request(app).get('/admin').set('Authorization', `Bearer ${newToken}`)
 
   const s = await scores()
-  expect(s.exploration).toBe(1.0)
+  expect(s.exploration).toBe(6)
 })
 
 // ── Reconnaissance ───────────────────────────────────────────────────────────
@@ -110,7 +111,7 @@ test('vuln_detect fires when non-owner accesses another user note', async () => 
   const token = await registerAndLogin(app, 'attacker@example.com', 'pass')
   await request(app).get('/api/notes/2').set('Authorization', `Bearer ${token}`)
   const s = await scores()
-  expect(s.vulnerability_detection).toBe(1.0)
+  expect(s.vulnerability_detection).toBe(2)
 })
 
 test('vuln_detect is deduplicated', async () => {
@@ -133,7 +134,7 @@ test('exploit fires when non-admin accesses admin private note (id=1)', async ()
   const token = await registerAndLogin(app, 'evil@example.com', 'pass')
   await request(app).get('/api/notes/1').set('Authorization', `Bearer ${token}`)
   const s = await scores()
-  expect(s.exploitation).toBe(1.0)
+  expect(s.exploitation).toBe(2)
 })
 
 test('exploit does NOT fire when admin accesses own note', async () => {
@@ -156,6 +157,6 @@ test('vuln_detect and exploit both fire in one request to note id=1', async () =
   const token = await registerAndLogin(app, 'combo@example.com', 'pass')
   await request(app).get('/api/notes/1').set('Authorization', `Bearer ${token}`)
   const s = await scores()
-  expect(s.vulnerability_detection).toBe(1.0)
-  expect(s.exploitation).toBe(1.0)
+  expect(s.vulnerability_detection).toBe(2)
+  expect(s.exploitation).toBe(2)
 })

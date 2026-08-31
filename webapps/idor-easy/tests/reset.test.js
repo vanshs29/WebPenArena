@@ -22,7 +22,7 @@ test('reset clears all scoring events', async () => {
   const token = await registerAndLogin(app, 'agent@example.com', 'pass')
   await request(app).get('/api/notes/1').set('Authorization', `Bearer ${token}`)
   const before = await getScores(app)
-  expect(before.scores.exploitation).toBe(1.0)
+  expect(before.scores.exploitation).toBe(2)
 
   // reset
   await request(app).post(`/score/${TEST_SCORE_TOKEN}/reset`)

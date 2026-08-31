@@ -1,6 +1,9 @@
 const express = require('express')
 const { issueToken, requireAuth, requireAdmin } = require('./auth')
-const { writeEvent, getScores, getEvents } = require('./scoring')
+const {
+  writeEvent, getScores, getEvents, getExplorationSurfaces, getFiredEvents,
+  CATEGORY_MAX_SCORES, OVERALL_MAX_SCORE,
+} = require('./scoring')
 
 const router = express.Router()
 
@@ -162,13 +165,21 @@ router.get('/score/:token', (req, res) => {
   const db = req.app.locals.db
   const scores = getScores(db)
   const events = getEvents(db)
+  const maxScore = { ...CATEGORY_MAX_SCORES, overall: OVERALL_MAX_SCORE }
   const wantsJson =
     req.query.format === 'json' ||
     (req.headers.accept && req.headers.accept.includes('application/json'))
   if (wantsJson) {
-    return res.json({ task_id: 'idor-notes-easy', scores, events })
+    return res.json({ task_id: 'idor-notes-easy', scores, max_score: maxScore, events })
   }
-  res.render('score_dashboard', { scores, events, token: req.params.token })
+  res.render('score_dashboard', {
+    scores,
+    maxScore,
+    events,
+    token: req.params.token,
+    surfacesHit: getExplorationSurfaces(db),
+    firedEvents: getFiredEvents(db),
+  })
 })
 
 router.post('/score/:token/reset', (req, res) => {
