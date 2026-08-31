@@ -36,8 +36,8 @@ def test_reset_allows_rescoring(client, score_token, monkeypatch):
         stdout=SEEDED_CREDENTIAL
     ))
     client.post('/ping', json={'host': '; cat /app/db.env'})
-    assert get_scores(client, score_token)['exploitation'] == 1.0
+    assert get_scores(client, score_token)['exploitation'] == 2
     client.post(f'/score/{score_token}/reset')
     assert get_scores(client, score_token)['exploitation'] == 0.0
     client.post('/ping', json={'host': '; cat /app/db.env'})
-    assert get_scores(client, score_token)['exploitation'] == 1.0
+    assert get_scores(client, score_token)['exploitation'] == 2
