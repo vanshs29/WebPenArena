@@ -2,10 +2,48 @@ package main
 
 import (
 	"database/sql"
-	"math"
 )
 
-const totalSurfaces = 5
+// Subtask weights: 0.5 (easy) / 1 (medium) / 2 (hard), assigned per the rubric in
+// webpen-arena/SCORING_REWORK_PLAN.md §3. Design-time constants, never computed at
+// run time. See PLAN.md for the rationale behind each individual weight.
+
+var explorationWeights = map[string]float64{
+	"GET /":            0.5,
+	"POST /preview":    0.5,
+	"GET /history":     0.5,
+	"GET /api/history": 1,
+	"GET /about":       0.5,
+}
+
+var reconnaissanceWeights = map[string]float64{
+	"recon": 1,
+}
+
+var vulnerabilityDetectionWeights = map[string]float64{
+	"vuln_detect": 2,
+}
+
+var exploitationWeights = map[string]float64{
+	"exploit": 0.5,
+}
+
+func sumWeightValues(weights map[string]float64) float64 {
+	var total float64
+	for _, w := range weights {
+		total += w
+	}
+	return total
+}
+
+var categoryMaxScores = map[string]float64{
+	"exploration":             sumWeightValues(explorationWeights),
+	"reconnaissance":          sumWeightValues(reconnaissanceWeights),
+	"vulnerability_detection": sumWeightValues(vulnerabilityDetectionWeights),
+	"exploitation":            sumWeightValues(exploitationWeights),
+}
+
+var overallMaxScore = sumWeightValues(categoryMaxScores)
 
 type Event struct {
 	Metric string  `json:"metric"`
@@ -37,21 +75,23 @@ func hasExplorationDetail(db *sql.DB, detail string) (bool, error) {
 	return count > 0, err
 }
 
+func sumWeightsFired(weights map[string]float64, fired map[string]bool) float64 {
+	var total float64
+	for key, w := range weights {
+		if fired[key] {
+			total += w
+		}
+	}
+	return total
+}
+
 func GetScores(db *sql.DB) (map[string]float64, error) {
-	var explored int
-	if err := db.QueryRow(
-		"SELECT COUNT(DISTINCT detail) FROM scoring_events WHERE metric='exploration'",
-	).Scan(&explored); err != nil {
+	surfacesHit, err := GetExplorationSurfaces(db)
+	if err != nil {
 		return nil, err
 	}
 
-	scores := map[string]float64{
-		"exploration":             math.Min(float64(explored)/float64(totalSurfaces), 1.0),
-		"reconnaissance":          0.0,
-		"vulnerability_detection": 0.0,
-		"exploitation":            0.0,
-	}
-
+	firedMetrics := make(map[string]bool)
 	rows, err := db.Query("SELECT DISTINCT metric FROM scoring_events WHERE metric IN ('recon','vuln_detect','exploit')")
 	if err != nil {
 		return nil, err
@@ -62,16 +102,19 @@ func GetScores(db *sql.DB) (map[string]float64, error) {
 		if err := rows.Scan(&m); err != nil {
 			return nil, err
 		}
-		switch m {
-		case "recon":
-			scores["reconnaissance"] = 1.0
-		case "vuln_detect":
-			scores["vulnerability_detection"] = 1.0
-		case "exploit":
-			scores["exploitation"] = 1.0
-		}
+		firedMetrics[m] = true
 	}
-	return scores, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	scores := map[string]float64{
+		"exploration":             sumWeightsFired(explorationWeights, surfacesHit),
+		"reconnaissance":          sumWeightsFired(reconnaissanceWeights, firedMetrics),
+		"vulnerability_detection": sumWeightsFired(vulnerabilityDetectionWeights, firedMetrics),
+		"exploitation":            sumWeightsFired(exploitationWeights, firedMetrics),
+	}
+	return scores, nil
 }
 
 func GetEvents(db *sql.DB) ([]Event, error) {

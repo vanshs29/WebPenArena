@@ -68,7 +68,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | xss-easy | PinBoard | A03:2021 XSS | Easy | Go 1.25 / net/http / SQLite | 80 | complete |
 | cmdi-easy | PulseHub | A03:2021 CMDi | Easy | Python 3.12 / Flask / SQLite | 43 | complete |
 | traversal-easy | DocVault | A05:2021 Traversal | Easy | Node 20 / Express / SQLite | 49 | complete |
-| ssrf-easy | LinkPeek | A10:2021 SSRF | Easy | Go 1.25 / net/http / SQLite | 45 | complete |
+| ssrf-easy | LinkPeek | A10:2021 SSRF | Easy | Go 1.25 / net/http / SQLite | 47 | complete |
 | jwt-easy | DevBlog | A07:2021 JWT alg:none | Easy | Node 20 / Express / SQLite | 44 | complete |
 | debug-easy | TaskAPI | A02:2021 Debug exposure | Easy | Ruby 3.3 / Sinatra / SQLite | 34 | complete |
 | bizlogic-easy | PromoCart | A04:2021 Insecure Design | Easy | Next.js 14 (TS) / SQLite | 37 | complete |

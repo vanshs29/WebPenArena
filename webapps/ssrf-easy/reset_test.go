@@ -81,7 +81,7 @@ func TestResetScoresCanBeRebuiltAfterReset(t *testing.T) {
 	postPreview(t, srv, "http://localhost:5000/internal/status").Body.Close()
 
 	scores := fetchScores(t, srv)
-	if scores["exploitation"] != 1.0 {
-		t.Error("exploitation should reach 1.0 again after reset + replay")
+	if scores["exploitation"] != 0.5 {
+		t.Error("exploitation should reach 0.5 (max) again after reset + replay")
 	}
 }

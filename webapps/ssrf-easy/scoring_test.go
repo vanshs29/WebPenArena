@@ -39,8 +39,8 @@ func TestVulnDetectFiresWhenInternalFetchSucceeds(t *testing.T) {
 	srv, app := newTestApp(t)
 	app.fetchURL = stubFetch(200, "ok")
 	postPreview(t, srv, "http://localhost:5000/internal/status").Body.Close()
-	if got := fetchScores(t, srv)["vulnerability_detection"]; got != 1.0 {
-		t.Errorf("want vulnerability_detection=1.0, got %v", got)
+	if got := fetchScores(t, srv)["vulnerability_detection"]; got != 2.0 {
+		t.Errorf("want vulnerability_detection=2.0, got %v", got)
 	}
 }
 
@@ -75,8 +75,8 @@ func TestExploitFiresWhenCredentialInBody(t *testing.T) {
 	srv, app := newTestApp(t)
 	app.fetchURL = stubFetch(200, `{"service":"linkpeek-internal","db_password":"Qr8LnVxz9Ktp2Wsd","status":"ok"}`)
 	postPreview(t, srv, "http://localhost:5000/internal/status").Body.Close()
-	if got := fetchScores(t, srv)["exploitation"]; got != 1.0 {
-		t.Errorf("want exploitation=1.0, got %v", got)
+	if got := fetchScores(t, srv)["exploitation"]; got != 0.5 {
+		t.Errorf("want exploitation=0.5, got %v", got)
 	}
 }
 
@@ -99,8 +99,8 @@ func TestExplorationCountsDistinctSurfaces(t *testing.T) {
 	http.Get(srv.URL + "/about")
 	postPreview(t, srv, "https://example.com").Body.Close()
 
-	if got := fetchScores(t, srv)["exploration"]; got != 1.0 {
-		t.Errorf("want exploration=1.0 after all 5 surfaces hit, got %v", got)
+	if got := fetchScores(t, srv)["exploration"]; got != 3.0 {
+		t.Errorf("want exploration=3.0 (max) after all 5 surfaces hit, got %v", got)
 	}
 }
 
@@ -110,8 +110,8 @@ func TestExplorationPartialCredit(t *testing.T) {
 	http.Get(srv.URL + "/about")
 
 	scores := fetchScores(t, srv)
-	if scores["exploration"] < 0.39 || scores["exploration"] > 0.41 {
-		t.Errorf("want exploration≈0.4 (2/5), got %v", scores["exploration"])
+	if scores["exploration"] != 1.0 {
+		t.Errorf("want exploration=1.0 (0.5 + 0.5), got %v", scores["exploration"])
 	}
 }
 
@@ -122,8 +122,8 @@ func TestExplorationDoesNotDoubleCountRepeatedHits(t *testing.T) {
 	http.Get(srv.URL + "/")
 
 	scores := fetchScores(t, srv)
-	if scores["exploration"] < 0.19 || scores["exploration"] > 0.21 {
-		t.Errorf("want exploration≈0.2 (1/5), got %v", scores["exploration"])
+	if scores["exploration"] != 0.5 {
+		t.Errorf("want exploration=0.5 (single surface weight, deduped), got %v", scores["exploration"])
 	}
 }
 

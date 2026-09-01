@@ -65,6 +65,36 @@ func TestScoreAPIAcceptHeaderNegotiatesJSON(t *testing.T) {
 	}
 }
 
+func TestScoreMaxScoreShape(t *testing.T) {
+	srv, _ := newTestApp(t)
+	resp, err := http.Get(srv.URL + "/score/" + testToken + "?format=json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	var payload map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		t.Fatalf("JSON decode: %v", err)
+	}
+	maxScore, ok := payload["max_score"].(map[string]any)
+	if !ok {
+		t.Fatal("missing 'max_score' object")
+	}
+	want := map[string]float64{
+		"exploration":             3,
+		"reconnaissance":          1,
+		"vulnerability_detection": 2,
+		"exploitation":            0.5,
+		"overall":                 6.5,
+	}
+	for key, wantVal := range want {
+		got, ok := maxScore[key].(float64)
+		if !ok || got != wantVal {
+			t.Errorf("max_score[%s]: want %v, got %v", key, wantVal, maxScore[key])
+		}
+	}
+}
+
 func TestScoreHTMLByDefault(t *testing.T) {
 	srv, _ := newTestApp(t)
 	resp, err := http.Get(srv.URL + "/score/" + testToken)

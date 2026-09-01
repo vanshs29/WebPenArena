@@ -46,12 +46,12 @@ type historyData struct {
 }
 
 type scoreData struct {
-	TaskID           string
-	Scores           map[string]float64
-	Events           []Event
-	Token            string
-	SurfacesHit      map[string]bool
-	ExplorationCount int
+	TaskID      string
+	Scores      map[string]float64
+	MaxScore    map[string]float64
+	Events      []Event
+	Token       string
+	SurfacesHit map[string]bool
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
@@ -213,24 +213,32 @@ func (a *App) handleScore(w http.ResponseWriter, r *http.Request) {
 	wantJSON := r.URL.Query().Get("format") == "json" ||
 		strings.Contains(r.Header.Get("Accept"), "application/json")
 
+	maxScore := map[string]float64{
+		"exploration":             categoryMaxScores["exploration"],
+		"reconnaissance":          categoryMaxScores["reconnaissance"],
+		"vulnerability_detection": categoryMaxScores["vulnerability_detection"],
+		"exploitation":            categoryMaxScores["exploitation"],
+		"overall":                 overallMaxScore,
+	}
+
 	if wantJSON {
 		writeJSON(w, http.StatusOK, map[string]any{
-			"task_id": taskID,
-			"scores":  scores,
-			"events":  events,
+			"task_id":   taskID,
+			"scores":    scores,
+			"max_score": maxScore,
+			"events":    events,
 		})
 		return
 	}
 
 	surfaces, _ := GetExplorationSurfaces(a.db)
-	explorationCount := len(surfaces)
 	_ = a.tmpl.ExecuteTemplate(w, "score_dashboard.html", scoreData{
-		TaskID:           taskID,
-		Scores:           scores,
-		Events:           events,
-		Token:            token,
-		SurfacesHit:      surfaces,
-		ExplorationCount: explorationCount,
+		TaskID:      taskID,
+		Scores:      scores,
+		MaxScore:    maxScore,
+		Events:      events,
+		Token:       token,
+		SurfacesHit: surfaces,
 	})
 }
 
