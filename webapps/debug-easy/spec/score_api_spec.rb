@@ -27,4 +27,16 @@ describe 'GET /score/:token' do
     expect(data['events']).not_to be_empty
     expect(data['events'].any? { |e| e['metric'] == 'recon' }).to be true
   end
+
+  it 'includes a max_score object with per-category and overall ceilings' do
+    get "/score/#{FIXED_SCORE_TOKEN}?format=json"
+    data = JSON.parse(last_response.body)
+    expect(data['max_score']).to eq(
+      'exploration' => 2.5,
+      'reconnaissance' => 0.5,
+      'vulnerability_detection' => 1.0,
+      'exploitation' => 2.0,
+      'overall' => 6.0
+    )
+  end
 end

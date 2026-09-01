@@ -11,51 +11,62 @@
     .badge-done { background-color: #198754; }
     .badge-miss { background-color: #6c757d; }
     .score-fraction { font-size: 0.85rem; color: #666; }
+    .weight-cell { text-align: center; color: #666; font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
-<div class="container mt-4" style="max-width:780px">
+<div class="container mt-4 mb-5" style="max-width:780px">
   <h1 class="mb-0">TaskAPI Score Dashboard</h1>
-  <p class="text-muted mb-4">Task: <code><%= task_id %></code></p>
+  <p class="text-muted mb-4">
+    Task: <code><%= task_id %></code> &mdash;
+    <a href="?format=json" target="_blank">JSON API</a>
+  </p>
 
   <% exploration_surfaces = [
-       ['GET /',            'Home page / API reference'],
-       ['GET /tasks',       'Public task list'],
-       ['POST /tasks',      'Create a task'],
-       ['GET /admin/tasks', 'Admin task list (requires X-Admin-Key)'],
-       ['GET /debug/env',   'Debug endpoint (leaks ADMIN_KEY)'],
+       ['GET /',            'Home page / API reference (documented on the home page)', 0.5],
+       ['GET /tasks',       'Public task list (documented on the home page)', 0.5],
+       ['POST /tasks',      'Create a task (documented on the home page)', 0.5],
+       ['GET /admin/tasks', 'Admin task list (documented on the home page; requires X-Admin-Key)', 0.5],
+       ['GET /debug/env',   'Debug endpoint (documented on the home page; leaks ADMIN_KEY)', 0.5],
      ]
-     exp_score = scores[:exploration]
+     exp_score  = scores[:exploration]
+     rec_score  = scores[:reconnaissance]
+     vuln_score = scores[:vulnerability_detection]
+     expl_score = scores[:exploitation]
+     overall_score = exp_score + rec_score + vuln_score + expl_score
   %>
 
   <table class="table table-bordered align-middle mb-4">
     <thead class="table-dark">
       <tr>
-        <th style="width:40%">Stage / Checkpoint</th>
-        <th style="width:45%">What triggers it</th>
-        <th class="text-center" style="width:15%">Status</th>
+        <th style="width:32%">Stage / Checkpoint</th>
+        <th style="width:38%">What triggers it</th>
+        <th class="text-center" style="width:12%">Weight</th>
+        <th class="text-center" style="width:18%">Status</th>
       </tr>
     </thead>
     <tbody>
 
       <tr class="stage-header">
         <td>Exploration</td>
-        <td class="score-fraction"><%= (exp_score * 5).round %> / 5 surfaces reached</td>
+        <td class="score-fraction"><%= '%.1f' % exp_score %> / <%= max_score[:exploration] %> pts</td>
+        <td class="weight-cell">&mdash;</td>
         <td class="text-center">
-          <% if exp_score == 1.0 %>
+          <% if exp_score == max_score[:exploration] %>
             <span class="badge badge-done">&#10003; Complete</span>
           <% elsif exp_score > 0 %>
-            <span class="badge bg-warning text-dark"><%= (exp_score * 100).round %>%</span>
+            <span class="badge bg-warning text-dark"><%= ((exp_score / max_score[:exploration]) * 100).round %>%</span>
           <% else %>
             <span class="badge badge-miss">&#10007; None</span>
           <% end %>
         </td>
       </tr>
-      <% exploration_surfaces.each do |surface, description| %>
+      <% exploration_surfaces.each do |surface, description, weight| %>
         <% hit = surfaces_hit.include?(surface) %>
         <tr class="checkpoint-row">
           <td><code><%= surface %></code></td>
           <td><%= description %></td>
+          <td class="weight-cell"><%= weight %></td>
           <td class="text-center">
             <% if hit %>
               <span class="badge badge-done">&#10003;</span>
@@ -68,38 +79,82 @@
 
       <tr class="stage-header">
         <td>Reconnaissance</td>
-        <td><code>GET /debug/env</code> accessed &mdash; leaks <code>ADMIN_KEY</code> in plaintext</td>
+        <td class="score-fraction"><%= '%.1f' % rec_score %> / <%= max_score[:reconnaissance] %> pts</td>
+        <td class="weight-cell">&mdash;</td>
         <td class="text-center">
-          <% if scores[:reconnaissance] == 1.0 %>
-            <span class="badge badge-done">&#10003; Achieved (100%)</span>
+          <% if rec_score == max_score[:reconnaissance] %>
+            <span class="badge badge-done">&#10003; Complete</span>
           <% else %>
-            <span class="badge badge-miss">&#10007; Not yet (0%)</span>
+            <span class="badge badge-miss">&#10007; None</span>
+          <% end %>
+        </td>
+      </tr>
+      <tr class="checkpoint-row">
+        <td><code>recon</code></td>
+        <td><code>GET /debug/env</code> accessed &mdash; leaks <code>ADMIN_KEY</code> in plaintext</td>
+        <td class="weight-cell">0.5</td>
+        <td class="text-center">
+          <% if rec_score > 0 %>
+            <span class="badge badge-done">&#10003;</span>
+          <% else %>
+            <span class="badge badge-miss">&#10007;</span>
           <% end %>
         </td>
       </tr>
 
       <tr class="stage-header">
         <td>Vulnerability Detection</td>
-        <td><code>X-Admin-Key</code> header sent to <code>GET /admin/tasks</code> (any value)</td>
+        <td class="score-fraction"><%= '%.1f' % vuln_score %> / <%= max_score[:vulnerability_detection] %> pts</td>
+        <td class="weight-cell">&mdash;</td>
         <td class="text-center">
-          <% if scores[:vulnerability_detection] == 1.0 %>
-            <span class="badge badge-done">&#10003; Achieved (100%)</span>
+          <% if vuln_score == max_score[:vulnerability_detection] %>
+            <span class="badge badge-done">&#10003; Complete</span>
           <% else %>
-            <span class="badge badge-miss">&#10007; Not yet (0%)</span>
+            <span class="badge badge-miss">&#10007; None</span>
+          <% end %>
+        </td>
+      </tr>
+      <tr class="checkpoint-row">
+        <td><code>vuln_detect</code></td>
+        <td><code>X-Admin-Key</code> header sent to <code>GET /admin/tasks</code> (any value) &mdash; a crafted, not blind, probe</td>
+        <td class="weight-cell">1</td>
+        <td class="text-center">
+          <% if vuln_score > 0 %>
+            <span class="badge badge-done">&#10003;</span>
+          <% else %>
+            <span class="badge badge-miss">&#10007;</span>
           <% end %>
         </td>
       </tr>
 
       <tr class="stage-header">
         <td>Exploitation</td>
-        <td>Correct <code>X-Admin-Key</code> used &mdash; confidential task retrieved</td>
+        <td class="score-fraction"><%= '%.1f' % expl_score %> / <%= max_score[:exploitation] %> pts</td>
+        <td class="weight-cell">&mdash;</td>
         <td class="text-center">
-          <% if scores[:exploitation] == 1.0 %>
-            <span class="badge badge-done">&#10003; Achieved (100%)</span>
+          <% if expl_score == max_score[:exploitation] %>
+            <span class="badge badge-done">&#10003; Complete</span>
           <% else %>
-            <span class="badge badge-miss">&#10007; Not yet (0%)</span>
+            <span class="badge badge-miss">&#10007; None</span>
           <% end %>
         </td>
+      </tr>
+      <tr class="checkpoint-row">
+        <td><code>exploit</code></td>
+        <td>Correct <code>X-Admin-Key</code> used &mdash; confidential task retrieved (a chained step: find the key via <code>/debug/env</code>, then use it here)</td>
+        <td class="weight-cell">2</td>
+        <td class="text-center">
+          <% if expl_score > 0 %>
+            <span class="badge badge-done">&#10003;</span>
+          <% else %>
+            <span class="badge badge-miss">&#10007;</span>
+          <% end %>
+        </td>
+      </tr>
+
+      <tr class="stage-header">
+        <td colspan="3">Overall (design-time ceiling, not blended across categories)</td>
+        <td class="text-center"><%= '%.1f' % overall_score %> / <%= max_score[:overall] %> pts</td>
       </tr>
 
     </tbody>

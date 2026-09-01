@@ -15,7 +15,7 @@ describe 'GET /score/:token (HTML dashboard)' do
   it 'reflects current scores in the rendered page' do
     get '/debug/env'
     get "/score/#{FIXED_SCORE_TOKEN}"
-    expect(last_response.body).to include('100%')
+    expect(last_response.body).to include('0.5 / 0.5 pts')
   end
 
   it 'lists each of the five exploration surfaces individually' do
