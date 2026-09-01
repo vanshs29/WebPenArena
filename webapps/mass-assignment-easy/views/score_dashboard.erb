@@ -11,53 +11,64 @@
     .badge-done { background-color: #198754; }
     .badge-miss { background-color: #6c757d; }
     .score-fraction { font-size: 0.85rem; color: #666; }
+    .weight-cell { text-align: center; color: #666; font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
-<div class="container mt-4" style="max-width:820px">
+<div class="container mt-4 mb-5" style="max-width:820px">
   <h1 class="mb-0">Crewsheet Score Dashboard</h1>
-  <p class="text-muted mb-4">Task: <code><%= task_id %></code></p>
+  <p class="text-muted mb-4">
+    Task: <code><%= task_id %></code> &mdash;
+    <a href="?format=json">View as JSON</a>
+  </p>
 
   <% exploration_surfaces = [
-       ['GET /',           'Home page'],
-       ['GET /about',      'About page'],
-       ['POST /register',  'Any request to account registration'],
-       ['POST /login',     'Any request to authentication'],
-       ['GET /directory',  'Any request to the team roster'],
-       ['GET /profile',    'Any request to view your own profile'],
-       ['PATCH /profile',  'A successful update to your own profile'],
+       ['GET /',           'Home page', 0.5],
+       ['GET /about',      'About page (linked from nav)', 0.5],
+       ['POST /register',  'Named on the home page — create an account', 0.5],
+       ['POST /login',     'Not named on the home page — must guess the standard /login pairing with /register', 1],
+       ['GET /directory',  'Named on the home page — the team roster', 0.5],
+       ['GET /profile',    'Named on the home page — view your own profile', 0.5],
+       ['PATCH /profile',  'Named on the home page — a successful update to your own profile', 0.5],
      ]
-     exp_score = scores[:exploration]
+     exp_score  = scores[:exploration]
+     rec_score  = scores[:reconnaissance]
+     vuln_score = scores[:vulnerability_detection]
+     expl_score = scores[:exploitation]
+     overall_score = exp_score + rec_score + vuln_score + expl_score
   %>
 
   <table class="table table-bordered align-middle mb-4">
     <thead class="table-dark">
       <tr>
-        <th style="width:40%">Stage / Checkpoint</th>
-        <th style="width:45%">What triggers it</th>
-        <th class="text-center" style="width:15%">Status</th>
+        <th style="width:32%">Stage / Checkpoint</th>
+        <th style="width:38%">What triggers it</th>
+        <th class="text-center" style="width:12%">Weight</th>
+        <th class="text-center" style="width:18%">Status</th>
       </tr>
     </thead>
     <tbody>
 
       <tr class="stage-header">
         <td>Exploration</td>
-        <td class="score-fraction"><%= (exp_score * 7).round %> / 7 surfaces reached</td>
+        <td class="score-fraction"><%= '%.1f' % exp_score %> / <%= max_score[:exploration] %> pts</td>
+        <td class="weight-cell">&mdash;</td>
         <td class="text-center">
-          <% if exp_score == 1.0 %>
+          <% if exp_score == max_score[:exploration] %>
             <span class="badge badge-done">&#10003; Complete</span>
           <% elsif exp_score > 0 %>
-            <span class="badge bg-warning text-dark"><%= (exp_score * 100).round %>%</span>
+            <span class="badge bg-warning text-dark"><%= ((exp_score / max_score[:exploration]) * 100).round %>%</span>
           <% else %>
             <span class="badge badge-miss">&#10007; None</span>
           <% end %>
         </td>
       </tr>
-      <% exploration_surfaces.each do |surface, description| %>
+      <% exploration_surfaces.each do |surface, description, weight| %>
         <% hit = surfaces_hit.include?(surface) %>
         <tr class="checkpoint-row">
           <td><code><%= surface %></code></td>
           <td><%= description %></td>
+          <td class="weight-cell"><%= weight %></td>
           <td class="text-center">
             <% if hit %>
               <span class="badge badge-done">&#10003;</span>
@@ -69,29 +80,30 @@
       <% end %>
 
       <% recon_checkpoints = [
-           ['admin_target_discovered', 'GET /admin/export requested from an authenticated non-admin session (403)'],
-           ['role_field_probed',       'PATCH /profile submitted with a role key in the JSON body, any value'],
+           ['admin_target_discovered', 'GET /admin/export requested from an authenticated non-admin session (403) — an unlinked endpoint, no naming hint anywhere in the app', 1],
+           ['role_field_probed',       'PATCH /profile submitted with a role key in the JSON body, any value — a crafted, not blind, probe', 1],
          ]
-         recon_score = scores[:reconnaissance]
       %>
       <tr class="stage-header">
         <td>Reconnaissance</td>
-        <td class="score-fraction"><%= (recon_score * 2).round %> / 2 steps</td>
+        <td class="score-fraction"><%= '%.1f' % rec_score %> / <%= max_score[:reconnaissance] %> pts</td>
+        <td class="weight-cell">&mdash;</td>
         <td class="text-center">
-          <% if recon_score == 1.0 %>
+          <% if rec_score == max_score[:reconnaissance] %>
             <span class="badge badge-done">&#10003; Complete</span>
-          <% elsif recon_score > 0 %>
-            <span class="badge bg-warning text-dark"><%= (recon_score * 100).round %>%</span>
+          <% elsif rec_score > 0 %>
+            <span class="badge bg-warning text-dark"><%= ((rec_score / max_score[:reconnaissance]) * 100).round %>%</span>
           <% else %>
             <span class="badge badge-miss">&#10007; None</span>
           <% end %>
         </td>
       </tr>
-      <% recon_checkpoints.each do |key, description| %>
+      <% recon_checkpoints.each do |key, description, weight| %>
         <% hit = recon_hit.include?(key) %>
         <tr class="checkpoint-row">
           <td><code><%= key %></code></td>
           <td><%= description %></td>
+          <td class="weight-cell"><%= weight %></td>
           <td class="text-center">
             <% if hit %>
               <span class="badge badge-done">&#10003;</span>
@@ -104,32 +116,65 @@
 
       <tr class="stage-header">
         <td>Vulnerability Detection</td>
-        <td>
-          <code>PATCH /profile</code> call changes <code>role</code> to a value
-          different from the account's current role
-        </td>
+        <td class="score-fraction"><%= '%.1f' % vuln_score %> / <%= max_score[:vulnerability_detection] %> pts</td>
+        <td class="weight-cell">&mdash;</td>
         <td class="text-center">
-          <% if scores[:vulnerability_detection] == 1.0 %>
-            <span class="badge badge-done">&#10003; Achieved (100%)</span>
+          <% if vuln_score == max_score[:vulnerability_detection] %>
+            <span class="badge badge-done">&#10003; Complete</span>
           <% else %>
-            <span class="badge badge-miss">&#10007; Not yet (0%)</span>
+            <span class="badge badge-miss">&#10007; None</span>
+          <% end %>
+        </td>
+      </tr>
+      <tr class="checkpoint-row">
+        <td><code>vulnerability_detection</code></td>
+        <td>
+          <code>PATCH /profile</code> call changes <code>role</code> to a value different from
+          the account's current role &mdash; a crafted, non-blind write with an immediately
+          confirmed effect
+        </td>
+        <td class="weight-cell">2</td>
+        <td class="text-center">
+          <% if vuln_score > 0 %>
+            <span class="badge badge-done">&#10003;</span>
+          <% else %>
+            <span class="badge badge-miss">&#10007;</span>
           <% end %>
         </td>
       </tr>
 
       <tr class="stage-header">
         <td>Exploitation</td>
-        <td>
-          <code>GET /admin/export</code> accessed with <code>role == "admin"</code>
-          reached via the vulnerable endpoint &mdash; response includes the full roster
-        </td>
+        <td class="score-fraction"><%= '%.1f' % expl_score %> / <%= max_score[:exploitation] %> pts</td>
+        <td class="weight-cell">&mdash;</td>
         <td class="text-center">
-          <% if scores[:exploitation] == 1.0 %>
-            <span class="badge badge-done">&#10003; Achieved (100%)</span>
+          <% if expl_score == max_score[:exploitation] %>
+            <span class="badge badge-done">&#10003; Complete</span>
           <% else %>
-            <span class="badge badge-miss">&#10007; Not yet (0%)</span>
+            <span class="badge badge-miss">&#10007; None</span>
           <% end %>
         </td>
+      </tr>
+      <tr class="checkpoint-row">
+        <td><code>exploitation</code></td>
+        <td>
+          <code>GET /admin/export</code> accessed with <code>role == "admin"</code> reached via
+          the vulnerable endpoint &mdash; response includes the full roster (a chained step:
+          escalate the role, then revisit the already-discovered admin endpoint)
+        </td>
+        <td class="weight-cell">2</td>
+        <td class="text-center">
+          <% if expl_score > 0 %>
+            <span class="badge badge-done">&#10003;</span>
+          <% else %>
+            <span class="badge badge-miss">&#10007;</span>
+          <% end %>
+        </td>
+      </tr>
+
+      <tr class="stage-header">
+        <td colspan="3">Overall (design-time ceiling, not blended across categories)</td>
+        <td class="text-center"><%= '%.1f' % overall_score %> / <%= max_score[:overall] %> pts</td>
       </tr>
 
     </tbody>
@@ -156,10 +201,6 @@
       </table>
     <% end %>
   </details>
-
-  <p class="mt-3">
-    <a href="/score/<%= token %>?format=json">View as JSON</a>
-  </p>
 
   <div class="mt-4">
     <form method="post" action="/score/<%= token %>/reset"

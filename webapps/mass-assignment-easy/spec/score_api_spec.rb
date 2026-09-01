@@ -35,6 +35,18 @@ describe 'GET /score/:token' do
     expect(data['events'].first).to have_key('metric')
     expect(data['events'].first).to have_key('detail')
   end
+
+  it 'includes a max_score object with per-category and overall ceilings' do
+    get "/score/#{FIXED_SCORE_TOKEN}?format=json"
+    data = JSON.parse(last_response.body)
+    expect(data['max_score']).to eq(
+      'exploration' => 4.0,
+      'reconnaissance' => 2,
+      'vulnerability_detection' => 2,
+      'exploitation' => 2,
+      'overall' => 10.0
+    )
+  end
 end
 
 describe 'POST /score/:token/reset' do
