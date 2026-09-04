@@ -60,6 +60,27 @@ class ScoreControllerTest {
     }
 
     @Test
+    void jsonFormatReturnsMaxScoreCeilingsMatchingWeightedSubtaskModel() throws Exception {
+        mockMvc.perform(get("/score/test-token").param("format", "json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.max_score.exploration").value(2.0))
+                .andExpect(jsonPath("$.max_score.reconnaissance").value(0.5))
+                .andExpect(jsonPath("$.max_score.vulnerability_detection").value(2.0))
+                .andExpect(jsonPath("$.max_score.exploitation").value(2.0))
+                .andExpect(jsonPath("$.max_score.overall").value(6.5));
+    }
+
+    @Test
+    void dashboardHtmlRendersPerCheckpointWeightsAndOverallCeiling() throws Exception {
+        mockMvc.perform(get("/score/test-token"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(allOf(
+                        containsString("0.5 pt"),
+                        containsString("2.0 pt"),
+                        containsString("6.5"))));
+    }
+
+    @Test
     void acceptHeaderJsonReturnsJsonEvenWithoutFormatParam() throws Exception {
         mockMvc.perform(get("/score/test-token").header(HttpHeaders.ACCEPT, "application/json"))
                 .andExpect(status().isOk())
