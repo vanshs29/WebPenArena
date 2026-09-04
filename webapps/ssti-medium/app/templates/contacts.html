@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title_suffix %} — Contacts{% endblock %}
+{% block content %}
+<h2 class="mb-3">Shared Contacts</h2>
+<table class="table table-striped">
+  <thead>
+    <tr><th>First name</th><th>Last name</th><th>Email</th><th>Company</th></tr>
+  </thead>
+  <tbody>
+    {% for c in contacts %}
+    <tr>
+      <td>{{ c.first_name }}</td>
+      <td>{{ c.last_name }}</td>
+      <td>{{ c.email }}</td>
+      <td>{{ c.company }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

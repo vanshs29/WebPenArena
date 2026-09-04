@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title_suffix %} — New Campaign{% endblock %}
+{% block content %}
+<h2 class="mb-3">Draft a Campaign</h2>
+<form id="campaign-form">
+  <div class="mb-3">
+    <label class="form-label" for="subject">Subject</label>
+    <input class="form-control" type="text" id="subject" name="subject" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="body">Body</label>
+    <textarea class="form-control" id="body" name="body" rows="6"
+      placeholder="Hi {{ '{{contact.first_name}}' }}, thanks for being a {{ '{{contact.company}}' }} customer!"></textarea>
+  </div>
+  <button class="btn btn-outline-secondary" type="button" id="preview-btn">Live Preview</button>
+  <button class="btn btn-primary" type="submit">Save Campaign</button>
+</form>
+<div class="mt-4" id="preview-result" hidden>
+  <h5>Preview</h5>
+  <pre class="border rounded p-3 bg-light" id="preview-output"></pre>
+</div>
+<script>
+function authHeaders() {
+  return { 'Authorization': 'Bearer ' + localStorage.getItem('token') };
+}
+
+document.getElementById('preview-btn').addEventListener('click', async () => {
+  const template = document.getElementById('body').value;
+  const resp = await fetch('/campaigns/preview', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ template }),
+  });
+  const data = await resp.json();
+  document.getElementById('preview-result').hidden = false;
+  document.getElementById('preview-output').textContent = data.rendered ?? data.error;
+});
+
+document.getElementById('campaign-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const subject = document.getElementById('subject').value;
+  const body = document.getElementById('body').value;
+  const resp = await fetch('/campaigns', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ subject, body }),
+  });
+  if (resp.ok) {
+    window.location.href = '/campaigns';
+  }
+});
+</script>
+{% endblock %}

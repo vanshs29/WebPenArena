@@ -159,6 +159,14 @@
       "path": "webapps/xxe-credleak-medium",
       "image": "benchmark/xxe-credleak-medium",
       "container_port": 5000
+    },
+    {
+      "id": "ssti-medium",
+      "name": "BlastCraft",
+      "description": "OWASP A03:2021 — Server-side template injection via render_template_string() on an email campaign live-preview endpoint; keyword-filter bypass leads to real command execution (Medium)",
+      "path": "webapps/ssti-medium",
+      "image": "benchmark/ssti-medium",
+      "container_port": 5000
     }
   ]
 }

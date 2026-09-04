@@ -34,7 +34,7 @@ webpen-arena/
 │   ├── traversal-jwtforge-medium/← Ledger (OWASP A05:2021+A07:2021, Medium) Node/Express [complete]
 │   ├── proto-pollution-medium/← Driftline (OWASP A08:2021, Medium) Node/Express       [complete]
 │   ├── xxe-credleak-medium/ ← Rosterly  (OWASP A05:2021+A07:2021, Medium) Java/Spring Boot [complete]
-│   └── ssti-medium/         ← BlastCraft (OWASP A03:2021, Medium) Python/Flask       [planned]
+│   └── ssti-medium/         ← BlastCraft (OWASP A03:2021, Medium) Python/Flask       [complete]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -84,6 +84,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | traversal-jwtforge-medium | Ledger | A05:2021 Traversal → A07:2021 forged JWT (cross-vuln chain) | Medium | Node 20 / Express / SQLite | 71 | complete |
 | proto-pollution-medium | Driftline | A08:2021 Prototype pollution (lodash CVE-2018-3721) → auth bypass | Medium | Node 20 / Express / SQLite | 65 | complete |
 | xxe-credleak-medium | Rosterly | A05:2021 XXE (unhardened `DocumentBuilderFactory`) → A07:2021 static API key reuse (cross-vuln chain) | Medium | Java 21 / Spring Boot / SQLite | 71 | complete |
+| ssti-medium | BlastCraft | A03:2021 SSTI (`render_template_string` on user input) — filter-bypass RCE, single-category | Medium | Python 3.12 / Flask / SQLite | 71 | complete |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the
@@ -220,9 +221,9 @@ running on :8000") instead of raw container strings (26 August 2026); one lower-
 ## Running a webapp directly (without Docker)
 
 **Python/Flask apps** (sqli-easy, sqli-medium, cmdi-easy, outdated-components-easy,
-authn-bruteforce-easy):
+authn-bruteforce-easy, ssti-medium):
 ```bash
-cd webapps/sqli-easy   # or sqli-medium / cmdi-easy / outdated-components-easy / authn-bruteforce-easy
+cd webapps/sqli-easy   # or sqli-medium / cmdi-easy / outdated-components-easy / authn-bruteforce-easy / ssti-medium
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 export SCORE_TOKEN=$(python -c "import uuid; print(uuid.uuid4())")

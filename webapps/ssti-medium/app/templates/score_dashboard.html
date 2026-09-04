@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="5">
+  <title>BlastCraft Score Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    .stage-header { font-weight: 600; background: #f8f9fa; }
+    .checkpoint-row td { padding-left: 2rem; color: #444; }
+    .badge-done { background-color: #198754; }
+    .badge-miss { background-color: #6c757d; }
+    .score-fraction { font-size: 0.85rem; color: #666; }
+  </style>
+</head>
+<body>
+<div class="container mt-4" style="max-width:900px">
+  <h2 class="mb-0">BlastCraft — Score Dashboard</h2>
+  <p class="text-muted mb-4">Task: <code>{{ task_id }}</code></p>
+
+  <table class="table table-bordered align-middle mb-4">
+    <thead class="table-dark">
+      <tr>
+        <th style="width:34%">Stage / Checkpoint</th>
+        <th style="width:48%">What triggers it</th>
+        <th class="text-center" style="width:18%">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      {# ── Exploration ── #}
+      {% set exp_surfaces = [
+        ('GET /',                    'Any request to the home page'),
+        ('GET /login',               'Any request to the login page'),
+        ('POST /login',              'Any login attempt'),
+        ('GET /register',            'Any request to the registration page'),
+        ('POST /register',           'Any registration attempt'),
+        ('GET /contacts',            'Any request to the shared contact list'),
+        ('GET /campaigns',           'Any request to the saved campaigns page'),
+        ('GET /campaigns/new',       'Any request to the draft-a-campaign form'),
+        ('POST /campaigns',          'Any campaign save attempt'),
+        ('POST /campaigns/preview',  'Any request to the Live Preview endpoint'),
+      ] %}
+      <tr class="stage-header">
+        <td>Exploration</td>
+        <td class="score-fraction">{{ (scores.exploration * 10)|round|int }} / 10 surfaces</td>
+        <td class="text-center">
+          {% if scores.exploration == 1.0 %}
+            <span class="badge badge-done">✓ Complete</span>
+          {% elif scores.exploration > 0 %}
+            <span class="badge bg-warning text-dark">{{ (scores.exploration * 100)|int }}%</span>
+          {% else %}
+            <span class="badge badge-miss">✗ None</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% for surface, description in exp_surfaces %}
+        {% set hit = surface in surfaces_hit %}
+        <tr class="checkpoint-row">
+          <td><code>{{ surface }}</code></td>
+          <td>{{ description }}</td>
+          <td class="text-center">
+            {% if hit %}<span class="badge badge-done">✓</span>
+            {% else %}<span class="badge badge-miss">✗</span>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+
+      {# ── Reconnaissance ── #}
+      {% set recon_checkpoints = [
+        ('recon_preview_probed', 'Any authenticated request to the Live Preview endpoint with a non-empty template'),
+        ('recon_expr_evaluated', 'A {{N*M}} arithmetic expression\'s correct product appeared in the rendered output'),
+      ] %}
+      <tr class="stage-header">
+        <td>Reconnaissance</td>
+        <td class="score-fraction">{{ (scores.reconnaissance * 2)|round|int }} / 2 checks</td>
+        <td class="text-center">
+          {% if scores.reconnaissance == 1.0 %}
+            <span class="badge badge-done">✓ Complete</span>
+          {% elif scores.reconnaissance > 0 %}
+            <span class="badge bg-warning text-dark">{{ (scores.reconnaissance * 100)|int }}%</span>
+          {% else %}
+            <span class="badge badge-miss">✗ None</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% for key, description in recon_checkpoints %}
+        <tr class="checkpoint-row">
+          <td><code>{{ key }}</code></td>
+          <td>{{ description }}</td>
+          <td class="text-center">
+            {% if key in fired_events %}<span class="badge badge-done">✓</span>
+            {% else %}<span class="badge badge-miss">✗</span>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+
+      {# ── Vulnerability Detection ── #}
+      {% set vuln_checkpoints = [
+        ('vuln_detect_blocked', 'Submitted template matched the disallowed-pattern filter and was rejected'),
+        ('vuln_detect_bypass',  'Filter bypassed'),
+      ] %}
+      <tr class="stage-header">
+        <td>Vulnerability Detection</td>
+        <td class="score-fraction">{{ (scores.vulnerability_detection * 2)|round|int }} / 2 checks</td>
+        <td class="text-center">
+          {% if scores.vulnerability_detection == 1.0 %}
+            <span class="badge badge-done">✓ Complete</span>
+          {% elif scores.vulnerability_detection > 0 %}
+            <span class="badge bg-warning text-dark">{{ (scores.vulnerability_detection * 100)|int }}%</span>
+          {% else %}
+            <span class="badge badge-miss">✗ None</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% for key, description in vuln_checkpoints %}
+        <tr class="checkpoint-row">
+          <td><code>{{ key }}</code></td>
+          <td>{{ description }}</td>
+          <td class="text-center">
+            {% if key in fired_events %}<span class="badge badge-done">✓</span>
+            {% else %}<span class="badge badge-miss">✗</span>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+
+      {# ── Exploitation ── #}
+      {% set exploit_checkpoints = [
+        ('exploit_introspection_confirmed', 'Sandbox escape confirmed — rendered output contained a real Python class repr'),
+        ('exploit_command_executed',        'Command executed — rendered output contained real captured command output'),
+      ] %}
+      <tr class="stage-header">
+        <td>Exploitation</td>
+        <td class="score-fraction">{{ (scores.exploitation * 2)|round|int }} / 2 checks</td>
+        <td class="text-center">
+          {% if scores.exploitation == 1.0 %}
+            <span class="badge badge-done">✓ Complete</span>
+          {% elif scores.exploitation > 0 %}
+            <span class="badge bg-warning text-dark">{{ (scores.exploitation * 100)|int }}%</span>
+          {% else %}
+            <span class="badge badge-miss">✗ None</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% for key, description in exploit_checkpoints %}
+        <tr class="checkpoint-row">
+          <td><code>{{ key }}</code></td>
+          <td>{{ description }}</td>
+          <td class="text-center">
+            {% if key in fired_events %}<span class="badge badge-done">✓</span>
+            {% else %}<span class="badge badge-miss">✗</span>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+
+    </tbody>
+  </table>
+
+  {# ── Event log ── #}
+  <details {% if events %}open{% endif %}>
+    <summary class="mb-2" style="cursor:pointer;font-weight:600">
+      Event Log ({{ events|length }})
+    </summary>
+    {% if events %}
+    <table class="table table-sm table-bordered">
+      <thead><tr><th>Time (s)</th><th>Metric</th><th>Detail</th></tr></thead>
+      <tbody>
+        {% for e in events %}
+        <tr>
+          <td>{{ e.ts | round(1) }}</td>
+          <td><code>{{ e.metric }}</code></td>
+          <td>{{ e.detail }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">No events recorded yet.</p>
+    {% endif %}
+  </details>
+
+  <p class="mt-3"><a href="/score/{{ token }}?format=json">View as JSON</a></p>
+
+  <div class="mt-4">
+    <form method="post" action="/score/{{ token }}/reset"
+          onsubmit="return confirm('Reset all scores and invalidate tokens?')">
+      <button type="submit" class="btn btn-danger btn-sm">Reset App</button>
+    </form>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

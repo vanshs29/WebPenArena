@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title_suffix %} — Email Campaigns{% endblock %}
+{% block content %}
+<h2 class="mb-3">BlastCraft</h2>
+<p class="text-muted">Draft and personalise email campaigns for your shared contact list. Merge
+fields like <code>{{ '{{contact.first_name}}' }}</code> let you tailor each send, and the Live
+Preview feature lets you test a template against a sample contact before saving it.</p>
+<a class="btn btn-primary" href="/login">Get started</a>
+{% endblock %}

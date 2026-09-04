@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title_suffix %} — Login{% endblock %}
+{% block content %}
+<h2 class="mb-3">Login</h2>
+<form id="login-form">
+  <div class="mb-3">
+    <label class="form-label" for="email">Email</label>
+    <input class="form-control" type="email" id="email" name="email" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label" for="password">Password</label>
+    <input class="form-control" type="password" id="password" name="password" required>
+  </div>
+  <button class="btn btn-primary" type="submit">Log in</button>
+</form>
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const resp = await fetch('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (resp.ok) {
+    const data = await resp.json();
+    localStorage.setItem('token', data.token);
+    window.location.href = '/campaigns';
+  } else {
+    alert('Invalid credentials');
+  }
+});
+</script>
+{% endblock %}
