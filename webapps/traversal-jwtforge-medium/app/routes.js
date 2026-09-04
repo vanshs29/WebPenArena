@@ -1,7 +1,15 @@
 const express = require('express')
 const fs = require('fs')
 const path = require('path')
-const { writeEvent, getScores, getEvents, getExplorationSurfaces, getFiredEvents } = require('./scoring')
+const {
+  writeEvent,
+  getScores,
+  getEvents,
+  getExplorationSurfaces,
+  getFiredEvents,
+  CATEGORY_MAX_SCORES,
+  OVERALL_MAX_SCORE,
+} = require('./scoring')
 const { issueToken, requireAuth, requireAdmin } = require('./auth')
 const { writeConfig, generateSecret } = require('./config')
 const { resetDb } = require('./db')
@@ -154,18 +162,20 @@ router.get('/score/:token', (req, res) => {
   const events = getEvents(db)
   const surfacesHit = getExplorationSurfaces(db)
   const firedEvents = getFiredEvents(db)
+  const maxScore = { ...CATEGORY_MAX_SCORES, overall: OVERALL_MAX_SCORE }
   const wantsJson =
     req.query.format === 'json' ||
     (req.headers.accept && req.headers.accept.includes('application/json'))
 
   if (wantsJson) {
-    return res.json({ task_id: TASK_ID, scores, events })
+    return res.json({ task_id: TASK_ID, scores, max_score: maxScore, events })
   }
   res.render('scoreDashboard', {
     scores,
     events,
     surfacesHit,
     firedEvents,
+    maxScore,
     token: req.params.token,
     task_id: TASK_ID,
   })

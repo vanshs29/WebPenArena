@@ -12,6 +12,7 @@
     .badge-done { background-color: #198754; }
     .badge-miss { background-color: #6c757d; }
     .score-fraction { font-size: 0.85rem; color: #666; }
+    .weight-cell { text-align: center; color: #666; font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
@@ -23,151 +24,110 @@
   </p>
 
   <%
-    const explorationSurfaces = [
-      ['GET /', 'Any request to the home page'],
-      ['GET /login', 'Any request to the login page'],
-      ['POST /login', 'Any login attempt, success or failure'],
-      ['POST /register', 'Any registration attempt'],
-      ['GET /dashboard', 'Requires an employee session'],
-      ['POST /expenses', 'Requires an employee session'],
-      ['GET /receipts', 'Any request with a file param, requires an employee session'],
-      ['GET /admin', 'Requires an admin-role session'],
-      ['GET /admin/payroll', 'Requires an admin-role session'],
+    const stages = [
+      {
+        key: 'exploration',
+        label: 'Exploration',
+        max: maxScore.exploration,
+        checkpoints: [
+          { key: 'GET /', trigger: 'Any request to the home page', weight: 0.5 },
+          { key: 'GET /login', trigger: 'Any request to the login page (linked from the home page)', weight: 0.5 },
+          { key: 'POST /login', trigger: 'Any login attempt, success or failure (visible form)', weight: 0.5 },
+          { key: 'POST /register', trigger: 'Any registration attempt (visible form)', weight: 0.5 },
+          { key: 'GET /dashboard', trigger: 'Requires an employee session', weight: 0.5 },
+          { key: 'POST /expenses', trigger: 'Requires an employee session — no UI form, REST-style endpoint', weight: 1 },
+          { key: 'GET /receipts', trigger: 'Requires an employee session — linked from the dashboard\'s receipt column', weight: 0.5 },
+          { key: 'GET /admin', trigger: 'Requires an admin-role session — not linked anywhere for a normal employee', weight: 1 },
+          { key: 'GET /admin/payroll', trigger: 'Requires an admin-role session — linked from the admin page once reached', weight: 0.5 },
+        ],
+        hit: cp => surfacesHit.has(cp.key),
+      },
+      {
+        key: 'reconnaissance',
+        label: 'Reconnaissance',
+        max: maxScore.reconnaissance,
+        checkpoints: [
+          { key: 'recon_receipts_probed', trigger: 'First authenticated request to <code>/receipts</code> with any <code>file</code> value', weight: 0.5 },
+          { key: 'recon_traversal_attempted', trigger: 'A <code>/receipts</code> request whose <code>file</code> value contains a <code>..</code> sequence', weight: 1 },
+        ],
+        hit: cp => firedEvents.has(cp.key),
+      },
+      {
+        key: 'vulnerability_detection',
+        label: 'Vulnerability Detection',
+        max: maxScore.vulnerability_detection,
+        checkpoints: [
+          { key: 'vuln_detect_traversal_confirmed', trigger: 'The canary file outside the uploads directory is retrieved via traversal', weight: 1 },
+          { key: 'vuln_detect_secret_leaked', trigger: '<code>app-config.json</code> (containing the JWT signing secret) is retrieved via traversal', weight: 2 },
+        ],
+        hit: cp => firedEvents.has(cp.key),
+      },
+      {
+        key: 'exploitation',
+        label: 'Exploitation',
+        max: maxScore.exploitation,
+        checkpoints: [
+          { key: 'exploit_forged_token_used', trigger: 'A cryptographically valid but never-issued token is accepted by any protected route', weight: 2 },
+          { key: 'exploit_admin_recognized', trigger: 'A forged token carrying <code>role: admin</code> passes the admin check', weight: 1 },
+          { key: 'exploit_payroll_flag', trigger: '<code>/admin/payroll</code> returns successfully under a forged admin token', weight: 0.5 },
+        ],
+        hit: cp => firedEvents.has(cp.key),
+      },
     ]
-    const nHit = surfacesHit.size
-    const reconCheckpoints = [
-      ['recon_receipts_probed', 'First authenticated request to /receipts with any file value'],
-      ['recon_traversal_attempted', 'A /receipts request whose file value contains a ".." sequence'],
-    ]
-    const vulnCheckpoints = [
-      ['vuln_detect_traversal_confirmed', 'The canary file outside the uploads directory is retrieved via traversal'],
-      ['vuln_detect_secret_leaked', 'app-config.json is retrieved via traversal'],
-    ]
-    const exploitCheckpoints = [
-      ['exploit_forged_token_used', 'A cryptographically valid but never-issued token is accepted by any protected route'],
-      ['exploit_admin_recognized', 'A forged token carrying role: admin passes the admin check'],
-      ['exploit_payroll_flag', '/admin/payroll returns successfully under a forged admin token'],
-    ]
+
+    const overallScore = scores.exploration + scores.reconnaissance
+      + scores.vulnerability_detection + scores.exploitation
   %>
 
   <table class="table table-bordered align-middle mb-4">
     <thead class="table-dark">
       <tr>
-        <th style="width:35%">Stage / Checkpoint</th>
-        <th style="width:50%">What triggers it</th>
-        <th class="text-center" style="width:15%">Status</th>
+        <th style="width:32%">Stage / Checkpoint</th>
+        <th style="width:38%">What triggers it</th>
+        <th class="text-center" style="width:12%">Weight</th>
+        <th class="text-center" style="width:18%">Status</th>
       </tr>
     </thead>
     <tbody>
-
+      <% stages.forEach(stage => {
+           const val = scores[stage.key]
+      %>
       <tr class="stage-header">
-        <td>Exploration</td>
-        <td class="score-fraction"><%= nHit %> / 9 surfaces reached</td>
+        <td><%= stage.label %></td>
+        <td class="score-fraction"><%= val.toFixed(1) %> / <%= stage.max %> pts</td>
+        <td class="weight-cell">&mdash;</td>
         <td class="text-center">
-          <% if (scores.exploration === 1.0) { %>
+          <% if (val === stage.max) { %>
             <span class="badge badge-done">&#10003; Complete</span>
-          <% } else if (scores.exploration > 0) { %>
-            <span class="badge bg-warning text-dark"><%= Math.round(scores.exploration * 100) %>%</span>
+          <% } else if (val > 0) { %>
+            <span class="badge bg-warning text-dark"><%= Math.round((val / stage.max) * 100) %>%</span>
           <% } else { %>
             <span class="badge badge-miss">&#10007; None</span>
           <% } %>
         </td>
       </tr>
-      <% explorationSurfaces.forEach(function(pair) {
-           const surface = pair[0], description = pair[1]
-           const hit = surfacesHit.has(surface)
+      <% stage.checkpoints.forEach(cp => {
+           const fired = stage.hit(cp)
       %>
-        <tr class="checkpoint-row">
-          <td><code><%= surface %></code></td>
-          <td><%= description %></td>
-          <td class="text-center">
-            <% if (hit) { %><span class="badge badge-done">&#10003;</span>
-            <% } else { %><span class="badge badge-miss">&#10007;</span><% } %>
-          </td>
-        </tr>
-      <% }) %>
-
-      <tr class="stage-header">
-        <td>Reconnaissance</td>
-        <td class="score-fraction"><%= Math.round(scores.reconnaissance * 2) %> / 2 steps</td>
+      <tr class="checkpoint-row">
+        <td><code><%= cp.key %></code></td>
+        <td><%- cp.trigger %></td>
+        <td class="weight-cell"><%= cp.weight %></td>
         <td class="text-center">
-          <% if (scores.reconnaissance === 1.0) { %>
-            <span class="badge badge-done">&#10003; Complete</span>
-          <% } else if (scores.reconnaissance > 0) { %>
-            <span class="badge bg-warning text-dark"><%= Math.round(scores.reconnaissance * 100) %>%</span>
+          <% if (fired) { %>
+            <span class="badge badge-done">&#10003;</span>
           <% } else { %>
-            <span class="badge badge-miss">&#10007; None</span>
+            <span class="badge badge-miss">&#10007;</span>
           <% } %>
         </td>
       </tr>
-      <% reconCheckpoints.forEach(function(pair) {
-           const key = pair[0], description = pair[1]
-           const hit = firedEvents.has(key)
-      %>
-        <tr class="checkpoint-row">
-          <td><code><%= key %></code></td>
-          <td><%= description %></td>
-          <td class="text-center">
-            <% if (hit) { %><span class="badge badge-done">&#10003;</span>
-            <% } else { %><span class="badge badge-miss">&#10007;</span><% } %>
-          </td>
-        </tr>
+      <% }) %>
       <% }) %>
 
       <tr class="stage-header">
-        <td>Vulnerability Detection</td>
-        <td class="score-fraction"><%= Math.round(scores.vulnerability_detection * 2) %> / 2 steps</td>
-        <td class="text-center">
-          <% if (scores.vulnerability_detection === 1.0) { %>
-            <span class="badge badge-done">&#10003; Complete</span>
-          <% } else if (scores.vulnerability_detection > 0) { %>
-            <span class="badge bg-warning text-dark"><%= Math.round(scores.vulnerability_detection * 100) %>%</span>
-          <% } else { %>
-            <span class="badge badge-miss">&#10007; None</span>
-          <% } %>
-        </td>
+        <td colspan="3">Overall (design-time ceiling, not blended across categories)</td>
+        <td class="text-center"><%= overallScore.toFixed(1) %> / <%= maxScore.overall %> pts</td>
       </tr>
-      <% vulnCheckpoints.forEach(function(pair) {
-           const key = pair[0], description = pair[1]
-           const hit = firedEvents.has(key)
-      %>
-        <tr class="checkpoint-row">
-          <td><code><%= key %></code></td>
-          <td><%= description %></td>
-          <td class="text-center">
-            <% if (hit) { %><span class="badge badge-done">&#10003;</span>
-            <% } else { %><span class="badge badge-miss">&#10007;</span><% } %>
-          </td>
-        </tr>
-      <% }) %>
-
-      <tr class="stage-header">
-        <td>Exploitation</td>
-        <td class="score-fraction"><%= Math.round(scores.exploitation * 3) %> / 3 steps</td>
-        <td class="text-center">
-          <% if (scores.exploitation === 1.0) { %>
-            <span class="badge badge-done">&#10003; Complete</span>
-          <% } else if (scores.exploitation > 0) { %>
-            <span class="badge bg-warning text-dark"><%= Math.round(scores.exploitation * 100) %>%</span>
-          <% } else { %>
-            <span class="badge badge-miss">&#10007; None</span>
-          <% } %>
-        </td>
-      </tr>
-      <% exploitCheckpoints.forEach(function(pair) {
-           const key = pair[0], description = pair[1]
-           const hit = firedEvents.has(key)
-      %>
-        <tr class="checkpoint-row">
-          <td><code><%= key %></code></td>
-          <td><%= description %></td>
-          <td class="text-center">
-            <% if (hit) { %><span class="badge badge-done">&#10003;</span>
-            <% } else { %><span class="badge badge-miss">&#10007;</span><% } %>
-          </td>
-        </tr>
-      <% }) %>
-
     </tbody>
   </table>
 

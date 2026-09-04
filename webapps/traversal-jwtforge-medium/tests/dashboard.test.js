@@ -42,4 +42,10 @@ describe('score dashboard', () => {
     expect(res.text).toMatch(/exploit_admin_recognized/)
     expect(res.text).toMatch(/exploit_payroll_flag/)
   })
+
+  test('dashboard shows per-checkpoint weights and the overall point ceiling', async () => {
+    const res = await request(app).get(`/score/${TEST_SCORE_TOKEN}`).set('Accept', 'text/html')
+    expect(res.text).toContain('0.0 / 5.5 pts')
+    expect(res.text).toContain('/ 13.5 pts')
+  })
 })

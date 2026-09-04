@@ -1,6 +1,7 @@
 const request = require('supertest')
 const jwt = require('jsonwebtoken')
 const { newTestApp, loginAs, getScores, forgeToken } = require('./helpers')
+const { CATEGORY_MAX_SCORES } = require('../app/scoring')
 
 describe('exploration instrumentation', () => {
   let app
@@ -15,10 +16,10 @@ describe('exploration instrumentation', () => {
   test('exploration increments per surface, deduplicated', async () => {
     await request(app).get('/')
     await request(app).get('/')
-    expect((await getScores(app)).exploration).toBeCloseTo(1 / 9)
+    expect((await getScores(app)).exploration).toBeCloseTo(0.5)
   })
 
-  test('exploration reaches 1.0 after all nine surfaces are hit', async () => {
+  test('exploration reaches its max after all nine surfaces are hit', async () => {
     const cookie = await loginAs(app, 'alice', 'password123')
     await request(app).get('/')
     await request(app).get('/login')
@@ -33,7 +34,7 @@ describe('exploration instrumentation', () => {
     await request(app).get('/admin').set('Cookie', `session=${forged}`)
     await request(app).get('/admin/payroll').set('Cookie', `session=${forged}`)
 
-    expect((await getScores(app)).exploration).toBe(1.0)
+    expect((await getScores(app)).exploration).toBe(CATEGORY_MAX_SCORES.exploration)
   })
 
   test('GET /register is not a scored exploration surface', async () => {
@@ -58,7 +59,7 @@ describe('reconnaissance instrumentation', () => {
     const cookie = await loginAs(app, 'alice', 'password123')
     await request(app).get('/receipts?file=invoice1.pdf').set('Cookie', cookie)
     await request(app).get('/receipts?file=../config/canary.txt').set('Cookie', cookie)
-    expect((await getScores(app)).reconnaissance).toBe(1.0)
+    expect((await getScores(app)).reconnaissance).toBe(CATEGORY_MAX_SCORES.reconnaissance)
   })
 
   test('recon steps do not duplicate', async () => {
@@ -66,7 +67,7 @@ describe('reconnaissance instrumentation', () => {
     for (let i = 0; i < 3; i++) {
       await request(app).get('/receipts?file=../config/canary.txt').set('Cookie', cookie)
     }
-    expect((await getScores(app)).reconnaissance).toBe(1.0)
+    expect((await getScores(app)).reconnaissance).toBe(CATEGORY_MAX_SCORES.reconnaissance)
   })
 })
 
@@ -79,20 +80,20 @@ describe('vulnerability detection instrumentation', () => {
   test('vuln_detect_traversal_confirmed fires only for the canary file', async () => {
     const cookie = await loginAs(app, 'alice', 'password123')
     await request(app).get('/receipts?file=../config/canary.txt').set('Cookie', cookie)
-    expect((await getScores(app)).vulnerability_detection).toBeCloseTo(0.5)
+    expect((await getScores(app)).vulnerability_detection).toBeCloseTo(1)
   })
 
   test('vuln_detect_secret_leaked fires only for the config file', async () => {
     const cookie = await loginAs(app, 'alice', 'password123')
     await request(app).get('/receipts?file=../config/app-config.json').set('Cookie', cookie)
-    expect((await getScores(app)).vulnerability_detection).toBeCloseTo(0.5)
+    expect((await getScores(app)).vulnerability_detection).toBeCloseTo(2)
   })
 
   test('both steps together reach full score', async () => {
     const cookie = await loginAs(app, 'alice', 'password123')
     await request(app).get('/receipts?file=../config/canary.txt').set('Cookie', cookie)
     await request(app).get('/receipts?file=../config/app-config.json').set('Cookie', cookie)
-    expect((await getScores(app)).vulnerability_detection).toBe(1.0)
+    expect((await getScores(app)).vulnerability_detection).toBe(CATEGORY_MAX_SCORES.vulnerability_detection)
   })
 
   test('a plain 404 traversal attempt does not fire either vuln_detect step', async () => {
@@ -113,7 +114,7 @@ describe('exploitation instrumentation', () => {
     const aliceId = jwt.decode(alice.headers['set-cookie'][0].split('=')[1].split(';')[0]).sub
     const forged = forgeToken(app, { sub: aliceId, role: 'admin' })
     await request(app).get('/dashboard').set('Cookie', `session=${forged}`)
-    expect((await getScores(app)).exploitation).toBeCloseTo(1 / 3)
+    expect((await getScores(app)).exploitation).toBeCloseTo(2)
   })
 
   test('exploit_admin_recognized requires the admin route specifically', async () => {
@@ -121,7 +122,7 @@ describe('exploitation instrumentation', () => {
     const aliceId = jwt.decode(alice.headers['set-cookie'][0].split('=')[1].split(';')[0]).sub
     const forged = forgeToken(app, { sub: aliceId, role: 'admin' })
     await request(app).get('/admin').set('Cookie', `session=${forged}`)
-    expect((await getScores(app)).exploitation).toBeCloseTo(2 / 3)
+    expect((await getScores(app)).exploitation).toBeCloseTo(3)
   })
 
   test('exploit_payroll_flag completes the chain', async () => {
@@ -130,7 +131,7 @@ describe('exploitation instrumentation', () => {
     const forged = forgeToken(app, { sub: aliceId, role: 'admin' })
     await request(app).get('/admin').set('Cookie', `session=${forged}`)
     await request(app).get('/admin/payroll').set('Cookie', `session=${forged}`)
-    expect((await getScores(app)).exploitation).toBe(1.0)
+    expect((await getScores(app)).exploitation).toBe(CATEGORY_MAX_SCORES.exploitation)
   })
 
   test('a normal admin login (if it ever happened) would not trigger exploitation', async () => {
