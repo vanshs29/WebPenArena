@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { freshContext, jsonRequest, TEST_SCORE_TOKEN } from './helpers/testContext'
+import { CATEGORY_MAX_SCORES, OVERALL_MAX_SCORE } from '../lib/db'
 
 describe('GET /score/[token]', () => {
   test('wrong token returns 404', async () => {
@@ -43,6 +44,23 @@ describe('GET /score/[token]', () => {
     })
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toMatch(/html/)
+  })
+
+  test('max_score reports the design-time weighted ceiling per category and overall', async () => {
+    const ctx = await freshContext()
+    const res = await ctx.score.GET(
+      new Request(`http://localhost/score/${TEST_SCORE_TOKEN}?format=json`),
+      { params: { token: TEST_SCORE_TOKEN } }
+    )
+    const body = await res.json()
+    expect(body.max_score).toEqual({
+      exploration: CATEGORY_MAX_SCORES.exploration,
+      reconnaissance: CATEGORY_MAX_SCORES.reconnaissance,
+      vulnerability_detection: CATEGORY_MAX_SCORES.vulnerability_detection,
+      exploitation: CATEGORY_MAX_SCORES.exploitation,
+      overall: OVERALL_MAX_SCORE,
+    })
+    expect(body.max_score.overall).toBe(8.5)
   })
 
   test('events include metric, detail, and ts fields', async () => {
@@ -117,5 +135,14 @@ describe('score dashboard checkpoint breakdown', () => {
     // (GET /, GET /product/[id], GET /cart, POST /api/cart, GET /api/orders) plus none of
     // recon/vuln_detect/exploitation should read as unmet.
     expect(html).toMatch(/POST \/api\/checkout[\s\S]*?(✓|achieved|complete)/i)
+  })
+
+  test('renders each checkpoint row with its design-time weight', async () => {
+    const ctx = await freshContext()
+    const html = await getDashboardHtml(ctx)
+    expect(html).toContain(`${CATEGORY_MAX_SCORES.reconnaissance} pt`)
+    expect(html).toContain(`${CATEGORY_MAX_SCORES.vulnerability_detection} pt`)
+    expect(html).toContain(`${CATEGORY_MAX_SCORES.exploitation} pt`)
+    expect(html).toContain(`${OVERALL_MAX_SCORE} pts`)
   })
 })

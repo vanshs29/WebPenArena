@@ -33,7 +33,8 @@ webpen-arena/
 │   ├── mass-assignment-easy/← Crewsheet   (OWASP A01:2021, Easy) Ruby/Sinatra            [complete]
 │   ├── traversal-jwtforge-medium/← Ledger (OWASP A05:2021+A07:2021, Medium) Node/Express [complete]
 │   ├── proto-pollution-medium/← Driftline (OWASP A08:2021, Medium) Node/Express       [complete]
-│   └── xxe-credleak-medium/ ← Rosterly  (OWASP A05:2021+A07:2021, Medium) Java/Spring Boot [complete]
+│   ├── xxe-credleak-medium/ ← Rosterly  (OWASP A05:2021+A07:2021, Medium) Java/Spring Boot [complete]
+│   └── ssti-medium/         ← BlastCraft (OWASP A03:2021, Medium) Python/Flask       [planned]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -72,7 +73,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | ssrf-easy | LinkPeek | A10:2021 SSRF | Easy | Go 1.25 / net/http / SQLite | 47 | complete |
 | jwt-easy | DevBlog | A07:2021 JWT alg:none | Easy | Node 20 / Express / SQLite | 44 | complete |
 | debug-easy | TaskAPI | A02:2021 Debug exposure | Easy | Ruby 3.3 / Sinatra / SQLite | 41 | complete |
-| bizlogic-easy | PromoCart | A04:2021 Insecure Design | Easy | Next.js 14 (TS) / SQLite | 37 | complete |
+| bizlogic-easy | PromoCart | A04:2021 Insecure Design | Easy | Next.js 14 (TS) / SQLite | 44 | complete |
 | deserialization-easy | SessionStore | A08:2021 Deserialization | Easy | Java 21 / Spring Boot / SQLite | 36 | complete |
 | nosqli-easy | QuickPoll | A03:2021 NoSQL Injection | Easy | Fastify (TS) / MongoDB + SQLite | 50 | complete |
 | config-exposure-easy | OpsDesk | A05:2021 Backup File Exposure | Easy | PHP 8.3 / SQLite | 41 | complete |

@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest'
 import { freshContext, jsonRequest, readScores } from './helpers/testContext'
-import { TOTAL_SURFACES } from '../lib/db'
+import { EXPLORATION_WEIGHTS, CATEGORY_MAX_SCORES } from '../lib/db'
 
 describe('exploration scoring across all six surfaces', () => {
-  test('hitting one surface registers a fraction of TOTAL_SURFACES', async () => {
+  test('hitting one surface registers that surface\'s weight', async () => {
     const ctx = await freshContext()
     await ctx.orders.GET()
     const scores = await readScores(ctx)
-    expect(scores.exploration).toBeCloseTo(1 / TOTAL_SURFACES)
+    expect(scores.exploration).toBeCloseTo(EXPLORATION_WEIGHTS['GET /api/orders'])
   })
 
   test('repeating the same surface does not double count', async () => {
@@ -15,10 +15,10 @@ describe('exploration scoring across all six surfaces', () => {
     await ctx.orders.GET()
     await ctx.orders.GET()
     const scores = await readScores(ctx)
-    expect(scores.exploration).toBeCloseTo(1 / TOTAL_SURFACES)
+    expect(scores.exploration).toBeCloseTo(EXPLORATION_WEIGHTS['GET /api/orders'])
   })
 
-  test('all six surfaces reach exploration 1.0', async () => {
+  test('all six surfaces reach the full exploration weighted max', async () => {
     const ctx = await freshContext()
 
     await ctx.homePage.default()
@@ -33,7 +33,7 @@ describe('exploration scoring across all six surfaces', () => {
     await ctx.orders.GET()
 
     const scores = await readScores(ctx)
-    expect(scores.exploration).toBe(1.0)
+    expect(scores.exploration).toBe(CATEGORY_MAX_SCORES.exploration)
   })
 })
 
@@ -43,20 +43,20 @@ describe('page components fire their exploration event', () => {
     await ctx.homePage.default()
     await ctx.homePage.default()
     const scores = await readScores(ctx)
-    expect(scores.exploration).toBeCloseTo(1 / TOTAL_SURFACES)
+    expect(scores.exploration).toBeCloseTo(EXPLORATION_WEIGHTS['GET /'])
   })
 
   test('product page records GET /product/[id] for any product id', async () => {
     const ctx = await freshContext()
     await ctx.productPage.default({ params: { id: '4' } })
     const scores = await readScores(ctx)
-    expect(scores.exploration).toBeCloseTo(1 / TOTAL_SURFACES)
+    expect(scores.exploration).toBeCloseTo(EXPLORATION_WEIGHTS['GET /product/[id]'])
   })
 
   test('cart page records GET /cart', async () => {
     const ctx = await freshContext()
     await ctx.cartPage.default()
     const scores = await readScores(ctx)
-    expect(scores.exploration).toBeCloseTo(1 / TOTAL_SURFACES)
+    expect(scores.exploration).toBeCloseTo(EXPLORATION_WEIGHTS['GET /cart'])
   })
 })

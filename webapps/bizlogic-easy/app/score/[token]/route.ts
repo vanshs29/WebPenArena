@@ -1,5 +1,16 @@
 import { NextResponse } from 'next/server'
-import { getDb, getEvents, getScores, type ScoringEvent, type Scores } from '../../../lib/db'
+import {
+  EXPLORATION_WEIGHTS,
+  RECONNAISSANCE_WEIGHT,
+  VULNERABILITY_DETECTION_WEIGHT,
+  EXPLOITATION_WEIGHT,
+  getDb,
+  getEvents,
+  getMaxScores,
+  getScores,
+  type ScoringEvent,
+  type Scores,
+} from '../../../lib/db'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,8 +26,7 @@ const EXPLORATION_CHECKPOINTS: [string, string][] = [
 ]
 
 function statusBadge(value: number): string {
-  if (value >= 1.0) return '<span class="badge badge-done">&#10003; Complete</span>'
-  if (value > 0) return `<span class="badge bg-warning text-dark">${Math.round(value * 100)}%</span>`
+  if (value > 0) return '<span class="badge badge-done">&#10003; Complete</span>'
   return '<span class="badge badge-miss">&#10007; None</span>'
 }
 
@@ -30,14 +40,16 @@ function renderDashboardHtml(scores: Scores, events: ScoringEvent[], token: stri
       ${i === 0 ? `<td rowspan="${EXPLORATION_CHECKPOINTS.length}"><strong>Exploration</strong></td>` : ''}
       <td><code>${surface}</code></td>
       <td>${description}</td>
+      <td class="text-center">${EXPLORATION_WEIGHTS[surface]} pt</td>
       <td class="text-center">${hitSurfaces.has(surface) ? '&#10003;' : '&#10007;'}</td>
     </tr>`
   ).join('')
 
-  const singleStepRow = (stage: string, checkpoint: string, trigger: string, value: number) => `<tr>
+  const singleStepRow = (stage: string, checkpoint: string, trigger: string, weight: number, value: number) => `<tr>
     <td><strong>${stage}</strong></td>
     <td>${checkpoint}</td>
     <td>${trigger}</td>
+    <td class="text-center">${weight} pt</td>
     <td class="text-center">${statusBadge(value)}</td>
   </tr>`
 
@@ -73,9 +85,10 @@ function renderDashboardHtml(scores: Scores, events: ScoringEvent[], token: stri
   <table class="table table-bordered align-middle mb-4">
     <thead class="table-dark">
       <tr>
-        <th style="width:15%">Stage</th>
-        <th style="width:25%">Checkpoint</th>
-        <th style="width:45%">What triggers it</th>
+        <th style="width:13%">Stage</th>
+        <th style="width:22%">Checkpoint</th>
+        <th style="width:40%">What triggers it</th>
+        <th class="text-center" style="width:10%">Weight</th>
         <th class="text-center" style="width:15%">Status</th>
       </tr>
     </thead>
@@ -85,22 +98,28 @@ function renderDashboardHtml(scores: Scores, events: ScoringEvent[], token: stri
         'Reconnaissance',
         'Price mismatch submitted',
         "A checkout request's unitPrice for a line item differs from that product's catalog price",
+        RECONNAISSANCE_WEIGHT,
         scores.reconnaissance
       )}
       ${singleStepRow(
         'Vulnerability Detection',
         'Mismatched order accepted',
         'The server creates an order using the client-supplied unitPrice instead of the catalog price',
+        VULNERABILITY_DETECTION_WEIGHT,
         scores.vulnerability_detection
       )}
       ${singleStepRow(
         'Exploitation',
         'Underpriced purchase completed',
         'An order for a catalog item priced above $10 completes with a total of $0.01 or less',
+        EXPLOITATION_WEIGHT,
         scores.exploitation
       )}
     </tbody>
   </table>
+  <p class="text-muted">Overall: <strong>${
+    scores.exploration + scores.reconnaissance + scores.vulnerability_detection + scores.exploitation
+  } / ${getMaxScores().overall} pts</strong></p>
 
   <details ${events.length > 0 ? 'open' : ''} class="mb-4">
     <summary style="cursor:pointer;font-weight:600">Event Log (${events.length})</summary>
@@ -136,7 +155,7 @@ export async function GET(req: Request, { params }: { params: { token: string } 
     (req.headers.get('accept') || '').includes('application/json')
 
   if (wantsJson) {
-    return NextResponse.json({ task_id: TASK_ID, scores, events })
+    return NextResponse.json({ task_id: TASK_ID, scores, max_score: getMaxScores(), events })
   }
 
   return new NextResponse(renderDashboardHtml(scores, events, params.token), {

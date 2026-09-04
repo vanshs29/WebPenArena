@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { freshContext, jsonRequest, readScores } from './helpers/testContext'
+import { CATEGORY_MAX_SCORES } from '../lib/db'
 
 describe('checkout with catalog-accurate prices', () => {
   test('creates an order with the server catalog price and total', async () => {
@@ -39,8 +40,8 @@ describe('checkout trusts a client-supplied unitPrice', () => {
     })
     await ctx.checkout.POST(req)
     const scores = await readScores(ctx)
-    expect(scores.reconnaissance).toBe(1)
-    expect(scores.vulnerability_detection).toBe(1)
+    expect(scores.reconnaissance).toBe(CATEGORY_MAX_SCORES.reconnaissance)
+    expect(scores.vulnerability_detection).toBe(CATEGORY_MAX_SCORES.vulnerability_detection)
     expect(scores.exploitation).toBe(0)
   })
 
@@ -54,9 +55,9 @@ describe('checkout trusts a client-supplied unitPrice', () => {
     expect(body.total).toBeCloseTo(0.01)
 
     const scores = await readScores(ctx)
-    expect(scores.reconnaissance).toBe(1)
-    expect(scores.vulnerability_detection).toBe(1)
-    expect(scores.exploitation).toBe(1)
+    expect(scores.reconnaissance).toBe(CATEGORY_MAX_SCORES.reconnaissance)
+    expect(scores.vulnerability_detection).toBe(CATEGORY_MAX_SCORES.vulnerability_detection)
+    expect(scores.exploitation).toBe(CATEGORY_MAX_SCORES.exploitation)
   })
 
 })

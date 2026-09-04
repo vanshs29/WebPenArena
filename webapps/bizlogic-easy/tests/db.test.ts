@@ -9,7 +9,8 @@ import {
   createOrder,
   getOrders,
   resetDb,
-  TOTAL_SURFACES,
+  EXPLORATION_WEIGHTS,
+  CATEGORY_MAX_SCORES,
 } from '../lib/db'
 
 describe('product catalog seed', () => {
@@ -57,31 +58,31 @@ describe('getScores', () => {
     })
   })
 
-  test('exploration climbs toward 1.0 as distinct surfaces are recorded', () => {
+  test('exploration sums the weights of distinct surfaces recorded', () => {
     const db = createDb(':memory:')
     writeEvent(db, 'exploration', 'GET /')
     writeEvent(db, 'exploration', 'GET /cart')
     const scores = getScores(db)
-    expect(scores.exploration).toBeCloseTo(2 / TOTAL_SURFACES)
+    expect(scores.exploration).toBeCloseTo(EXPLORATION_WEIGHTS['GET /'] + EXPLORATION_WEIGHTS['GET /cart'])
   })
 
-  test('exploration is capped at 1.0 and does not exceed it', () => {
+  test('exploration reaches its weighted max once every surface has fired', () => {
     const db = createDb(':memory:')
     const labels = ['GET /', 'GET /product/[id]', 'GET /cart', 'POST /api/cart', 'POST /api/checkout', 'GET /api/orders']
     for (const label of labels) writeEvent(db, 'exploration', label)
-    expect(getScores(db).exploration).toBe(1.0)
+    expect(getScores(db).exploration).toBe(CATEGORY_MAX_SCORES.exploration)
   })
 
-  test('reconnaissance, vulnerability_detection, and exploitation are binary flags', () => {
+  test('reconnaissance, vulnerability_detection, and exploitation report their design-time weight once fired', () => {
     const db = createDb(':memory:')
     writeEvent(db, 'recon', 'tampered unitPrice submitted')
     writeEvent(db, 'vuln_detect', 'tampered order accepted')
     writeEvent(db, 'exploit', 'underpriced order completed')
     expect(getScores(db)).toEqual({
       exploration: 0,
-      reconnaissance: 1,
-      vulnerability_detection: 1,
-      exploitation: 1,
+      reconnaissance: CATEGORY_MAX_SCORES.reconnaissance,
+      vulnerability_detection: CATEGORY_MAX_SCORES.vulnerability_detection,
+      exploitation: CATEGORY_MAX_SCORES.exploitation,
     })
   })
 })

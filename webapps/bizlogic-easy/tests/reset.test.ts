@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { freshContext, jsonRequest, readScores, TEST_SCORE_TOKEN } from './helpers/testContext'
+import { CATEGORY_MAX_SCORES } from '../lib/db'
 
 describe('POST /score/[token]/reset', () => {
   test('wrong token returns 404 and does not clear events', async () => {
@@ -15,7 +16,7 @@ describe('POST /score/[token]/reset', () => {
     )
     expect(res.status).toBe(404)
     const scores = await readScores(ctx)
-    expect(scores.exploitation).toBe(1)
+    expect(scores.exploitation).toBe(CATEGORY_MAX_SCORES.exploitation)
   })
 
   test('correct token clears all scoring events', async () => {
