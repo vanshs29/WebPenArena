@@ -12,6 +12,7 @@
     .badge-done { background-color: #198754; }
     .badge-miss { background-color: #6c757d; }
     .score-fraction { font-size: 0.85rem; color: #666; }
+    .weight-cell { text-align: center; color: #666; font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
@@ -23,148 +24,109 @@
   </p>
 
   <%
-    const explorationSurfaces = [
-      ['GET /', 'Any request to the home page'],
-      ['GET /login', 'Any request to the login page'],
-      ['POST /login', 'Any login attempt, success or failure'],
-      ['GET /register', 'Any request to the register page'],
-      ['POST /register', 'Any registration attempt'],
-      ['GET /settings', 'Requires a member session'],
-      ['PATCH /api/settings', 'Requires a member session'],
-      ['GET /api/session', 'Requires a member session'],
-      ['GET /admin', 'Requires an owner-role or polluted-isAdmin session'],
-      ['GET /admin/billing', 'Requires an owner-role or polluted-isAdmin session'],
+    const stages = [
+      {
+        key: 'exploration',
+        label: 'Exploration',
+        max: maxScore.exploration,
+        checkpoints: [
+          { key: 'GET /', trigger: 'Any request to the home page', weight: 0.5 },
+          { key: 'GET /login', trigger: 'Any request to the login page (linked from the home page)', weight: 0.5 },
+          { key: 'POST /login', trigger: 'Any login attempt, success or failure (visible form)', weight: 0.5 },
+          { key: 'GET /register', trigger: 'Any request to the register page (linked from the home page)', weight: 0.5 },
+          { key: 'POST /register', trigger: 'Any registration attempt (visible form)', weight: 0.5 },
+          { key: 'GET /settings', trigger: 'Requires a member session — named in the home page\'s copy but not directly linked', weight: 1 },
+          { key: 'PATCH /api/settings', trigger: 'Requires a member session — the exact method and path are stated on the Settings page', weight: 0.5 },
+          { key: 'GET /api/session', trigger: 'Requires a member session — not linked or named anywhere in the UI', weight: 1 },
+          { key: 'GET /admin', trigger: 'Requires an owner-role or polluted-isAdmin session — not linked anywhere for a normal member', weight: 1 },
+          { key: 'GET /admin/billing', trigger: 'Requires an owner-role or polluted-isAdmin session — linked from the admin page once reached', weight: 0.5 },
+        ],
+        hit: cp => surfacesHit.has(cp.key),
+      },
+      {
+        key: 'reconnaissance',
+        label: 'Reconnaissance',
+        max: maxScore.reconnaissance,
+        checkpoints: [
+          { key: 'recon_settings_probed', trigger: 'First authenticated <code>PATCH /api/settings</code> with a non-empty body', weight: 0.5 },
+          { key: 'recon_proto_key_attempted', trigger: 'A <code>PATCH /api/settings</code> body containing <code>__proto__</code>/<code>constructor</code>/<code>prototype</code> at any depth', weight: 1 },
+        ],
+        hit: cp => firedEvents.has(cp.key),
+      },
+      {
+        key: 'vulnerability_detection',
+        label: 'Vulnerability Detection',
+        max: maxScore.vulnerability_detection,
+        checkpoints: [
+          { key: 'vuln_detect_pollution_confirmed', trigger: '<code>GET /api/session</code> resolves <code>isAdmin: true</code> for a member session that never touched its own settings', weight: 2 },
+        ],
+        hit: cp => firedEvents.has(cp.key),
+      },
+      {
+        key: 'exploitation',
+        label: 'Exploitation',
+        max: maxScore.exploitation,
+        checkpoints: [
+          { key: 'exploit_admin_bypassed', trigger: '<code>GET /admin</code> succeeds for a non-owner session with polluted <code>isAdmin</code>', weight: 1 },
+          { key: 'exploit_billing_retrieved', trigger: '<code>GET /admin/billing</code> succeeds under the same condition', weight: 0.5 },
+        ],
+        hit: cp => firedEvents.has(cp.key),
+      },
     ]
-    const nHit = surfacesHit.size
-    const reconCheckpoints = [
-      ['recon_settings_probed', 'First authenticated PATCH /api/settings with a non-empty body'],
-      ['recon_proto_key_attempted', 'A PATCH /api/settings body containing __proto__/constructor/prototype at any depth'],
-    ]
-    const vulnCheckpoints = [
-      ['vuln_detect_pollution_confirmed', 'GET /api/session resolves isAdmin: true for a member session'],
-    ]
-    const exploitCheckpoints = [
-      ['exploit_admin_bypassed', 'GET /admin succeeds for a non-owner session with polluted isAdmin'],
-      ['exploit_billing_retrieved', 'GET /admin/billing succeeds under the same condition'],
-    ]
+
+    const overallScore = scores.exploration + scores.reconnaissance
+      + scores.vulnerability_detection + scores.exploitation
   %>
 
   <table class="table table-bordered align-middle mb-4">
     <thead class="table-dark">
       <tr>
-        <th style="width:35%">Stage / Checkpoint</th>
-        <th style="width:50%">What triggers it</th>
-        <th class="text-center" style="width:15%">Status</th>
+        <th style="width:32%">Stage / Checkpoint</th>
+        <th style="width:38%">What triggers it</th>
+        <th class="text-center" style="width:12%">Weight</th>
+        <th class="text-center" style="width:18%">Status</th>
       </tr>
     </thead>
     <tbody>
-
+      <% stages.forEach(stage => {
+           const val = scores[stage.key]
+      %>
       <tr class="stage-header">
-        <td>Exploration</td>
-        <td class="score-fraction"><%= nHit %> / 10 surfaces reached</td>
+        <td><%= stage.label %></td>
+        <td class="score-fraction"><%= val.toFixed(1) %> / <%= stage.max %> pts</td>
+        <td class="weight-cell">&mdash;</td>
         <td class="text-center">
-          <% if (scores.exploration === 1.0) { %>
+          <% if (val === stage.max) { %>
             <span class="badge badge-done">&#10003; Complete</span>
-          <% } else if (scores.exploration > 0) { %>
-            <span class="badge bg-warning text-dark"><%= Math.round(scores.exploration * 100) %>%</span>
+          <% } else if (val > 0) { %>
+            <span class="badge bg-warning text-dark"><%= Math.round((val / stage.max) * 100) %>%</span>
           <% } else { %>
             <span class="badge badge-miss">&#10007; None</span>
           <% } %>
         </td>
       </tr>
-      <% explorationSurfaces.forEach(function(pair) {
-           const surface = pair[0], description = pair[1]
-           const hit = surfacesHit.has(surface)
+      <% stage.checkpoints.forEach(cp => {
+           const fired = stage.hit(cp)
       %>
-        <tr class="checkpoint-row">
-          <td><code><%= surface %></code></td>
-          <td><%= description %></td>
-          <td class="text-center">
-            <% if (hit) { %><span class="badge badge-done">&#10003;</span>
-            <% } else { %><span class="badge badge-miss">&#10007;</span><% } %>
-          </td>
-        </tr>
-      <% }) %>
-
-      <tr class="stage-header">
-        <td>Reconnaissance</td>
-        <td class="score-fraction"><%= Math.round(scores.reconnaissance * 2) %> / 2 steps</td>
+      <tr class="checkpoint-row">
+        <td><code><%= cp.key %></code></td>
+        <td><%- cp.trigger %></td>
+        <td class="weight-cell"><%= cp.weight %></td>
         <td class="text-center">
-          <% if (scores.reconnaissance === 1.0) { %>
-            <span class="badge badge-done">&#10003; Complete</span>
-          <% } else if (scores.reconnaissance > 0) { %>
-            <span class="badge bg-warning text-dark"><%= Math.round(scores.reconnaissance * 100) %>%</span>
+          <% if (fired) { %>
+            <span class="badge badge-done">&#10003;</span>
           <% } else { %>
-            <span class="badge badge-miss">&#10007; None</span>
+            <span class="badge badge-miss">&#10007;</span>
           <% } %>
         </td>
       </tr>
-      <% reconCheckpoints.forEach(function(pair) {
-           const key = pair[0], description = pair[1]
-           const hit = firedEvents.has(key)
-      %>
-        <tr class="checkpoint-row">
-          <td><code><%= key %></code></td>
-          <td><%= description %></td>
-          <td class="text-center">
-            <% if (hit) { %><span class="badge badge-done">&#10003;</span>
-            <% } else { %><span class="badge badge-miss">&#10007;</span><% } %>
-          </td>
-        </tr>
+      <% }) %>
       <% }) %>
 
       <tr class="stage-header">
-        <td>Vulnerability Detection</td>
-        <td class="score-fraction"><%= Math.round(scores.vulnerability_detection * 1) %> / 1 step</td>
-        <td class="text-center">
-          <% if (scores.vulnerability_detection === 1.0) { %>
-            <span class="badge badge-done">&#10003; Complete</span>
-          <% } else { %>
-            <span class="badge badge-miss">&#10007; None</span>
-          <% } %>
-        </td>
+        <td colspan="3">Overall (design-time ceiling, not blended across categories)</td>
+        <td class="text-center"><%= overallScore.toFixed(1) %> / <%= maxScore.overall %> pts</td>
       </tr>
-      <% vulnCheckpoints.forEach(function(pair) {
-           const key = pair[0], description = pair[1]
-           const hit = firedEvents.has(key)
-      %>
-        <tr class="checkpoint-row">
-          <td><code><%= key %></code></td>
-          <td><%= description %></td>
-          <td class="text-center">
-            <% if (hit) { %><span class="badge badge-done">&#10003;</span>
-            <% } else { %><span class="badge badge-miss">&#10007;</span><% } %>
-          </td>
-        </tr>
-      <% }) %>
-
-      <tr class="stage-header">
-        <td>Exploitation</td>
-        <td class="score-fraction"><%= Math.round(scores.exploitation * 2) %> / 2 steps</td>
-        <td class="text-center">
-          <% if (scores.exploitation === 1.0) { %>
-            <span class="badge badge-done">&#10003; Complete</span>
-          <% } else if (scores.exploitation > 0) { %>
-            <span class="badge bg-warning text-dark"><%= Math.round(scores.exploitation * 100) %>%</span>
-          <% } else { %>
-            <span class="badge badge-miss">&#10007; None</span>
-          <% } %>
-        </td>
-      </tr>
-      <% exploitCheckpoints.forEach(function(pair) {
-           const key = pair[0], description = pair[1]
-           const hit = firedEvents.has(key)
-      %>
-        <tr class="checkpoint-row">
-          <td><code><%= key %></code></td>
-          <td><%= description %></td>
-          <td class="text-center">
-            <% if (hit) { %><span class="badge badge-done">&#10003;</span>
-            <% } else { %><span class="badge badge-miss">&#10007;</span><% } %>
-          </td>
-        </tr>
-      <% }) %>
-
     </tbody>
   </table>
 

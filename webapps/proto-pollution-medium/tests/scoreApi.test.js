@@ -1,5 +1,6 @@
 const request = require('supertest')
 const { newTestApp, TEST_SCORE_TOKEN } = require('./helpers')
+const { CATEGORY_MAX_SCORES, OVERALL_MAX_SCORE } = require('../app/scoring')
 
 describe('score JSON API', () => {
   let app
@@ -44,5 +45,13 @@ describe('score JSON API', () => {
     await request(app).get('/')
     const res = await request(app).get(`/score/${TEST_SCORE_TOKEN}`).set('Accept', 'application/json')
     expect(res.body.events.some((e) => e.metric === 'exploration' && e.detail === 'GET /')).toBe(true)
+  })
+
+  test('format=json includes max_score ceilings for every category and overall', async () => {
+    const res = await request(app).get(`/score/${TEST_SCORE_TOKEN}?format=json`)
+    expect(res.body.max_score).toEqual({
+      ...CATEGORY_MAX_SCORES,
+      overall: OVERALL_MAX_SCORE,
+    })
   })
 })

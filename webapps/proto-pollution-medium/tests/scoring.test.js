@@ -1,5 +1,6 @@
 const request = require('supertest')
 const { newTestApp, loginAs, getScores, sendRawJson } = require('./helpers')
+const { CATEGORY_MAX_SCORES } = require('../app/scoring')
 
 const POLLUTE_BODY = '{"__proto__":{"isAdmin":true}}'
 
@@ -17,10 +18,10 @@ describe('exploration', () => {
   test('exploration increments per surface, deduplicated', async () => {
     await request(app).get('/')
     await request(app).get('/')
-    expect((await getScores(app)).exploration).toBeCloseTo(1 / 10)
+    expect((await getScores(app)).exploration).toBeCloseTo(0.5)
   })
 
-  test('exploration reaches 1.0 after all ten surfaces are hit', async () => {
+  test('exploration reaches its max after all ten surfaces are hit', async () => {
     await request(app).get('/')
     await request(app).get('/login')
     await request(app).post('/login').send({ email: 'alice@driftline.local', password: 'password123' })
@@ -34,7 +35,7 @@ describe('exploration', () => {
     await request(app).get('/admin').set('Cookie', cookie)
     await request(app).get('/admin/billing').set('Cookie', cookie)
 
-    expect((await getScores(app)).exploration).toBe(1.0)
+    expect((await getScores(app)).exploration).toBe(CATEGORY_MAX_SCORES.exploration)
   })
 })
 
@@ -55,7 +56,7 @@ describe('reconnaissance', () => {
     const cookie = await loginAs(app, 'alice@driftline.local', 'password123')
     await request(app).patch('/api/settings').set('Cookie', cookie).send({ theme: 'dark' })
     await sendRawJson(request(app).patch('/api/settings').set('Cookie', cookie), '{"__proto__":{"x":1}}')
-    expect((await getScores(app)).reconnaissance).toBe(1.0)
+    expect((await getScores(app)).reconnaissance).toBe(CATEGORY_MAX_SCORES.reconnaissance)
   })
 
   test('a nested proto key is still detected', async () => {
@@ -64,7 +65,7 @@ describe('reconnaissance', () => {
       request(app).patch('/api/settings').set('Cookie', cookie),
       '{"notifications":{"__proto__":{"x":1}}}'
     )
-    expect((await getScores(app)).reconnaissance).toBe(1.0)
+    expect((await getScores(app)).reconnaissance).toBe(CATEGORY_MAX_SCORES.reconnaissance)
   })
 
   test('a proto-like key at the top level via constructor is detected as recon too', async () => {
@@ -73,7 +74,7 @@ describe('reconnaissance', () => {
       .patch('/api/settings')
       .set('Cookie', cookie)
       .send({ constructor: { prototype: { x: 1 } } })
-    expect((await getScores(app)).reconnaissance).toBe(1.0)
+    expect((await getScores(app)).reconnaissance).toBe(CATEGORY_MAX_SCORES.reconnaissance)
   })
 
   test('recon steps do not duplicate', async () => {
@@ -81,7 +82,7 @@ describe('reconnaissance', () => {
     for (let i = 0; i < 3; i++) {
       await sendRawJson(request(app).patch('/api/settings').set('Cookie', cookie), '{"__proto__":{"x":1}}')
     }
-    expect((await getScores(app)).reconnaissance).toBe(1.0)
+    expect((await getScores(app)).reconnaissance).toBe(CATEGORY_MAX_SCORES.reconnaissance)
   })
 
   test('an empty body does not fire recon_settings_probed', async () => {
@@ -102,7 +103,7 @@ describe('vulnerability detection', () => {
     const cookie = await loginAs(app, 'alice@driftline.local', 'password123')
     await sendRawJson(request(app).patch('/api/settings').set('Cookie', cookie), POLLUTE_BODY)
     await request(app).get('/api/session').set('Cookie', cookie)
-    expect((await getScores(app)).vulnerability_detection).toBe(1.0)
+    expect((await getScores(app)).vulnerability_detection).toBe(CATEGORY_MAX_SCORES.vulnerability_detection)
   })
 
   test('does not fire for an unpolluted member', async () => {
@@ -116,7 +117,7 @@ describe('vulnerability detection', () => {
     await sendRawJson(request(app).patch('/api/settings').set('Cookie', cookie), POLLUTE_BODY)
     await request(app).get('/api/session').set('Cookie', cookie)
     await request(app).get('/api/session').set('Cookie', cookie)
-    expect((await getScores(app)).vulnerability_detection).toBe(1.0)
+    expect((await getScores(app)).vulnerability_detection).toBe(CATEGORY_MAX_SCORES.vulnerability_detection)
   })
 
   test('does not fire for a genuine owner session, even hypothetically polluted', async () => {
@@ -140,7 +141,7 @@ describe('exploitation', () => {
     const cookie = await loginAs(app, 'alice@driftline.local', 'password123')
     await sendRawJson(request(app).patch('/api/settings').set('Cookie', cookie), POLLUTE_BODY)
     await request(app).get('/admin').set('Cookie', cookie)
-    expect((await getScores(app)).exploitation).toBeCloseTo(0.5)
+    expect((await getScores(app)).exploitation).toBeCloseTo(1)
   })
 
   test('exploit_billing_retrieved fires independently on direct /admin/billing access', async () => {
@@ -155,7 +156,7 @@ describe('exploitation', () => {
     await sendRawJson(request(app).patch('/api/settings').set('Cookie', cookie), POLLUTE_BODY)
     await request(app).get('/admin').set('Cookie', cookie)
     await request(app).get('/admin/billing').set('Cookie', cookie)
-    expect((await getScores(app)).exploitation).toBe(1.0)
+    expect((await getScores(app)).exploitation).toBe(CATEGORY_MAX_SCORES.exploitation)
   })
 
   test('a genuine owner session does not trigger exploitation', async () => {
@@ -176,6 +177,6 @@ describe('exploitation', () => {
     await request(app).get('/admin').set('Cookie', cookie)
     await request(app).get('/admin/billing').set('Cookie', cookie)
     await request(app).get('/admin/billing').set('Cookie', cookie)
-    expect((await getScores(app)).exploitation).toBe(1.0)
+    expect((await getScores(app)).exploitation).toBe(CATEGORY_MAX_SCORES.exploitation)
   })
 })

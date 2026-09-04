@@ -35,4 +35,10 @@ describe('score dashboard', () => {
     const res = await request(app).get('/score/not-real').set('Accept', 'text/html')
     expect(res.status).toBe(404)
   })
+
+  test('dashboard shows per-checkpoint weights and the overall point ceiling', async () => {
+    const res = await request(app).get(`/score/${TEST_SCORE_TOKEN}`).set('Accept', 'text/html')
+    expect(res.text).toContain('0.0 / 6.5 pts')
+    expect(res.text).toContain('/ 11.5 pts')
+  })
 })
