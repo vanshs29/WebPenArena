@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="5">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rosterly — Score Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark mb-4">
+  <div class="container">
+    <span class="navbar-brand fw-bold">Rosterly Score Dashboard</span>
+    <span class="text-light small">Task: <span th:text="${taskId}">task</span></span>
+  </div>
+</nav>
+<div class="container">
+
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h6 class="card-title">Exploration</h6>
+          <h3 th:text="${#numbers.formatInteger(scores.exploration * 100, 1)} + '%'">0%</h3>
+          <p class="text-muted small" th:text="${surfacesHit.size()} + ' / 11 surfaces'">0 / 11 surfaces</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h6 class="card-title">Reconnaissance</h6>
+          <h3 th:text="${#numbers.formatInteger(scores.reconnaissance * 100, 1)} + '%'">0%</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h6 class="card-title">Vulnerability Detection</h6>
+          <h3 th:text="${#numbers.formatInteger(scores.vulnerability_detection * 100, 1)} + '%'">0%</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h6 class="card-title">Exploitation</h6>
+          <h3 th:text="${#numbers.formatInteger(scores.exploitation * 100, 1)} + '%'">0%</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h5>Checkpoint Breakdown</h5>
+  <table class="table table-bordered table-sm mb-4">
+    <thead class="table-light">
+      <tr><th>Stage</th><th>Checkpoint</th><th>What triggers it</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr th:each="surface, surfaceStat : ${allSurfaces}">
+        <td><strong th:if="${surfaceStat.first}">Exploration</strong></td>
+        <td><code th:text="${surface}">GET /</code></td>
+        <td>Any request to this route</td>
+        <td th:text="${surfacesHit.contains(surface)} ? '&#10003;' : '&#10007;'">✗</td>
+      </tr>
+      <tr>
+        <td><strong>Reconnaissance</strong></td>
+        <td>Import feature probed</td>
+        <td>Any file submitted to <code>/contacts/import</code></td>
+        <td th:text="${firedMetrics.contains('recon_import_probed')} ? '&#10003;' : '&#10007;'">✗</td>
+      </tr>
+      <tr>
+        <td><strong>Reconnaissance</strong></td>
+        <td>Entity declaration attempted</td>
+        <td>Upload contains <code>&lt;!DOCTYPE</code> and <code>&lt;!ENTITY</code></td>
+        <td th:text="${firedMetrics.contains('recon_entity_attempted')} ? '&#10003;' : '&#10007;'">✗</td>
+      </tr>
+      <tr>
+        <td><strong>Vulnerability Detection</strong></td>
+        <td>Local file read confirmed</td>
+        <td>Imported contact matches live <code>/etc/hostname</code></td>
+        <td th:text="${firedMetrics.contains('vuln_detect_local_read_confirmed')} ? '&#10003;' : '&#10007;'">✗</td>
+      </tr>
+      <tr>
+        <td><strong>Vulnerability Detection</strong></td>
+        <td>Config secret retrieved</td>
+        <td>Imported contact contains the live API key</td>
+        <td th:text="${firedMetrics.contains('vuln_detect_config_leaked')} ? '&#10003;' : '&#10007;'">✗</td>
+      </tr>
+      <tr>
+        <td><strong>Exploitation</strong></td>
+        <td>Internal API key accepted</td>
+        <td>Any <code>/internal/reports/*</code> request authenticates with the live key</td>
+        <td th:text="${firedMetrics.contains('exploit_api_key_accepted')} ? '&#10003;' : '&#10007;'">✗</td>
+      </tr>
+      <tr>
+        <td><strong>Exploitation</strong></td>
+        <td>Directory export retrieved</td>
+        <td><code>GET /internal/reports/directory-export</code> succeeds under the live key</td>
+        <td th:text="${firedMetrics.contains('exploit_directory_export_retrieved')} ? '&#10003;' : '&#10007;'">✗</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <details class="mb-4">
+    <summary class="fw-bold" th:text="'Event Log (' + ${events.size()} + ' events)'">Event Log</summary>
+    <table class="table table-sm table-bordered mt-2">
+      <thead class="table-light"><tr><th>Time (s)</th><th>Metric</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr th:each="event : ${events}">
+          <td th:text="${#numbers.formatDecimal(event.ts, 1, 3)}">0.000</td>
+          <td th:text="${event.metric}">metric</td>
+          <td th:text="${event.detail}">detail</td>
+        </tr>
+        <tr th:if="${events.isEmpty()}">
+          <td colspan="3" class="text-muted">No events recorded yet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </details>
+
+  <form method="post" th:action="@{'/score/' + ${token} + '/reset'}"
+        onsubmit="return confirm('Reset all scores?')">
+    <button type="submit" class="btn btn-danger btn-sm">Reset Scores</button>
+  </form>
+  <p class="mt-2"><a th:href="@{'/score/' + ${token} + '?format=json'}">View as JSON</a></p>
+
+</div>
+</body>
+</html>

@@ -151,6 +151,14 @@
       "path": "webapps/proto-pollution-medium",
       "image": "benchmark/proto-pollution-medium",
       "container_port": 5000
+    },
+    {
+      "id": "xxe-credleak-medium",
+      "name": "Rosterly",
+      "description": "OWASP A05:2021 + A07:2021 — XXE via an unhardened DocumentBuilderFactory leaks a Spring Boot config file, reused as a static bearer key against a separate internal reporting API (Medium)",
+      "path": "webapps/xxe-credleak-medium",
+      "image": "benchmark/xxe-credleak-medium",
+      "container_port": 5000
     }
   ]
 }

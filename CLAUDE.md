@@ -32,7 +32,8 @@ webpen-arena/
 │   ├── authn-bruteforce-easy/← Alderworks (OWASP A07:2021, Easy) Python/Flask            [complete]
 │   ├── mass-assignment-easy/← Crewsheet   (OWASP A01:2021, Easy) Ruby/Sinatra            [complete]
 │   ├── traversal-jwtforge-medium/← Ledger (OWASP A05:2021+A07:2021, Medium) Node/Express [complete]
-│   └── proto-pollution-medium/← Driftline (OWASP A08:2021, Medium) Node/Express       [complete]
+│   ├── proto-pollution-medium/← Driftline (OWASP A08:2021, Medium) Node/Express       [complete]
+│   └── xxe-credleak-medium/ ← Rosterly  (OWASP A05:2021+A07:2021, Medium) Java/Spring Boot [complete]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -74,13 +75,14 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | bizlogic-easy | PromoCart | A04:2021 Insecure Design | Easy | Next.js 14 (TS) / SQLite | 37 | complete |
 | deserialization-easy | SessionStore | A08:2021 Deserialization | Easy | Java 21 / Spring Boot / SQLite | 34 | complete |
 | nosqli-easy | QuickPoll | A03:2021 NoSQL Injection | Easy | Fastify (TS) / MongoDB + SQLite | 50 | complete |
-| config-exposure-easy | OpsDesk | A05:2021 Backup File Exposure | Easy | PHP 8.3 / SQLite | 40 | complete |
+| config-exposure-easy | OpsDesk | A05:2021 Backup File Exposure | Easy | PHP 8.3 / SQLite | 41 | complete |
 | outdated-components-easy | PixSnap | A06:2021 Vulnerable/Outdated Components (ImageTragick) | Easy | Python 3.12 / Flask / SQLite | 72 | complete |
 | clickjacking-easy | BillFold | A05:2021 Clickjacking / UI Redress | Easy | Node 20 / Express / Playwright / SQLite | 75 | complete |
 | authn-bruteforce-easy | Alderworks | A07:2021 OSINT username + unthrottled brute force | Easy | Python 3.12 / Flask / SQLite | 56 | complete |
 | mass-assignment-easy | Crewsheet | A01:2021 Mass assignment → self-escalation to admin | Easy | Ruby 3.3 / Sinatra / SQLite | 56 | complete |
 | traversal-jwtforge-medium | Ledger | A05:2021 Traversal → A07:2021 forged JWT (cross-vuln chain) | Medium | Node 20 / Express / SQLite | 71 | complete |
 | proto-pollution-medium | Driftline | A08:2021 Prototype pollution (lodash CVE-2018-3721) → auth bypass | Medium | Node 20 / Express / SQLite | 65 | complete |
+| xxe-credleak-medium | Rosterly | A05:2021 XXE (unhardened `DocumentBuilderFactory`) → A07:2021 static API key reuse (cross-vuln chain) | Medium | Java 21 / Spring Boot / SQLite | 71 | complete |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the
@@ -292,6 +294,28 @@ scratch directory and used via `JAVA_HOME=/path/to/jdk-21.0.5+11 ./gradlew ...` 
 touching system packages; do the same if `javac` isn't already on `PATH`. `./gradlew test`
 runs the JUnit 5 + MockMvc suite; the Gradle wrapper (`gradlew`, `gradle/wrapper/`) is
 committed so no separate Gradle install is required once a JDK is available.
+
+**`xxe-credleak-medium` (Rosterly) cannot run directly on the host at all, including for
+`./gradlew test`** — unlike every other app in this section. `RuntimeConfig`'s config path is a
+hardcoded `private static final Path CONFIG_PATH = Path.of("/app/config/application.properties")`
+(no env-var override, deliberately — see `webapps/xxe-credleak-medium/PLAN.md` §2), and creating
+`/app` at the filesystem root needs privileges a normal dev sandbox user doesn't have. Both the
+TDD cycle and `bootRun` must run inside a container where the process is root (any
+`eclipse-temurin:21-jdk`/`-jre` image works — no custom dev image needed), e.g.:
+```bash
+cd webapps/xxe-credleak-medium
+docker run --rm -v "$HOME/.gradle:/root/.gradle" -v "$(pwd):/workspace" -w /workspace \
+  eclipse-temurin:21-jdk bash -c '
+    mkdir -p /app/config /app/data
+    printf "internal.reports.api-key=%s\n" "$(head -c32 /dev/urandom | od -An -tx1 | tr -d " \n")" \
+      > /app/config/application.properties
+    ./gradlew test --no-daemon --console=plain
+  '
+```
+If a host-side IDE Gradle daemon is holding the shared `~/.gradle` cache's `journal-1` lock at
+the same time (this environment runs one), mount an isolated scratch `GRADLE_USER_HOME` instead
+of the host's `~/.gradle` rather than waiting on the lock — hit this directly during this app's
+own build.
 
 ---
 
