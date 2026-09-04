@@ -64,6 +64,8 @@ public class ScoreController {
         model.put("taskId", TASK_ID);
         model.put("token", token);
         model.put("scores", scoreService.scores());
+        model.put("maxScores", scoreService.maxScores());
+        model.put("scoreService", scoreService);
         model.put("events", scoreService.events());
         model.put("surfacesHit", scoreService.explorationSurfacesHit());
         model.put("firedMetrics", scoreService.firedMetrics());
@@ -93,6 +95,7 @@ public class ScoreController {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("task_id", TASK_ID);
         body.put("scores", scoreService.scores());
+        body.put("max_score", scoreService.maxScores());
         body.put("events", scoreService.events());
         return body;
     }

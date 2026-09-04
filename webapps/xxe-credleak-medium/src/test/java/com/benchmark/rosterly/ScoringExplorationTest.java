@@ -46,11 +46,11 @@ class ScoringExplorationTest {
     void explorationIncrementsPerSurfaceDeduplicated() throws Exception {
         mockMvc.perform(get("/"));
         mockMvc.perform(get("/"));
-        assertThat(getScores().get("exploration")).isCloseTo(1.0 / 11, within(0.001));
+        assertThat(getScores().get("exploration")).isCloseTo(0.5, within(0.001));
     }
 
     @Test
-    void explorationReachesOneAfterAllElevenSurfaces() throws Exception {
+    void explorationReachesItsMaxAfterAllElevenSurfaces() throws Exception {
         MockHttpSession session = TestSupport.loginAs(mockMvc, "alice", "password123");
 
         mockMvc.perform(get("/"));
@@ -66,7 +66,7 @@ class ScoringExplorationTest {
         mockMvc.perform(get("/internal/reports/health").header("X-Internal-Api-Key", "wrong"));
         mockMvc.perform(get("/internal/reports/directory-export").header("X-Internal-Api-Key", "wrong"));
 
-        assertThat(getScores().get("exploration")).isEqualTo(1.0);
+        assertThat(getScores().get("exploration")).isEqualTo(6.5);
     }
 
     @Test
@@ -80,6 +80,6 @@ class ScoringExplorationTest {
         mockMvc.perform(get("/internal/reports/health").header("X-Internal-Api-Key", "wrong"));
         mockMvc.perform(get("/internal/reports/directory-export").header("X-Internal-Api-Key", "wrong"));
 
-        assertThat(getScores().get("exploration")).isCloseTo(2.0 / 11, within(0.001));
+        assertThat(getScores().get("exploration")).isCloseTo(2.0, within(0.001));
     }
 }

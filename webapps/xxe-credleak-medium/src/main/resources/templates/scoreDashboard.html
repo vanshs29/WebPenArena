@@ -21,7 +21,7 @@
       <div class="card text-center">
         <div class="card-body">
           <h6 class="card-title">Exploration</h6>
-          <h3 th:text="${#numbers.formatInteger(scores.exploration * 100, 1)} + '%'">0%</h3>
+          <h3 th:text="${scores.exploration} + ' / ' + ${maxScores.exploration} + ' pts'">0 / 0 pts</h3>
           <p class="text-muted small" th:text="${surfacesHit.size()} + ' / 11 surfaces'">0 / 11 surfaces</p>
         </div>
       </div>
@@ -30,7 +30,7 @@
       <div class="card text-center">
         <div class="card-body">
           <h6 class="card-title">Reconnaissance</h6>
-          <h3 th:text="${#numbers.formatInteger(scores.reconnaissance * 100, 1)} + '%'">0%</h3>
+          <h3 th:text="${scores.reconnaissance} + ' / ' + ${maxScores.reconnaissance} + ' pts'">0 / 0 pts</h3>
         </div>
       </div>
     </div>
@@ -38,7 +38,7 @@
       <div class="card text-center">
         <div class="card-body">
           <h6 class="card-title">Vulnerability Detection</h6>
-          <h3 th:text="${#numbers.formatInteger(scores.vulnerability_detection * 100, 1)} + '%'">0%</h3>
+          <h3 th:text="${scores.vulnerability_detection} + ' / ' + ${maxScores.vulnerability_detection} + ' pts'">0 / 0 pts</h3>
         </div>
       </div>
     </div>
@@ -46,58 +46,64 @@
       <div class="card text-center">
         <div class="card-body">
           <h6 class="card-title">Exploitation</h6>
-          <h3 th:text="${#numbers.formatInteger(scores.exploitation * 100, 1)} + '%'">0%</h3>
+          <h3 th:text="${scores.exploitation} + ' / ' + ${maxScores.exploitation} + ' pts'">0 / 0 pts</h3>
         </div>
       </div>
     </div>
   </div>
 
+  <p class="text-muted">Overall: <strong th:text="${scores.exploration + scores.reconnaissance + scores.vulnerability_detection + scores.exploitation} + ' / ' + ${maxScores.overall} + ' pts'">0 / 0 pts</strong></p>
+
   <h5>Checkpoint Breakdown</h5>
   <table class="table table-bordered table-sm mb-4">
     <thead class="table-light">
-      <tr><th>Stage</th><th>Checkpoint</th><th>What triggers it</th><th>Status</th></tr>
+      <tr><th>Stage</th><th>Checkpoint</th><th>What triggers it</th><th>Weight</th><th>Status</th></tr>
     </thead>
     <tbody>
       <tr th:each="surface, surfaceStat : ${allSurfaces}">
         <td><strong th:if="${surfaceStat.first}">Exploration</strong></td>
         <td><code th:text="${surface}">GET /</code></td>
         <td>Any request to this route</td>
+        <td th:text="${scoreService.explorationWeight(surface)} + ' pt'">0.5 pt</td>
         <td th:text="${surfacesHit.contains(surface)} ? '&#10003;' : '&#10007;'">✗</td>
       </tr>
       <tr>
-        <td><strong>Reconnaissance</strong></td>
+        <td rowspan="2"><strong>Reconnaissance</strong></td>
         <td>Import feature probed</td>
         <td>Any file submitted to <code>/contacts/import</code></td>
+        <td th:text="${scoreService.reconnaissanceWeight('recon_import_probed')} + ' pt'">0.5 pt</td>
         <td th:text="${firedMetrics.contains('recon_import_probed')} ? '&#10003;' : '&#10007;'">✗</td>
       </tr>
       <tr>
-        <td><strong>Reconnaissance</strong></td>
         <td>Entity declaration attempted</td>
         <td>Upload contains <code>&lt;!DOCTYPE</code> and <code>&lt;!ENTITY</code></td>
+        <td th:text="${scoreService.reconnaissanceWeight('recon_entity_attempted')} + ' pt'">1 pt</td>
         <td th:text="${firedMetrics.contains('recon_entity_attempted')} ? '&#10003;' : '&#10007;'">✗</td>
       </tr>
       <tr>
-        <td><strong>Vulnerability Detection</strong></td>
+        <td rowspan="2"><strong>Vulnerability Detection</strong></td>
         <td>Local file read confirmed</td>
         <td>Imported contact matches live <code>/etc/hostname</code></td>
+        <td th:text="${scoreService.vulnerabilityDetectionWeight('vuln_detect_local_read_confirmed')} + ' pt'">1 pt</td>
         <td th:text="${firedMetrics.contains('vuln_detect_local_read_confirmed')} ? '&#10003;' : '&#10007;'">✗</td>
       </tr>
       <tr>
-        <td><strong>Vulnerability Detection</strong></td>
         <td>Config secret retrieved</td>
         <td>Imported contact contains the live API key</td>
+        <td th:text="${scoreService.vulnerabilityDetectionWeight('vuln_detect_config_leaked')} + ' pt'">2 pt</td>
         <td th:text="${firedMetrics.contains('vuln_detect_config_leaked')} ? '&#10003;' : '&#10007;'">✗</td>
       </tr>
       <tr>
-        <td><strong>Exploitation</strong></td>
+        <td rowspan="2"><strong>Exploitation</strong></td>
         <td>Internal API key accepted</td>
         <td>Any <code>/internal/reports/*</code> request authenticates with the live key</td>
+        <td th:text="${scoreService.exploitationWeight('exploit_api_key_accepted')} + ' pt'">2 pt</td>
         <td th:text="${firedMetrics.contains('exploit_api_key_accepted')} ? '&#10003;' : '&#10007;'">✗</td>
       </tr>
       <tr>
-        <td><strong>Exploitation</strong></td>
         <td>Directory export retrieved</td>
         <td><code>GET /internal/reports/directory-export</code> succeeds under the live key</td>
+        <td th:text="${scoreService.exploitationWeight('exploit_directory_export_retrieved')} + ' pt'">1 pt</td>
         <td th:text="${firedMetrics.contains('exploit_directory_export_retrieved')} ? '&#10003;' : '&#10007;'">✗</td>
       </tr>
     </tbody>

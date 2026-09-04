@@ -60,4 +60,11 @@ class DashboardTest {
     void wrongTokenReturns404OnDashboardWithFormatJson() throws Exception {
         mockMvc.perform(get("/score/not-real?format=json")).andExpect(status().isNotFound());
     }
+
+    @Test
+    void dashboardShowsPerCheckpointWeightsAndTheOverallPointCeiling() throws Exception {
+        mockMvc.perform(get("/score/" + TestSupport.TEST_TOKEN))
+                .andExpect(content().string(containsString("0.0 / 6.5 pts")))
+                .andExpect(content().string(containsString("14.0 pts")));
+    }
 }

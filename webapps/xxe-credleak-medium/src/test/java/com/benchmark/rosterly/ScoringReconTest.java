@@ -53,7 +53,7 @@ class ScoringReconTest {
         MockHttpSession s = loginAs("alice", "password123");
         submitImport(s, "<contacts/>");
         submitImport(s, "<!DOCTYPE x [ <!ENTITY y \"z\"> ]><contacts/>");
-        assertThat(getScores().get("reconnaissance")).isEqualTo(1.0);
+        assertThat(getScores().get("reconnaissance")).isEqualTo(1.5);
     }
 
     @Test
@@ -62,7 +62,7 @@ class ScoringReconTest {
         for (int i = 0; i < 3; i++) {
             submitImport(s, "<!DOCTYPE x [ <!ENTITY y \"z\"> ]><contacts/>");
         }
-        assertThat(getScores().get("reconnaissance")).isEqualTo(1.0);
+        assertThat(getScores().get("reconnaissance")).isEqualTo(1.5);
     }
 
     @Test

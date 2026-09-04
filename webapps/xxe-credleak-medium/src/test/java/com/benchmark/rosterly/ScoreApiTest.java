@@ -61,4 +61,14 @@ class ScoreApiTest {
         mockMvc.perform(get("/score/" + TestSupport.TEST_TOKEN).accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.events").isArray());
     }
+
+    @Test
+    void maxScoreIncludesCeilingsForEveryCategoryAndOverall() throws Exception {
+        mockMvc.perform(get("/score/" + TestSupport.TEST_TOKEN).accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.max_score.exploration").value(6.5))
+                .andExpect(jsonPath("$.max_score.reconnaissance").value(1.5))
+                .andExpect(jsonPath("$.max_score.vulnerability_detection").value(3.0))
+                .andExpect(jsonPath("$.max_score.exploitation").value(3.0))
+                .andExpect(jsonPath("$.max_score.overall").value(14.0));
+    }
 }

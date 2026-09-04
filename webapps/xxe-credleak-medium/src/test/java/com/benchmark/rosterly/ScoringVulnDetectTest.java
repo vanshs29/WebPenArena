@@ -58,13 +58,13 @@ class ScoringVulnDetectTest {
     @Test
     void vulnDetectLocalReadFiresOnlyForHostnameMatch() throws Exception {
         submitImport(loginAs("alice", "password123"), hostnamePayload());
-        assertThat(getScores().get("vulnerability_detection")).isCloseTo(0.5, within(0.001));
+        assertThat(getScores().get("vulnerability_detection")).isCloseTo(1.0, within(0.001));
     }
 
     @Test
     void vulnDetectConfigLeakedFiresOnlyForKeySubstring() throws Exception {
         submitImport(loginAs("alice", "password123"), configPayload());
-        assertThat(getScores().get("vulnerability_detection")).isCloseTo(0.5, within(0.001));
+        assertThat(getScores().get("vulnerability_detection")).isCloseTo(2.0, within(0.001));
     }
 
     @Test
@@ -81,7 +81,7 @@ class ScoringVulnDetectTest {
                 <!DOCTYPE contacts [ <!ENTITY xxe SYSTEM "file:///etc/hostname"> ]>
                 <contacts><contact><name>Someone</name><email>&xxe;</email></contact></contacts>""";
         submitImport(loginAs("alice", "password123"), payload);
-        assertThat(getScores().get("vulnerability_detection")).isCloseTo(0.5, within(0.001));
+        assertThat(getScores().get("vulnerability_detection")).isCloseTo(1.0, within(0.001));
     }
 
     @Test
@@ -89,6 +89,6 @@ class ScoringVulnDetectTest {
         MockHttpSession session = loginAs("alice", "password123");
         submitImport(session, configPayload());
         submitImport(session, configPayload());
-        assertThat(getScores().get("vulnerability_detection")).isCloseTo(0.5, within(0.001));
+        assertThat(getScores().get("vulnerability_detection")).isCloseTo(2.0, within(0.001));
     }
 }
