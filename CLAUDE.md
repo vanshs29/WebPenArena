@@ -147,6 +147,24 @@ same way this audit did, by grepping the app's route/handler files for every cal
 event-write function and confirming each one sits behind a specific named condition, not a
 catch-all logging hook.
 
+### Docker image contents — never a bare `COPY . .`
+
+Every app's Dockerfile must copy an explicit list of the files/directories it actually runs
+with (the pattern 19 of 20 apps already use — `COPY app/ ./app/`, `COPY src/ ./src/`, etc.),
+never a bare `COPY . .` relying on `.dockerignore` alone to keep `PLAN.md`, `CLAUDE.md`,
+`.claude/`, or any other SDE-agent-only file out of the built image. Explicit-copy fails
+closed (a new file added later is excluded by default); an ignore-list fails open (a new file
+is included by default unless someone remembers to exclude it). This matters even when the
+app's own routing happens not to serve the extra files today — a routing change later (very
+plausible in a traversal- or backup-file-exposure app specifically) can turn a dormant leak
+into a real one with no Dockerfile change at all. Caught in `config-exposure-easy` on
+4 September 2026: its Dockerfile used `COPY . .`, which baked `PLAN.md`/`CLAUDE.md`/`.claude/`
+into `/app` in the image (confirmed by building it and running `ls -la /app` inside a
+container) even though nothing in `router.php` actually served them over HTTP at the time.
+Fixed by switching to an explicit `COPY` list and adding those paths to `.dockerignore` as
+defense-in-depth. Verify any new app the same way — build the image and inspect its
+filesystem directly, don't just read the Dockerfile and assume nothing leaks.
+
 ### Basic UI/design standard
 
 Every app's own functional pages (storefront, forms, whatever its actual surface is — distinct

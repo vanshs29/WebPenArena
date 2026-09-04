@@ -172,3 +172,18 @@ returns 200 with the raw (unexecuted) leaked source and fires both `reconnaissan
 `exploitation`, and the resulting session cookie unlocks `GET /admin/db_console.php`; wrong
 `SCORE_TOKEN` on either `/score/<token>` or `/score/<token>/reset` returns 404; reset clears
 all recorded events and scores.
+
+### Dockerfile fixed 4 September 2026 — `COPY . .` was baking `PLAN.md`/`CLAUDE.md` into the image
+
+The original Dockerfile used `COPY . .`, which pulled `PLAN.md`, `CLAUDE.md`, and `.claude/`
+into `/app` inside the built image (confirmed via `docker run --rm <image> ls -la /app`).
+Nothing in `router.php` actually served them over HTTP — it 404s anything outside `public/`
+that isn't a recognized exploration surface or backup-file suffix, verified with direct curl
+requests including path-traversal variants — but their presence in the container filesystem at
+all was a dormant risk given this app's own vulnerability class. Fixed by switching to an
+explicit `COPY` list (`bootstrap.php config.php router.php`, `src/`, `templates/`, `public/`)
+matching the rest of the corpus, plus adding `PLAN.md`/`CLAUDE.md`/`.claude/` to
+`.dockerignore` as defense-in-depth. Rebuilt and re-verified: the image no longer contains
+those files, and the app's full behavior (home page, about, admin login, the
+`config.php.bak` exploit, score/reset) is unchanged. See root `CLAUDE.md`'s 4 September 2026
+entry for the corpus-wide convention this motivated.

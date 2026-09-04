@@ -4,3 +4,6 @@ data/*.db
 vendor/
 phpunit.xml
 .gitignore
+PLAN.md
+CLAUDE.md
+.claude/
