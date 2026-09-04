@@ -75,7 +75,7 @@ class VulnTest extends TestCase
     public function testRealBackupFiresVulnerabilityDetection(): void
     {
         $this->http->get($this->server->baseUrl() . '/config.php.bak');
-        $this->assertSame(1.0, $this->scores()['vulnerability_detection']);
+        $this->assertSame(2.0, $this->scores()['vulnerability_detection']);
     }
 
     public function testLoginWithLeakedCredentialsSucceedsAndFiresExploitation(): void
@@ -90,7 +90,7 @@ class VulnTest extends TestCase
         ]);
 
         $this->assertContains($response['status'], [200, 302]);
-        $this->assertSame(1.0, $this->scores()['exploitation']);
+        $this->assertSame(2.0, $this->scores()['exploitation']);
     }
 
     public function testSuccessfulLoginGrantsAccessToDbConsole(): void

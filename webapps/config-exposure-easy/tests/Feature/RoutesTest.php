@@ -63,7 +63,7 @@ class RoutesTest extends TestCase
         $this->http->get($this->server->baseUrl() . '/admin/login.php');
         $this->http->get($this->server->baseUrl() . '/admin/db_console.php');
 
-        $this->assertSame(1.0, $this->scores()['exploration']);
+        $this->assertSame(2.5, $this->scores()['exploration']);
     }
 
     public function testRepeatedVisitToSameSurfaceDoesNotDoubleCount(): void
@@ -71,6 +71,6 @@ class RoutesTest extends TestCase
         $this->http->get($this->server->baseUrl() . '/');
         $this->http->get($this->server->baseUrl() . '/');
 
-        $this->assertSame(0.25, $this->scores()['exploration']);
+        $this->assertSame(0.5, $this->scores()['exploration']);
     }
 }

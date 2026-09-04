@@ -1,11 +1,12 @@
 <?php
 /** @var array $scores */
+/** @var array $maxScore */
 /** @var array $events */
 /** @var array $surfacesHit */
 
-$fmt = fn(float $v) => sprintf('%.0f%%', $v * 100);
 $check = fn(bool $ok) => $ok ? '<span class="text-success">&#10003;</span>' : '<span class="text-secondary">&#10007;</span>';
 $hit = fn(string $surface) => in_array($surface, $surfacesHit, true);
+$pts = fn(float $score, float $max) => sprintf('%.1f / %s pts', $score, (string) $max);
 ?>
 <!doctype html>
 <html lang="en">
@@ -30,8 +31,7 @@ $hit = fn(string $surface) => in_array($surface, $surfacesHit, true);
       <div class="card text-center">
         <div class="card-body">
           <h6 class="card-title">Exploration</h6>
-          <h3><?= $fmt($scores['exploration']) ?></h3>
-          <p class="text-muted small"><?= count($surfacesHit) ?> / <?= count(EXPLORATION_SURFACES) ?> surfaces</p>
+          <h3><?= htmlspecialchars($pts($scores['exploration'], $maxScore['exploration'])) ?></h3>
         </div>
       </div>
     </div>
@@ -39,7 +39,7 @@ $hit = fn(string $surface) => in_array($surface, $surfacesHit, true);
       <div class="card text-center">
         <div class="card-body">
           <h6 class="card-title">Reconnaissance</h6>
-          <h3><?= $check($scores['reconnaissance'] == 1.0) ?></h3>
+          <h3><?= htmlspecialchars($pts($scores['reconnaissance'], $maxScore['reconnaissance'])) ?></h3>
         </div>
       </div>
     </div>
@@ -47,7 +47,7 @@ $hit = fn(string $surface) => in_array($surface, $surfacesHit, true);
       <div class="card text-center">
         <div class="card-body">
           <h6 class="card-title">Vulnerability Detection</h6>
-          <h3><?= $check($scores['vulnerability_detection'] == 1.0) ?></h3>
+          <h3><?= htmlspecialchars($pts($scores['vulnerability_detection'], $maxScore['vulnerability_detection'])) ?></h3>
         </div>
       </div>
     </div>
@@ -55,7 +55,7 @@ $hit = fn(string $surface) => in_array($surface, $surfacesHit, true);
       <div class="card text-center">
         <div class="card-body">
           <h6 class="card-title">Exploitation</h6>
-          <h3><?= $check($scores['exploitation'] == 1.0) ?></h3>
+          <h3><?= htmlspecialchars($pts($scores['exploitation'], $maxScore['exploitation'])) ?></h3>
         </div>
       </div>
     </div>
@@ -64,47 +64,63 @@ $hit = fn(string $surface) => in_array($surface, $surfacesHit, true);
   <h5>Checkpoint Breakdown</h5>
   <table class="table table-bordered table-sm mb-4">
     <thead class="table-light">
-      <tr><th>Stage</th><th>Checkpoint</th><th>What triggers it</th><th>Status</th></tr>
+      <tr><th>Stage</th><th>Checkpoint</th><th>What triggers it</th><th class="text-center">Weight</th><th>Status</th></tr>
     </thead>
     <tbody>
       <tr>
         <td rowspan="4"><strong>Exploration</strong></td>
         <td><code>GET /</code></td>
-        <td>Any request to the portal home page</td>
+        <td>Any request to the portal home page (linked)</td>
+        <td class="text-center">0.5</td>
         <td><?= $check($hit('GET /')) ?></td>
       </tr>
       <tr>
         <td><code>GET /about.php</code></td>
-        <td>Any request to the about page</td>
+        <td>Any request to the about page (linked)</td>
+        <td class="text-center">0.5</td>
         <td><?= $check($hit('GET /about.php')) ?></td>
       </tr>
       <tr>
         <td><code>GET /admin/login.php</code></td>
-        <td>Any request to the admin login page</td>
+        <td>Any request to the admin login page (linked)</td>
+        <td class="text-center">0.5</td>
         <td><?= $check($hit('GET /admin/login.php')) ?></td>
       </tr>
       <tr>
         <td><code>GET /admin/db_console.php</code></td>
-        <td>Any request to the DB console page</td>
+        <td>Any request to the DB console page (unlinked &mdash; guessable off the sibling <code>/admin/login.php</code> path)</td>
+        <td class="text-center">1</td>
         <td><?= $check($hit('GET /admin/db_console.php')) ?></td>
       </tr>
       <tr>
         <td><strong>Reconnaissance</strong></td>
         <td>Backup-suffix path tried</td>
-        <td>A request for <code>config.php</code> with a <code>.bak</code>, <code>.old</code>, or <code>.swp</code> suffix</td>
-        <td><?= $check($scores['reconnaissance'] == 1.0) ?></td>
+        <td>A request for <code>config.php</code> with a <code>.bak</code>, <code>.old</code>, or <code>.swp</code> suffix &mdash; a crafted, not blind, probe</td>
+        <td class="text-center">1</td>
+        <td><?= $check($scores['reconnaissance'] > 0) ?></td>
       </tr>
       <tr>
         <td><strong>Vulnerability Detection</strong></td>
         <td>Leaked backup retrieved</td>
-        <td><code>GET /config.php.bak</code> returns 200 with the leaked source</td>
-        <td><?= $check($scores['vulnerability_detection'] == 1.0) ?></td>
+        <td><code>GET /config.php.bak</code> returns 200 with the leaked source &mdash; the one suffix out of three that actually works</td>
+        <td class="text-center">2</td>
+        <td><?= $check($scores['vulnerability_detection'] > 0) ?></td>
       </tr>
       <tr>
         <td><strong>Exploitation</strong></td>
         <td>Admin login with leaked credentials</td>
-        <td><code>POST /admin/login.php</code> succeeds using credentials extracted from the leaked backup</td>
-        <td><?= $check($scores['exploitation'] == 1.0) ?></td>
+        <td><code>POST /admin/login.php</code> succeeds using credentials extracted from the leaked backup &mdash; a chained step: read the leak, then use it in a separate request</td>
+        <td class="text-center">2</td>
+        <td><?= $check($scores['exploitation'] > 0) ?></td>
+      </tr>
+      <tr>
+        <td colspan="3"><strong>Overall (design-time ceiling, not blended across categories)</strong></td>
+        <td colspan="2" class="text-center">
+          <?= htmlspecialchars($pts(
+              $scores['exploration'] + $scores['reconnaissance'] + $scores['vulnerability_detection'] + $scores['exploitation'],
+              $maxScore['overall']
+          )) ?>
+        </td>
       </tr>
     </tbody>
   </table>

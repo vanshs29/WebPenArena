@@ -33,12 +33,15 @@ function handle_score_view(string $token): void
     $scoring = opsdesk_scoring();
     $scores = $scoring->getScores();
     $events = $scoring->getEvents();
+    $maxScore = \OpsDesk\Scoring::categoryMaxScores();
+    $maxScore['overall'] = \OpsDesk\Scoring::overallMaxScore();
 
     if (score_wants_json()) {
         header('Content-Type: application/json');
         echo json_encode([
             'task_id' => TASK_ID,
             'scores' => $scores,
+            'max_score' => $maxScore,
             'events' => $events,
         ], JSON_PRESERVE_ZERO_FRACTION);
         return;

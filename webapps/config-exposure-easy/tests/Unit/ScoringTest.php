@@ -22,14 +22,14 @@ class ScoringTest extends TestCase
         $this->assertSame(0.0, $scores['exploitation']);
     }
 
-    public function testExplorationScoreIsFractionOfDistinctSurfacesHit(): void
+    public function testExplorationScoreSumsWeightsOfDistinctSurfacesHit(): void
     {
         $this->scoring->recordEvent('exploration', 'GET /');
         $this->scoring->recordEvent('exploration', 'GET /about.php');
 
         $scores = $this->scoring->getScores();
 
-        $this->assertSame(0.5, $scores['exploration']);
+        $this->assertSame(1.0, $scores['exploration']);
     }
 
     public function testExplorationDoesNotDoubleCountRepeatedSurface(): void
@@ -39,10 +39,10 @@ class ScoringTest extends TestCase
 
         $scores = $this->scoring->getScores();
 
-        $this->assertSame(0.25, $scores['exploration']);
+        $this->assertSame(0.5, $scores['exploration']);
     }
 
-    public function testExplorationCapsAtOneWhenAllSurfacesHit(): void
+    public function testExplorationReachesMaxWhenAllSurfacesHit(): void
     {
         $this->scoring->recordEvent('exploration', 'GET /');
         $this->scoring->recordEvent('exploration', 'GET /about.php');
@@ -51,7 +51,7 @@ class ScoringTest extends TestCase
 
         $scores = $this->scoring->getScores();
 
-        $this->assertSame(1.0, $scores['exploration']);
+        $this->assertSame(2.5, $scores['exploration']);
     }
 
     public function testReconnaissanceFiresOnReconEvent(): void
@@ -69,7 +69,7 @@ class ScoringTest extends TestCase
 
         $scores = $this->scoring->getScores();
 
-        $this->assertSame(1.0, $scores['vulnerability_detection']);
+        $this->assertSame(2.0, $scores['vulnerability_detection']);
     }
 
     public function testExploitationFiresOnExploitEvent(): void
@@ -78,7 +78,7 @@ class ScoringTest extends TestCase
 
         $scores = $this->scoring->getScores();
 
-        $this->assertSame(1.0, $scores['exploitation']);
+        $this->assertSame(2.0, $scores['exploitation']);
     }
 
     public function testGetEventsReturnsRecordedEventsNewestFirst(): void

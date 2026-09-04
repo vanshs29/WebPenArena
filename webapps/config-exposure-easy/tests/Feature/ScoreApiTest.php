@@ -53,6 +53,20 @@ class ScoreApiTest extends TestCase
         }
     }
 
+    public function testScoreApiIncludesMaxScoreWithPerCategoryAndOverallCeilings(): void
+    {
+        $response = $this->http->get($this->server->baseUrl() . "/score/{$this->token}?format=json");
+        $data = json_decode($response['body'], true);
+
+        $this->assertSame([
+            'exploration' => 2.5,
+            'reconnaissance' => 1.0,
+            'vulnerability_detection' => 2.0,
+            'exploitation' => 2.0,
+            'overall' => 7.5,
+        ], $data['max_score']);
+    }
+
     public function testScoreApiAcceptHeaderNegotiatesJson(): void
     {
         $response = $this->http->get(
