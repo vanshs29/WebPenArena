@@ -49,6 +49,16 @@ deliberately varies its stack so the corpus isn't dominated by one language or f
 | config-exposure-easy | OpsDesk | A05:2021 Backup File Exposure | Easy | PHP 8.3 | complete |
 | outdated-components-easy | PixSnap | A06:2021 Vulnerable/Outdated Components | Easy | Python / Flask | complete |
 | clickjacking-easy | BillFold | A05:2021 Clickjacking / UI Redress | Easy | Node.js / Express / Playwright | complete |
+| authn-bruteforce-easy | Alderworks | A07:2021 Unthrottled Brute Force | Easy | Python / Flask | complete |
+| mass-assignment-easy | Crewsheet | A01:2021 Mass Assignment | Easy | Ruby / Sinatra | complete |
+| traversal-jwtforge-medium | Ledger | A05:2021 Traversal → A07:2021 JWT Forgery (chain) | Medium | Node.js / Express | complete |
+| proto-pollution-medium | Driftline | A08:2021 Prototype Pollution | Medium | Node.js / Express | complete |
+| xxe-credleak-medium | Rosterly | A05:2021 XXE → A07:2021 Credential Leak (chain) | Medium | Java / Spring Boot | complete |
+| ssti-medium | BlastCraft | A03:2021 Server-Side Template Injection | Medium | Python / Flask | complete |
+
+Three apps (`traversal-jwtforge-medium`, `xxe-credleak-medium`, and to a lesser extent the
+others' medium tier) chain two vulnerability classes rather than targeting a single OWASP
+category in isolation, reflecting the higher difficulty tier.
 
 See `CLAUDE.md` for the full repository layout and per-app implementation notes.
 
