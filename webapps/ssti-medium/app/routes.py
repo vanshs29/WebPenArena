@@ -10,6 +10,7 @@ from .auth import issue_token, require_auth
 from .db import SAMPLE_CONTACT, get_db, reset_db
 from .filtering import contains_disallowed_pattern, matches_bypass_signature
 from .scoring import (
+    CATEGORY_MAX_SCORES, OVERALL_MAX_SCORE,
     check_exploitation_signals, check_expr_evaluated, get_events,
     get_exploration_surfaces, get_fired_events, get_scores, write_event_once,
 )
@@ -19,10 +20,10 @@ bp = Blueprint("main", __name__)
 
 @bp.before_app_request
 def _track_exploration():
-    from .scoring import EXPLORATION_SURFACES, write_event
+    from .scoring import EXPLORATION_WEIGHTS, write_event
 
     detail = f"{request.method} {request.path}"
-    if detail not in EXPLORATION_SURFACES:
+    if detail not in EXPLORATION_WEIGHTS:
         return
     db = get_db(current_app._get_current_object())
     existing = db.execute(
@@ -203,6 +204,7 @@ def score(token):
     payload = {
         "task_id": "ssti-medium",
         "scores": scores,
+        "max_score": {**CATEGORY_MAX_SCORES, "overall": OVERALL_MAX_SCORE},
         "events": events,
     }
 

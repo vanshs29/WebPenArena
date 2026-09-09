@@ -84,7 +84,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | traversal-jwtforge-medium | Ledger | A05:2021 Traversal → A07:2021 forged JWT (cross-vuln chain) | Medium | Node 20 / Express / SQLite | 71 | complete |
 | proto-pollution-medium | Driftline | A08:2021 Prototype pollution (lodash CVE-2018-3721) → auth bypass | Medium | Node 20 / Express / SQLite | 65 | complete |
 | xxe-credleak-medium | Rosterly | A05:2021 XXE (unhardened `DocumentBuilderFactory`) → A07:2021 static API key reuse (cross-vuln chain) | Medium | Java 21 / Spring Boot / SQLite | 71 | complete |
-| ssti-medium | BlastCraft | A03:2021 SSTI (`render_template_string` on user input) — filter-bypass RCE, single-category | Medium | Python 3.12 / Flask / SQLite | 71 | complete |
+| ssti-medium | BlastCraft | A03:2021 SSTI (`render_template_string` on user input) — filter-bypass RCE, single-category | Medium | Python 3.12 / Flask / SQLite | 73 | complete |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the

@@ -1,4 +1,5 @@
 from conftest import TEST_SCORE_TOKEN, _get_scores
+from app.scoring import CATEGORY_MAX_SCORES, OVERALL_MAX_SCORE
 
 
 def test_wrong_token_returns_404(client):
@@ -24,3 +25,16 @@ def test_score_via_format_query_param(client):
 
 def test_wrong_token_reset_returns_404(client):
     assert client.post("/score/not-real/reset").status_code == 404
+
+
+def test_max_score_present_and_matches_category_maxes(client):
+    resp = client.get(f"/score/{TEST_SCORE_TOKEN}", headers={"Accept": "application/json"})
+    data = resp.get_json()
+    assert "max_score" in data
+    for category, max_value in CATEGORY_MAX_SCORES.items():
+        assert data["max_score"][category] == max_value
+
+
+def test_max_score_includes_overall(client):
+    resp = client.get(f"/score/{TEST_SCORE_TOKEN}", headers={"Accept": "application/json"})
+    assert resp.get_json()["max_score"]["overall"] == OVERALL_MAX_SCORE
