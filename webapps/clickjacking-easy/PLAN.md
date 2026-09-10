@@ -1,7 +1,8 @@
 # BillFold — Planning Document
 
-**Status: planned, not yet implemented.** This is a spec document only — no app code exists
-under this directory yet.
+**Status: complete.** Implemented via strict TDD and registered in `orchestrator/registry.json`
+since 21 August 2026 — see §7 "Implementation Status" for detail. This header line was stale
+(left over from the spec-only stage) until corrected 7 September 2026.
 
 ## 1. Challenge Selection
 
