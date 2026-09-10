@@ -10,3 +10,4 @@ vendor/
 .bundle/
 .claude/settings.local.json
 orchestrator/.claude/settings.local.json
+orchestrator/reports/

@@ -121,12 +121,71 @@ def reset_score(host_port: int, token: str, timeout: float = 3) -> bool:
     return resp.status_code == 200
 
 
-def _category_max(score: dict, metric: str) -> float:
+def category_max(score: dict, metric: str) -> float:
     """Apps retrofitted to the weighted-subtask model (see SCORING_REWORK_PLAN.md)
     declare their own per-category ceiling in `max_score`. Apps not yet retrofitted
     omit the field entirely and stay on the old [0, 1] fractional scale, so 1.0 is the
     correct default rather than a placeholder."""
     return score.get("max_score", {}).get(metric, 1.0)
+
+
+def build_entries(apps: list[dict]) -> list[dict]:
+    """One entry per registered app, running or not, each carrying its own fetched
+    score (or None). Shared by dashboard.py's live scoreboard and report.py's
+    snapshot generator so the two never compute this differently."""
+    running = {row["app"]["id"]: row for row in discover_running_apps(apps)}
+
+    entries = []
+    for reg_app in apps:
+        difficulty = difficulty_of(reg_app["id"])
+        row = running.get(reg_app["id"])
+        if row is None:
+            entries.append({
+                "id": reg_app["id"],
+                "name": reg_app["name"],
+                "description": reg_app["description"],
+                "difficulty": difficulty,
+                "container_name": None,
+                "host_port": None,
+                "status": None,
+                "running": False,
+                "score": None,
+                "score_url": None,
+            })
+            continue
+
+        score = fetch_score(row["host_port"], row["token"])
+        entries.append({
+            "id": reg_app["id"],
+            "name": reg_app["name"],
+            "description": reg_app["description"],
+            "difficulty": difficulty,
+            "container_name": row["container_name"],
+            "host_port": row["host_port"],
+            "status": row["status"],
+            "running": True,
+            "score": score,
+            "score_url": f"http://localhost:{row['host_port']}/score/{row['token']}",
+        })
+
+    return entries
+
+
+def aggregate_by_difficulty(entries: list[dict]) -> dict:
+    """Splits build_entries() output into per-tier totals, same shape as
+    aggregate_scores()'s "totals" but scoped to one difficulty tier at a time."""
+    totals_by_difficulty = {}
+    for tier in DIFFICULTIES:
+        tier_entries = [e for e in entries if e["difficulty"] == tier]
+        tier_agg = aggregate_scores(
+            [{"app": e, "score": e["score"]} for e in tier_entries if e["running"]]
+        )
+        totals_by_difficulty[tier] = {
+            "totals": tier_agg["totals"],
+            "n_total": len(tier_entries),
+            "n_responded": tier_agg["n_responded"],
+        }
+    return totals_by_difficulty
 
 
 def aggregate_scores(rows: list[dict]) -> dict:
@@ -143,7 +202,7 @@ def aggregate_scores(rows: list[dict]) -> dict:
     totals = {}
     for metric in METRICS:
         achieved = sum(r["score"]["scores"].get(metric, 0.0) for r in responded)
-        max_total = sum(_category_max(r["score"], metric) for r in responded)
+        max_total = sum(category_max(r["score"], metric) for r in responded)
         totals[metric] = {"achieved": achieved, "max": max_total}
     return {
         "totals": totals,

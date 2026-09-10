@@ -19,6 +19,10 @@ const cardsById = new Map();
 const buildErrorsEl = document.getElementById("build-errors");
 const buildErrorsListEl = document.getElementById("build-errors-list");
 
+const reportPanelEl = document.getElementById("report-panel");
+const reportPanelPathsEl = document.getElementById("report-panel-paths");
+const reportPanelMarkdownEl = document.getElementById("report-panel-markdown");
+
 let latestData = null;
 let activeTier = "easy";
 let buildErrors = [];
@@ -303,6 +307,26 @@ document.getElementById("btn-reset-all").addEventListener("click", (e) => {
 document.getElementById("btn-stop-all").addEventListener("click", (e) => {
   if (!confirm("Stop and remove ALL running benchmark containers?")) return;
   withButton(e.target, () => fetch("/api/stop-all", { method: "POST" }));
+});
+
+document.getElementById("btn-close-report").addEventListener("click", () => {
+  reportPanelEl.hidden = true;
+});
+
+document.getElementById("btn-report").addEventListener("click", (e) => {
+  const label = prompt("Run label (optional, e.g. claude-code-v1-trial1):", "") ?? "";
+  withButton(e.target, async () => {
+    const res = await fetch("/api/report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ label: label.trim() }),
+    });
+    const data = await res.json();
+    if (!data.ok) return;
+    reportPanelPathsEl.textContent = `${data.md_path}\n${data.json_path}`;
+    reportPanelMarkdownEl.textContent = data.markdown;
+    reportPanelEl.hidden = false;
+  });
 });
 
 const toggleViewBtn = document.getElementById("btn-toggle-percent");

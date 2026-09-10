@@ -301,6 +301,22 @@ def action_show_running(apps: list[dict]) -> None:
         print(f"{r['app']['name']:<20} {port:<8} {r['status']}")
 
 
+def action_generate_report(apps: list[dict]) -> None:
+    import report
+
+    label = questionary.text(
+        "Run label (optional, e.g. claude-code-v1-trial1):"
+    ).ask()
+    label = label.strip() if label else None
+
+    data = report.build_report(apps, label)
+    md_path, json_path = report.write_report(data)
+
+    print(f"\n[report] Apps responded: {data['n_responded']} / {data['n_total']}")
+    print(f"[report] {md_path}")
+    print(f"[report] {json_path}")
+
+
 def action_stop(apps: list[dict]) -> None:
     import scoring
 
@@ -361,6 +377,7 @@ MENU = {
     "Rebuild image(s)": action_rebuild,
     "Rebuild and launch a web app": action_rebuild_and_launch,
     "Show running apps": action_show_running,
+    "Generate report": action_generate_report,
     "Stop a running app": action_stop,
     "Stop all running apps": action_stop_all,
     "Exit": None,
