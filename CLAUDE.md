@@ -34,7 +34,8 @@ webpen-arena/
 │   ├── traversal-jwtforge-medium/← Ledger (OWASP A05:2021+A07:2021, Medium) Node/Express [complete]
 │   ├── proto-pollution-medium/← Driftline (OWASP A08:2021, Medium) Node/Express       [complete]
 │   ├── xxe-credleak-medium/ ← Rosterly  (OWASP A05:2021+A07:2021, Medium) Java/Spring Boot [complete]
-│   └── ssti-medium/         ← BlastCraft (OWASP A03:2021, Medium) Python/Flask       [complete]
+│   ├── ssti-medium/         ← BlastCraft (OWASP A03:2021, Medium) Python/Flask       [complete]
+│   └── logforge-jwtconfusion-medium/← Huddle (OWASP A09:2021+A07:2021, Medium) Node.js/Express [complete]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -85,6 +86,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | proto-pollution-medium | Driftline | A08:2021 Prototype pollution (lodash CVE-2018-3721) → auth bypass | Medium | Node 20 / Express / SQLite | 65 | complete |
 | xxe-credleak-medium | Rosterly | A05:2021 XXE (unhardened `DocumentBuilderFactory`) → A07:2021 static API key reuse (cross-vuln chain) | Medium | Java 21 / Spring Boot / SQLite | 71 | complete |
 | ssti-medium | BlastCraft | A03:2021 SSTI (`render_template_string` on user input) — filter-bypass RCE, single-category | Medium | Python 3.12 / Flask / SQLite | 73 | complete |
+| logforge-jwtconfusion-medium | Huddle | A09:2021 log forgery (independent dead end) + A07:2021 JWT RS256/HS256 algorithm confusion (the actual goal, unlocks two separate admin surfaces) | Medium | Node 20 / Express / SQLite | 69 | complete |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the
@@ -167,6 +169,22 @@ Fixed by switching to an explicit `COPY` list and adding those paths to `.docker
 defense-in-depth. Verify any new app the same way — build the image and inspect its
 filesystem directly, don't just read the Dockerfile and assume nothing leaks.
 
+### Score ledger — `orchestrator/scores.json` must be updated when an app is implemented
+
+Every app's PLAN.md §3 (Scoring Framework) computes a design-time `OVERALL_MAX_SCORE` and
+per-category maxes from its subtask weights. Once the app is actually built and its scoring
+module (`scoring.js`/`scoring.py`/`app.rb`/`scoring.go`/`Scoring.php`/`ScoringEvents.java`,
+whichever the stack uses) is verified to match those numbers, add an entry to
+`orchestrator/scores.json` with the app's `tier`, `category_max` breakdown, and
+`overall_max_score` — read the values from the actual implemented source, not by re-copying
+PLAN.md's numbers unread (PLAN.md is the design target; the ledger records what was actually
+built, and the two should agree, but only a source read confirms that). Do this in the same
+change that completes the app, not as a follow-up cleanup — this was previously an unaddressed
+gap (every app's overall score had to be hand-derived from source on demand, e.g. the corpus
+survey done 10 September 2026, which is what prompted creating this ledger). `logforge-
+jwtconfusion-medium` (Huddle) is the reference example of a ledger entry added at completion
+time.
+
 ### Basic UI/design standard
 
 Every app's own functional pages (storefront, forms, whatever its actual surface is — distinct
@@ -202,7 +220,9 @@ python orchestrator/orchestrator.py
 - **Stop all running apps** — lists every running benchmark container, asks for one confirmation, then stops and removes all of them.
 
 Adding a new webapp: add one entry to `orchestrator/registry.json`, put the app under
-`webapps/<id>/`, and make sure its Dockerfile is present.
+`webapps/<id>/`, make sure its Dockerfile is present, and add the app's verified
+`overall_max_score` (and per-category breakdown) to `orchestrator/scores.json` — see the Score
+Ledger convention below.
 
 **Known issues / proposed improvements:** see `orchestrator/ORCHESTRATOR_IMPROVEMENTS.md`. The
 dashboard-blocks-during-build issue is fixed (`threaded=True` added 25 August 2026); build
@@ -236,9 +256,9 @@ normal (non-vulnerable) behavior: the exploit depends on the specific pre-patch 
 ImageTragick RCE only reproduces inside the Docker image.
 
 **Node.js apps** (idor-easy, traversal-easy, jwt-easy, traversal-jwtforge-medium,
-proto-pollution-medium):
+proto-pollution-medium, logforge-jwtconfusion-medium):
 ```bash
-cd webapps/idor-easy   # or traversal-easy / jwt-easy / traversal-jwtforge-medium / proto-pollution-medium
+cd webapps/idor-easy   # or traversal-easy / jwt-easy / traversal-jwtforge-medium / proto-pollution-medium / logforge-jwtconfusion-medium
 npm install
 SCORE_TOKEN=$(node -e "console.log(require('crypto').randomUUID())") node run.js
 ```

@@ -167,6 +167,14 @@
       "path": "webapps/ssti-medium",
       "image": "benchmark/ssti-medium",
       "container_port": 5000
+    },
+    {
+      "id": "logforge-jwtconfusion-medium",
+      "name": "Huddle",
+      "description": "OWASP A09:2021 log forgery (independent dead end) + OWASP A07:2021 JWT RS256/HS256 algorithm confusion (the actual goal), unlocking two separate admin-gated surfaces (Medium)",
+      "path": "webapps/logforge-jwtconfusion-medium",
+      "image": "benchmark/logforge-jwtconfusion-medium",
+      "container_port": 5000
     }
   ]
 }
