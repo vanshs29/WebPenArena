@@ -175,6 +175,14 @@
       "path": "webapps/logforge-jwtconfusion-medium",
       "image": "benchmark/logforge-jwtconfusion-medium",
       "container_port": 5000
+    },
+    {
+      "id": "giftcard-race-medium",
+      "name": "Vaultly",
+      "description": "OWASP A04:2021 — TOCTOU race condition in gift-card redemption; a real per-request idempotency key fails to cover the per-code used check, letting concurrent distinct-key requests multi-credit a single-use code (Medium)",
+      "path": "webapps/giftcard-race-medium",
+      "image": "benchmark/giftcard-race-medium",
+      "container_port": 5000
     }
   ]
 }
