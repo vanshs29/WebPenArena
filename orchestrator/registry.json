@@ -199,6 +199,14 @@
       "path": "webapps/verbtamper-medium",
       "image": "benchmark/verbtamper-medium",
       "container_port": 5000
+    },
+    {
+      "id": "jwtheaderinject-medium",
+      "name": "Larkmoor",
+      "description": "OWASP A07:2021 — JWT header key-injection; a custom Partner API verifier trusts an x5c certificate embedded directly in the token (accepted for any partner_id, escalating to a full customer dataset via acme-enterprise), and a separate legacy HMAC endpoint resolves its signing key by an unsanitized kid path join, letting a kid traversal to an empty file forge a zero-knowledge signature that refunds a real order (Medium)",
+      "path": "webapps/jwtheaderinject-medium",
+      "image": "benchmark/jwtheaderinject-medium",
+      "container_port": 5000
     }
   ]
 }

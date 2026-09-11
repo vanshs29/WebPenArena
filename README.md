@@ -59,6 +59,7 @@ deliberately varies its stack so the corpus isn't dominated by one language or f
 | giftcard-race-medium | Vaultly | A04:2021 TOCTOU Race Condition + A05:2021 Backup File Exposure (chain) | Medium | Node.js / Express | complete |
 | predictable-reset-medium | Foundry | A02:2021 Cryptographic Failures (predictable password-reset token) | Medium | Node.js / Express | complete |
 | verbtamper-medium | Wrenlake | A01:2021 HTTP Verb Tampering (missing role check on a secondary verb) | Medium | Node.js / Express | complete |
+| jwtheaderinject-medium | Larkmoor | A07:2021 JWT Header Key-Injection (`x5c` certificate forging + `kid` path traversal) | Medium | Node.js / Express | complete |
 
 Four apps (`traversal-jwtforge-medium`, `xxe-credleak-medium`, `logforge-jwtconfusion-medium`,
 `giftcard-race-medium`, and to a lesser extent the others' medium tier) chain two vulnerability

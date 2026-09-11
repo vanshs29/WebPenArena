@@ -38,7 +38,8 @@ webpen-arena/
 │   ├── logforge-jwtconfusion-medium/← Huddle (OWASP A09:2021+A07:2021, Medium) Node.js/Express [complete]
 │   ├── giftcard-race-medium/← Vaultly     (OWASP A04:2021, Medium) Node.js/Express      [complete]
 │   ├── predictable-reset-medium/← Foundry (OWASP A02:2021, Medium) Node.js/Express      [complete]
-│   └── verbtamper-medium/← Wrenlake      (OWASP A01:2021, Medium) Node.js/Express      [complete]
+│   ├── verbtamper-medium/← Wrenlake      (OWASP A01:2021, Medium) Node.js/Express      [complete]
+│   └── jwtheaderinject-medium/← Larkmoor (OWASP A07:2021, Medium) Node.js/Express      [complete]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -93,6 +94,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | giftcard-race-medium | Vaultly | A04:2021 TOCTOU race condition (per-account gift-card redemption) chained with A05:2021 backup-file exposure (a leaked global one-time code) — a two-tier membership store rewards escalating the race or combining it with the leaked code | Medium | Node 20 / Express / SQLite | 80 | complete |
 | predictable-reset-medium | Foundry | A02:2021 Cryptographic Failures — predictable password-reset token (`sha256(email + timestamp)`, no server secret), single-category | Medium | Node 20 / Express / SQLite | 71 | complete |
 | verbtamper-medium | Wrenlake | A01:2021 HTTP Verb Tampering — admin role check missing on a route-chained secondary verb (WSTG 4.7.3), single-category | Medium | Node 20 / Express / SQLite | 60 | complete |
+| jwtheaderinject-medium | Larkmoor | A07:2021 JWT header key-injection — `x5c` certificate forging (primary) + `kid` path traversal → empty-secret HMAC forgery (secondary target) | Medium | Node 20 / Express / SQLite | 70 | complete |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the
@@ -263,16 +265,16 @@ ImageTragick RCE only reproduces inside the Docker image.
 
 **Node.js apps** (idor-easy, traversal-easy, jwt-easy, traversal-jwtforge-medium,
 proto-pollution-medium, logforge-jwtconfusion-medium, giftcard-race-medium,
-predictable-reset-medium, verbtamper-medium):
+predictable-reset-medium, verbtamper-medium, jwtheaderinject-medium):
 ```bash
-cd webapps/idor-easy   # or traversal-easy / jwt-easy / traversal-jwtforge-medium / proto-pollution-medium / logforge-jwtconfusion-medium / giftcard-race-medium / predictable-reset-medium / verbtamper-medium
+cd webapps/idor-easy   # or traversal-easy / jwt-easy / traversal-jwtforge-medium / proto-pollution-medium / logforge-jwtconfusion-medium / giftcard-race-medium / predictable-reset-medium / verbtamper-medium / jwtheaderinject-medium
 npm install
 SCORE_TOKEN=$(node -e "console.log(require('crypto').randomUUID())") node run.js
 ```
 `better-sqlite3`-backed apps (`traversal-jwtforge-medium`, `proto-pollution-medium`,
 `logforge-jwtconfusion-medium`, `giftcard-race-medium`, `predictable-reset-medium`,
-`verbtamper-medium`): if a plain `npm install` produces no native binding or no
-`node_modules/.bin/`, this sandbox's global `~/.npmrc` (`ignore-scripts=true`,
+`verbtamper-medium`, `jwtheaderinject-medium`): if a plain `npm install` produces no native
+binding or no `node_modules/.bin/`, this sandbox's global `~/.npmrc` (`ignore-scripts=true`,
 `bin-links=false`) is why — see root `CLAUDE.md`'s Implementation Phase section and
 `IMPLEMENTATION_LOG.md` for the fix (`npm_config_ignore_scripts=false npm rebuild
 better-sqlite3 --foreground-scripts`, and `node node_modules/jest/bin/jest.js` in place of
