@@ -35,7 +35,8 @@ webpen-arena/
 │   ├── proto-pollution-medium/← Driftline (OWASP A08:2021, Medium) Node/Express       [complete]
 │   ├── xxe-credleak-medium/ ← Rosterly  (OWASP A05:2021+A07:2021, Medium) Java/Spring Boot [complete]
 │   ├── ssti-medium/         ← BlastCraft (OWASP A03:2021, Medium) Python/Flask       [complete]
-│   └── logforge-jwtconfusion-medium/← Huddle (OWASP A09:2021+A07:2021, Medium) Node.js/Express [complete]
+│   ├── logforge-jwtconfusion-medium/← Huddle (OWASP A09:2021+A07:2021, Medium) Node.js/Express [complete]
+│   └── giftcard-race-medium/← Vaultly     (OWASP A04:2021, Medium) Node.js/Express      [complete]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -87,6 +88,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | xxe-credleak-medium | Rosterly | A05:2021 XXE (unhardened `DocumentBuilderFactory`) → A07:2021 static API key reuse (cross-vuln chain) | Medium | Java 21 / Spring Boot / SQLite | 71 | complete |
 | ssti-medium | BlastCraft | A03:2021 SSTI (`render_template_string` on user input) — filter-bypass RCE, single-category | Medium | Python 3.12 / Flask / SQLite | 73 | complete |
 | logforge-jwtconfusion-medium | Huddle | A09:2021 log forgery (independent dead end) + A07:2021 JWT RS256/HS256 algorithm confusion (the actual goal, unlocks two separate admin surfaces) | Medium | Node 20 / Express / SQLite | 69 | complete |
+| giftcard-race-medium | Vaultly | A04:2021 TOCTOU race condition — a real per-request idempotency key dedupes replay but doesn't cover the per-code `used` check, letting concurrent distinct-key requests multi-credit a single-use gift card | Medium | Node 20 / Express / SQLite | 63 | complete |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the
@@ -256,9 +258,9 @@ normal (non-vulnerable) behavior: the exploit depends on the specific pre-patch 
 ImageTragick RCE only reproduces inside the Docker image.
 
 **Node.js apps** (idor-easy, traversal-easy, jwt-easy, traversal-jwtforge-medium,
-proto-pollution-medium, logforge-jwtconfusion-medium):
+proto-pollution-medium, logforge-jwtconfusion-medium, giftcard-race-medium):
 ```bash
-cd webapps/idor-easy   # or traversal-easy / jwt-easy / traversal-jwtforge-medium / proto-pollution-medium / logforge-jwtconfusion-medium
+cd webapps/idor-easy   # or traversal-easy / jwt-easy / traversal-jwtforge-medium / proto-pollution-medium / logforge-jwtconfusion-medium / giftcard-race-medium
 npm install
 SCORE_TOKEN=$(node -e "console.log(require('crypto').randomUUID())") node run.js
 ```
