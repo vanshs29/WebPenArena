@@ -183,6 +183,14 @@
       "path": "webapps/giftcard-race-medium",
       "image": "benchmark/giftcard-race-medium",
       "container_port": 5000
+    },
+    {
+      "id": "predictable-reset-medium",
+      "name": "Foundry",
+      "description": "OWASP A02:2021 — Cryptographic Failures; a password-reset token computed as sha256(email + timestamp) with no server-side secret, recoverable by guessing a small jittered timestamp window against a rate-limited oracle (Medium)",
+      "path": "webapps/predictable-reset-medium",
+      "image": "benchmark/predictable-reset-medium",
+      "container_port": 5000
     }
   ]
 }

@@ -57,13 +57,17 @@ deliberately varies its stack so the corpus isn't dominated by one language or f
 | ssti-medium | BlastCraft | A03:2021 Server-Side Template Injection | Medium | Python / Flask | complete |
 | logforge-jwtconfusion-medium | Huddle | A09:2021 Log Forgery (dead end) + A07:2021 JWT Algorithm Confusion (goal) | Medium | Node.js / Express | complete |
 | giftcard-race-medium | Vaultly | A04:2021 TOCTOU Race Condition + A05:2021 Backup File Exposure (chain) | Medium | Node.js / Express | complete |
+| predictable-reset-medium | Foundry | A02:2021 Cryptographic Failures (predictable password-reset token) | Medium | Node.js / Express | complete |
 
 Four apps (`traversal-jwtforge-medium`, `xxe-credleak-medium`, `logforge-jwtconfusion-medium`,
 `giftcard-race-medium`, and to a lesser extent the others' medium tier) chain two vulnerability
 classes rather than targeting a single OWASP category in isolation, reflecting the higher
 difficulty tier. `giftcard-race-medium` is the corpus's first task built around concurrency/timing
 reasoning rather than payload crafting — its top membership tier rewards either escalating the
-race or combining it with a separately-discovered leaked code.
+race or combining it with a separately-discovered leaked code. `predictable-reset-medium` tests a
+different reasoning skill again: recognising that a token dressed up to look random is actually a
+deterministic function of known/observable inputs, then exploiting that via constrained, budgeted
+guessing against a live oracle rather than payload crafting or access-control chaining.
 
 See `CLAUDE.md` for the full repository layout and per-app implementation notes.
 

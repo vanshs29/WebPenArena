@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Design-time overall_max_score per app under the HTB-style weighted-subtask scoring model (0.5/1/2 per subtask, summed per category, summed again for the app overall). See root CLAUDE.md > Benchmark Methodology > Scoring Framework, and webpen-arena/SCORING_REWORK_PLAN.md §3 for the assignment rubric. An app is added here only once it is actually implemented and its scoring module has been verified against its PLAN.md §3 -- never at planning time. Whenever an app's scoring weights change (a retrofit, a bug fix to a checkpoint, a new subtask), update this file in the same change, not as an afterthought.",
-    "last_updated": "2026-09-10",
+    "last_updated": "2026-09-11",
     "difficulty_tier_note": "Tiers here are the design-intent labels already used in the app id/registry, not the final tercile-based classification planned once all 50 target apps are built (see root CLAUDE.md > Difficulty Scoring Methodology)."
   },
   "apps": {
@@ -119,6 +119,11 @@
       "tier": "medium",
       "category_max": { "exploration": 5.5, "reconnaissance": 2.0, "vulnerability_detection": 4.0, "exploitation": 3.5 },
       "overall_max_score": 15.0
+    },
+    "predictable-reset-medium": {
+      "tier": "medium",
+      "category_max": { "exploration": 6.0, "reconnaissance": 1.5, "vulnerability_detection": 3.0, "exploitation": 4.0 },
+      "overall_max_score": 14.5
     }
   }
 }
