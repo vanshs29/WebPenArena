@@ -9,15 +9,18 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS codes (
-    code  TEXT PRIMARY KEY,
-    value REAL NOT NULL,
-    used  INTEGER NOT NULL DEFAULT 0
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    code    TEXT NOT NULL,
+    value   REAL NOT NULL,
+    used    INTEGER NOT NULL DEFAULT 0,
+    user_id INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS redemption_requests (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     idempotency_key TEXT NOT NULL,
     code            TEXT NOT NULL,
+    code_id         INTEGER NOT NULL,
     user_id         INTEGER NOT NULL,
     status          TEXT NOT NULL DEFAULT 'processing',
     created_at      REAL NOT NULL,
@@ -42,7 +45,11 @@ CREATE TABLE IF NOT EXISTS scoring_events (
 `
 
 function seedCodes(db) {
-  db.prepare('INSERT OR REPLACE INTO codes (code, value, used) VALUES (?, ?, 0)').run('WELCOME50', 50)
+  db.prepare('INSERT INTO codes (code, value, used, user_id) VALUES (?, ?, 0, NULL)').run('FOUNDER30', 30)
+}
+
+function issueWelcomeCode(db, userId) {
+  db.prepare('INSERT INTO codes (code, value, used, user_id) VALUES (?, ?, 0, ?)').run('WELCOME50', 50, userId)
 }
 
 function createDb(dbPath) {
@@ -57,8 +64,9 @@ function resetDb(db) {
   db.exec('DELETE FROM scoring_events')
   db.exec('DELETE FROM purchases')
   db.exec('DELETE FROM redemption_requests')
+  db.exec('DELETE FROM codes')
   db.exec('DELETE FROM users')
   seedCodes(db)
 }
 
-module.exports = { createDb, resetDb }
+module.exports = { createDb, resetDb, issueWelcomeCode }

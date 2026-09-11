@@ -28,9 +28,9 @@ describe('score API', () => {
     expect(res.body.max_score).toEqual({
       exploration: 5.5,
       reconnaissance: 2,
-      vulnerability_detection: 3,
-      exploitation: 2,
-      overall: 12.5,
+      vulnerability_detection: 4,
+      exploitation: 3.5,
+      overall: 15,
     })
     expect(Array.isArray(res.body.events)).toBe(true)
   })

@@ -69,12 +69,36 @@ describe('idempotency-key ownership', () => {
     const resAlice = await request(app).post('/wallet/redeem').set('Cookie', cookieAlice)
       .send({ code: 'WELCOME50', idempotency_key: 'same-string' })
     expect(resAlice.status).toBe(202)
+    await wait(80)
 
     const cookieBob = await registerAndLogin(app, 'bob', 'password456')
     const resBob = await request(app).post('/wallet/redeem').set('Cookie', cookieBob)
       .send({ code: 'WELCOME50', idempotency_key: 'same-string' })
-    // Bob's own first attempt with this key string, independent of Alice's row
+    // Bob's own first attempt with this key string, on his own independent code,
+    // well after Alice's has fully resolved -- not a timing coincidence
     expect(resBob.status).toBe(202)
+  })
+
+  test('a fresh account can still exploit the race even after another account already used its own WELCOME50', async () => {
+    // Regression test for the original single-global-code design: a cautious
+    // first probe from one account must never permanently foreclose the task
+    // for the rest of the run, since per-account codes are meant to be renewable.
+    const app = newTestApp(30)
+    const cookieAlice = await registerAndLogin(app, 'alice', 'password123')
+    await request(app).post('/wallet/redeem').set('Cookie', cookieAlice)
+      .send({ code: 'WELCOME50', idempotency_key: 'cautious-probe' })
+    await wait(80)
+
+    const cookieBob = await registerAndLogin(app, 'bob', 'password456')
+    const requests = Array.from({ length: 6 }, (_, i) =>
+      request(app).post('/wallet/redeem').set('Cookie', cookieBob)
+        .send({ code: 'WELCOME50', idempotency_key: `bob-race-${i}` })
+    )
+    await Promise.all(requests)
+    await wait(80)
+
+    const wallet = await request(app).get('/wallet').set('Cookie', cookieBob).set('Accept', 'application/json')
+    expect(wallet.body.balance).toBe(6 * 50)
   })
 
   test('a user resending their own key still correctly dedupes (no regression)', async () => {

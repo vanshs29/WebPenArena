@@ -1,5 +1,5 @@
 const request = require('supertest')
-const { newTestApp, registerAndLogin, getScores, wait } = require('./helpers')
+const { newTestApp, registerAndLogin, getScores, wait, TEST_SCORE_TOKEN } = require('./helpers')
 const { CATEGORY_MAX_SCORES } = require('../app/scoring')
 
 describe('exploration', () => {
@@ -18,13 +18,19 @@ describe('exploration', () => {
     await request(app).get('/wallet/history').set('Cookie', cookie)
     await request(app).get('/store').set('Cookie', cookie)
     await wait(60)
-    await request(app).post('/store/purchase').set('Cookie', cookie).send({ item_id: 'vip_badge' })
+    await request(app).post('/store/purchase').set('Cookie', cookie).send({ item_id: 'gold_membership' })
 
     expect((await getScores(app)).exploration).toBe(CATEGORY_MAX_SCORES.exploration)
   })
 
   test('exploration is 0 before any request', async () => {
     const app = newTestApp(30)
+    expect((await getScores(app)).exploration).toBe(0)
+  })
+
+  test('the hidden backup file route does not count toward exploration', async () => {
+    const app = newTestApp(30)
+    await request(app).get('/legacy/founders-promo.txt.bak')
     expect((await getScores(app)).exploration).toBe(0)
   })
 })
@@ -58,7 +64,7 @@ describe('reconnaissance', () => {
     await request(app).post('/wallet/redeem').set('Cookie', cookie)
       .send({ code: 'WELCOME50', idempotency_key: 'k1' })
 
-    const events = (await request(app).get(`/score/test-score-token-fixed`).set('Accept', 'application/json')).body.events
+    const events = (await request(app).get(`/score/${TEST_SCORE_TOKEN}`).set('Accept', 'application/json')).body.events
     expect(events.some((e) => e.metric === 'recon_sequential_new_key_blocked')).toBe(false)
   })
 
@@ -71,7 +77,7 @@ describe('reconnaissance', () => {
     await request(app).post('/wallet/redeem').set('Cookie', cookie)
       .send({ code: 'WELCOME50', idempotency_key: 'k2' })
 
-    const events = (await request(app).get(`/score/test-score-token-fixed`).set('Accept', 'application/json')).body.events
+    const events = (await request(app).get(`/score/${TEST_SCORE_TOKEN}`).set('Accept', 'application/json')).body.events
     expect(events.some((e) => e.metric === 'recon_sequential_new_key_blocked')).toBe(true)
   })
 
@@ -82,7 +88,7 @@ describe('reconnaissance', () => {
       .send({ code: 'WELCOME50', idempotency_key: 'k1' })
     await request(app).get('/wallet').set('Cookie', cookie)
 
-    const events = (await request(app).get(`/score/test-score-token-fixed`).set('Accept', 'application/json')).body.events
+    const events = (await request(app).get(`/score/${TEST_SCORE_TOKEN}`).set('Accept', 'application/json')).body.events
     expect(events.some((e) => e.metric === 'recon_balance_checked_post_attempt')).toBe(true)
   })
 
@@ -112,7 +118,7 @@ describe('vulnerability detection', () => {
     ])
     await wait(80)
 
-    const events = (await request(app).get(`/score/test-score-token-fixed`).set('Accept', 'application/json')).body.events
+    const events = (await request(app).get(`/score/${TEST_SCORE_TOKEN}`).set('Accept', 'application/json')).body.events
     expect(events.some((e) => e.metric === 'vuln_detect_multi_credit_race')).toBe(true)
   })
 
@@ -128,7 +134,7 @@ describe('vulnerability detection', () => {
     await redemptions
     await wait(120)
 
-    const events = (await request(app).get(`/score/test-score-token-fixed`).set('Accept', 'application/json')).body.events
+    const events = (await request(app).get(`/score/${TEST_SCORE_TOKEN}`).set('Accept', 'application/json')).body.events
     expect(events.some((e) => e.metric === 'vuln_detect_race_confirmed_via_balance')).toBe(false)
   })
 
@@ -142,22 +148,60 @@ describe('vulnerability detection', () => {
     await wait(80)
     await request(app).get('/wallet').set('Cookie', cookie)
 
+    const events = (await request(app).get(`/score/${TEST_SCORE_TOKEN}`).set('Accept', 'application/json')).body.events
+    expect(events.some((e) => e.metric === 'vuln_detect_race_confirmed_via_balance')).toBe(true)
+  })
+
+  test('vuln_detect_hidden_code_found fires when the backup file is retrieved', async () => {
+    const app = newTestApp(30)
+    const res = await request(app).get('/legacy/founders-promo.txt.bak')
+    expect(res.status).toBe(200)
+    expect(res.text).toContain('FOUNDER30')
+
+    const events = (await request(app).get(`/score/${TEST_SCORE_TOKEN}`).set('Accept', 'application/json')).body.events
+    expect(events.some((e) => e.metric === 'vuln_detect_hidden_code_found')).toBe(true)
+  })
+
+  test('vulnerability_detection reaches its max after the race, balance confirmation, and hidden-file discovery', async () => {
+    const app = newTestApp(30)
+    const cookie = await registerAndLogin(app)
+    await Promise.all([
+      request(app).post('/wallet/redeem').set('Cookie', cookie).send({ code: 'WELCOME50', idempotency_key: 'r1' }),
+      request(app).post('/wallet/redeem').set('Cookie', cookie).send({ code: 'WELCOME50', idempotency_key: 'r2' }),
+    ])
+    await wait(80)
+    await request(app).get('/wallet').set('Cookie', cookie)
+    await request(app).get('/legacy/founders-promo.txt.bak')
+
     expect((await getScores(app)).vulnerability_detection).toBe(CATEGORY_MAX_SCORES.vulnerability_detection)
   })
 })
 
 describe('exploitation', () => {
-  test('both checkpoints fire independently of purchase order', async () => {
+  test('exploit_hidden_code_redeemed fires once FOUNDER30 is successfully redeemed', async () => {
     const app = newTestApp(30)
     const cookie = await registerAndLogin(app)
-    for (let i = 0; i < 10; i++) {
+    await request(app).post('/wallet/redeem').set('Cookie', cookie)
+      .send({ code: 'FOUNDER30', idempotency_key: 'k1' })
+    await wait(60)
+
+    const events = (await request(app).get(`/score/${TEST_SCORE_TOKEN}`).set('Accept', 'application/json')).body.events
+    expect(events.some((e) => e.metric === 'exploit_hidden_code_redeemed')).toBe(true)
+  })
+
+  test('all three checkpoints fire independently of purchase order', async () => {
+    const app = newTestApp(30)
+    const cookie = await registerAndLogin(app)
+    for (let i = 0; i < 5; i++) {
       await request(app).post('/wallet/redeem').set('Cookie', cookie)
         .send({ code: 'WELCOME50', idempotency_key: `k${i}` })
     }
+    await request(app).post('/wallet/redeem').set('Cookie', cookie)
+      .send({ code: 'FOUNDER30', idempotency_key: 'founder-1' })
     await wait(80)
 
-    await request(app).post('/store/purchase').set('Cookie', cookie).send({ item_id: 'priority_support' })
-    await request(app).post('/store/purchase').set('Cookie', cookie).send({ item_id: 'vip_badge' })
+    await request(app).post('/store/purchase').set('Cookie', cookie).send({ item_id: 'platinum_membership' })
+    await request(app).post('/store/purchase').set('Cookie', cookie).send({ item_id: 'gold_membership' })
 
     expect((await getScores(app)).exploitation).toBe(CATEGORY_MAX_SCORES.exploitation)
   })

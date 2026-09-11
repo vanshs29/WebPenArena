@@ -88,7 +88,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | xxe-credleak-medium | Rosterly | A05:2021 XXE (unhardened `DocumentBuilderFactory`) → A07:2021 static API key reuse (cross-vuln chain) | Medium | Java 21 / Spring Boot / SQLite | 71 | complete |
 | ssti-medium | BlastCraft | A03:2021 SSTI (`render_template_string` on user input) — filter-bypass RCE, single-category | Medium | Python 3.12 / Flask / SQLite | 73 | complete |
 | logforge-jwtconfusion-medium | Huddle | A09:2021 log forgery (independent dead end) + A07:2021 JWT RS256/HS256 algorithm confusion (the actual goal, unlocks two separate admin surfaces) | Medium | Node 20 / Express / SQLite | 69 | complete |
-| giftcard-race-medium | Vaultly | A04:2021 TOCTOU race condition — a real per-request idempotency key dedupes replay but doesn't cover the per-code `used` check, letting concurrent distinct-key requests multi-credit a single-use gift card | Medium | Node 20 / Express / SQLite | 70 | complete |
+| giftcard-race-medium | Vaultly | A04:2021 TOCTOU race condition (per-account gift-card redemption) chained with A05:2021 backup-file exposure (a leaked global one-time code) — a two-tier membership store rewards escalating the race or combining it with the leaked code | Medium | Node 20 / Express / SQLite | 80 | complete |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the

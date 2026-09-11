@@ -10,6 +10,7 @@ async function creditBalance(app, cookie, amount) {
     credited += 50
   }
   await wait(80)
+  return credited
 }
 
 describe('store purchases', () => {
@@ -17,17 +18,17 @@ describe('store purchases', () => {
     const app = newTestApp(30)
     const cookie = await registerAndLogin(app)
     const res = await request(app).post('/store/purchase').set('Cookie', cookie)
-      .send({ item_id: 'vip_badge' })
+      .send({ item_id: 'gold_membership' })
     expect(res.status).toBe(402)
   })
 
-  test('purchasing vip_badge at sufficient balance succeeds and deducts 300', async () => {
+  test('purchasing gold_membership at sufficient balance succeeds and deducts 100', async () => {
     const app = newTestApp(30)
     const cookie = await registerAndLogin(app)
-    await creditBalance(app, cookie, 300)
+    await creditBalance(app, cookie, 100)
 
     const res = await request(app).post('/store/purchase').set('Cookie', cookie)
-      .send({ item_id: 'vip_badge' })
+      .send({ item_id: 'gold_membership' })
     expect(res.status).toBe(200)
     expect(res.body.activation_code).toBeTruthy()
 
@@ -35,17 +36,17 @@ describe('store purchases', () => {
     expect(wallet.body.balance).toBe(0)
   })
 
-  test('purchasing priority_support at sufficient balance succeeds and deducts 200', async () => {
+  test('purchasing platinum_membership at sufficient balance succeeds and deducts 130', async () => {
     const app = newTestApp(30)
     const cookie = await registerAndLogin(app)
-    await creditBalance(app, cookie, 200)
+    const credited = await creditBalance(app, cookie, 130)
 
     const res = await request(app).post('/store/purchase').set('Cookie', cookie)
-      .send({ item_id: 'priority_support' })
+      .send({ item_id: 'platinum_membership' })
     expect(res.status).toBe(200)
 
     const wallet = await request(app).get('/wallet').set('Cookie', cookie).set('Accept', 'application/json')
-    expect(wallet.body.balance).toBe(0)
+    expect(wallet.body.balance).toBe(credited - 130)
   })
 
   test('an unknown item_id returns 404', async () => {
@@ -58,28 +59,28 @@ describe('store purchases', () => {
 
   test('requires auth', async () => {
     const app = newTestApp(30)
-    const res = await request(app).post('/store/purchase').send({ item_id: 'vip_badge' })
+    const res = await request(app).post('/store/purchase').send({ item_id: 'gold_membership' })
     expect(res.status).toBe(401)
   })
 
   test('activation codes differ between two separate purchases', async () => {
     const app = newTestApp(30)
     const cookie = await registerAndLogin(app)
-    await creditBalance(app, cookie, 500)
+    await creditBalance(app, cookie, 230)
 
-    const first = await request(app).post('/store/purchase').set('Cookie', cookie).send({ item_id: 'vip_badge' })
-    const second = await request(app).post('/store/purchase').set('Cookie', cookie).send({ item_id: 'priority_support' })
+    const first = await request(app).post('/store/purchase').set('Cookie', cookie).send({ item_id: 'gold_membership' })
+    const second = await request(app).post('/store/purchase').set('Cookie', cookie).send({ item_id: 'platinum_membership' })
     expect(first.body.activation_code).not.toBe(second.body.activation_code)
   })
 
   test('two concurrent purchase attempts with only enough balance for one result in exactly one success', async () => {
     const app = newTestApp(30)
     const cookie = await registerAndLogin(app)
-    await creditBalance(app, cookie, 300)
+    await creditBalance(app, cookie, 100)
 
     const [a, b] = await Promise.all([
-      request(app).post('/store/purchase').set('Cookie', cookie).send({ item_id: 'vip_badge' }),
-      request(app).post('/store/purchase').set('Cookie', cookie).send({ item_id: 'vip_badge' }),
+      request(app).post('/store/purchase').set('Cookie', cookie).send({ item_id: 'gold_membership' }),
+      request(app).post('/store/purchase').set('Cookie', cookie).send({ item_id: 'gold_membership' }),
     ])
     const statuses = [a.status, b.status].sort()
     expect(statuses).toEqual([200, 402])

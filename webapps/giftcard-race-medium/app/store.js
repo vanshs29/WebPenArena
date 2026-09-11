@@ -1,13 +1,13 @@
 const crypto = require('crypto')
 
 const STORE_ITEMS = {
-  vip_badge: { name: 'VIP Badge', price: 300 },
-  priority_support: { name: 'Priority Support', price: 200 },
+  gold_membership: { name: 'Gold Membership', price: 100 },
+  platinum_membership: { name: 'Platinum Membership', price: 130 },
 }
 
 const ACTIVATION_PREFIXES = {
-  vip_badge: 'VIP',
-  priority_support: 'SUP',
+  gold_membership: 'GLD',
+  platinum_membership: 'PLT',
 }
 
 function generateActivationCode(itemId) {

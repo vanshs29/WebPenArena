@@ -117,8 +117,8 @@
     },
     "giftcard-race-medium": {
       "tier": "medium",
-      "category_max": { "exploration": 5.5, "reconnaissance": 2.0, "vulnerability_detection": 3.0, "exploitation": 2.0 },
-      "overall_max_score": 12.5
+      "category_max": { "exploration": 5.5, "reconnaissance": 2.0, "vulnerability_detection": 4.0, "exploitation": 3.5 },
+      "overall_max_score": 15.0
     }
   }
 }

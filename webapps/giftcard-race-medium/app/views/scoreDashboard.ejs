@@ -65,6 +65,7 @@
         checkpoints: [
           { key: 'vuln_detect_multi_credit_race', trigger: 'More than one credited row exists for the same code', weight: 2 },
           { key: 'vuln_detect_race_confirmed_via_balance', trigger: 'Balance or history checked after the race, reflecting &ge;2 credits', weight: 1 },
+          { key: 'vuln_detect_hidden_code_found', trigger: 'The unlinked legacy backup file is retrieved', weight: 1 },
         ],
         hit: cp => firedEvents.has(cp.key),
       },
@@ -73,8 +74,9 @@
         label: 'Exploitation',
         max: maxScore.exploitation,
         checkpoints: [
-          { key: 'exploit_vip_badge_purchased', trigger: 'VIP Badge ($300) purchased', weight: 1 },
-          { key: 'exploit_priority_support_purchased', trigger: 'Priority Support ($200) purchased', weight: 1 },
+          { key: 'exploit_hidden_code_redeemed', trigger: 'The code found in the backup file is successfully redeemed', weight: 0.5 },
+          { key: 'exploit_gold_membership_purchased', trigger: 'Gold Membership ($100) purchased', weight: 1 },
+          { key: 'exploit_platinum_membership_purchased', trigger: 'Platinum Membership ($130) purchased', weight: 2 },
         ],
         hit: cp => firedEvents.has(cp.key),
       },

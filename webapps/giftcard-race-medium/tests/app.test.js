@@ -76,10 +76,10 @@ describe('store and history pages', () => {
     const cookie = await registerAndLogin(app)
     const res = await request(app).get('/store').set('Cookie', cookie)
     expect(res.status).toBe(200)
-    expect(res.text).toContain('VIP Badge')
-    expect(res.text).toContain('300')
-    expect(res.text).toContain('Priority Support')
-    expect(res.text).toContain('200')
+    expect(res.text).toContain('Gold Membership')
+    expect(res.text).toContain('100')
+    expect(res.text).toContain('Platinum Membership')
+    expect(res.text).toContain('130')
   })
 
   test('GET /wallet/history requires auth', async () => {

@@ -21,14 +21,16 @@ describe('score dashboard (HTML)', () => {
     })
   })
 
-  test('lists all 8 non-exploration checkpoints with weights', async () => {
+  test('lists all 9 non-exploration checkpoints with weights', async () => {
     const app = newTestApp()
     const res = await request(app).get(`/score/${TEST_SCORE_TOKEN}`)
     ;[
       'recon_redeem_observed', 'recon_replay_same_key_blocked',
       'recon_sequential_new_key_blocked', 'recon_balance_checked_post_attempt',
       'vuln_detect_multi_credit_race', 'vuln_detect_race_confirmed_via_balance',
-      'exploit_vip_badge_purchased', 'exploit_priority_support_purchased',
+      'vuln_detect_hidden_code_found',
+      'exploit_hidden_code_redeemed', 'exploit_gold_membership_purchased',
+      'exploit_platinum_membership_purchased',
     ].forEach((checkpoint) => {
       expect(res.text).toContain(checkpoint)
     })

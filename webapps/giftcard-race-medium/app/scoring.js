@@ -22,11 +22,13 @@ const RECONNAISSANCE_WEIGHTS = {
 const VULNERABILITY_DETECTION_WEIGHTS = {
   vuln_detect_multi_credit_race: 2,
   vuln_detect_race_confirmed_via_balance: 1,
+  vuln_detect_hidden_code_found: 1,
 }
 
 const EXPLOITATION_WEIGHTS = {
-  exploit_vip_badge_purchased: 1,
-  exploit_priority_support_purchased: 1,
+  exploit_hidden_code_redeemed: 0.5,
+  exploit_gold_membership_purchased: 1,
+  exploit_platinum_membership_purchased: 2,
 }
 
 function sumValues(weights) {
