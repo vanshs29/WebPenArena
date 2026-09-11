@@ -48,7 +48,7 @@ router.get('/login', (req, res) => {
 router.post('/login', (req, res) => {
   const db = req.app.locals.db
   const { username, password } = req.body || {}
-  if (!username || !password) {
+  if (typeof username !== 'string' || !username || typeof password !== 'string' || !password) {
     return res.status(401).json({ error: 'Invalid credentials' })
   }
   const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username)
@@ -67,7 +67,7 @@ router.get('/register', (req, res) => {
 router.post('/register', (req, res) => {
   const db = req.app.locals.db
   const { username, password } = req.body || {}
-  if (!username || !password) {
+  if (typeof username !== 'string' || !username || typeof password !== 'string' || !password) {
     return res.status(400).json({ error: 'username and password are required' })
   }
   const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username)
@@ -97,11 +97,12 @@ router.get('/wallet', requireAuth, (req, res) => {
 router.post('/wallet/redeem', requireAuth, async (req, res) => {
   const db = req.app.locals.db
   const { code, idempotency_key: idempotencyKey } = req.body || {}
-  if (!code || !idempotencyKey) {
+  if (typeof code !== 'string' || !code || typeof idempotencyKey !== 'string' || !idempotencyKey) {
     return res.status(400).json({ error: 'code and idempotency_key required' })
   }
 
-  const existing = db.prepare('SELECT * FROM redemption_requests WHERE idempotency_key = ?').get(idempotencyKey)
+  const existing = db.prepare('SELECT * FROM redemption_requests WHERE idempotency_key = ? AND user_id = ?')
+    .get(idempotencyKey, req.user.id)
   if (existing) {
     writeEvent(db, 'recon_replay_same_key_blocked')
     return res.status(200).json({ idempotency_key: idempotencyKey, status: existing.status })
@@ -127,8 +128,8 @@ router.post('/wallet/redeem', requireAuth, async (req, res) => {
 
   db.prepare('UPDATE users SET balance = balance + ? WHERE id = ?').run(codeRow.value, req.user.id)
   db.prepare('UPDATE codes SET used = 1 WHERE code = ?').run(code)
-  db.prepare('UPDATE redemption_requests SET status = ?, resolved_at = ? WHERE idempotency_key = ?')
-    .run('credited', Date.now() / 1000, idempotencyKey)
+  db.prepare('UPDATE redemption_requests SET status = ?, resolved_at = ? WHERE idempotency_key = ? AND user_id = ?')
+    .run('credited', Date.now() / 1000, idempotencyKey, req.user.id)
 
   const creditedCount = db.prepare(
     "SELECT COUNT(*) AS n FROM redemption_requests WHERE code = ? AND status = 'credited'"

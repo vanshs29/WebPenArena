@@ -191,16 +191,21 @@ CREATE TABLE codes (
     used  INTEGER NOT NULL DEFAULT 0
 );
 
--- One row per redemption attempt, keyed by the client-supplied idempotency_key.
--- Inserted synchronously (as "processing") in the same handler invocation that reads
--- codes.used, before the delay; updated to "credited" only after the delay resolves.
+-- One row per redemption attempt, keyed by (user_id, idempotency_key) — client-supplied
+-- idempotency keys are scoped per user, not globally unique, so two different users may
+-- independently choose the identical key string without colliding or seeing each other's
+-- cached status. Inserted synchronously (as "processing") in the same handler invocation
+-- that reads codes.used, before the delay; updated to "credited" only after the delay
+-- resolves.
 CREATE TABLE redemption_requests (
-    idempotency_key TEXT PRIMARY KEY,
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    idempotency_key TEXT NOT NULL,
     code            TEXT NOT NULL,
     user_id         INTEGER NOT NULL,
     status          TEXT NOT NULL DEFAULT 'processing',  -- processing | credited | rejected
     created_at      REAL NOT NULL,
-    resolved_at     REAL
+    resolved_at     REAL,
+    UNIQUE(user_id, idempotency_key)
 );
 
 CREATE TABLE purchases (
@@ -240,12 +245,12 @@ starts at `balance = 0`. No admin concept in this app; every user is equivalent.
 ```javascript
 app.post('/wallet/redeem', requireAuth, async (req, res) => {
   const { code, idempotency_key } = req.body;
-  if (!code || !idempotency_key) {
+  if (typeof code !== 'string' || !code || typeof idempotency_key !== 'string' || !idempotency_key) {
     return res.status(400).json({ error: 'code and idempotency_key required' });
   }
 
-  const existing = db.prepare('SELECT * FROM redemption_requests WHERE idempotency_key = ?')
-    .get(idempotency_key);
+  const existing = db.prepare('SELECT * FROM redemption_requests WHERE idempotency_key = ? AND user_id = ?')
+    .get(idempotency_key, req.user.id);
   if (existing) {
     return res.status(200).json({ idempotency_key, status: existing.status });
   }
@@ -268,10 +273,36 @@ app.post('/wallet/redeem', requireAuth, async (req, res) => {
 
   db.prepare('UPDATE users SET balance = balance + ? WHERE id = ?').run(codeRow.value, req.user.id);
   db.prepare('UPDATE codes SET used = 1 WHERE code = ?').run(code);
-  db.prepare('UPDATE redemption_requests SET status = ?, resolved_at = ? WHERE idempotency_key = ?')
-    .run('credited', Date.now() / 1000, idempotency_key);
+  db.prepare('UPDATE redemption_requests SET status = ?, resolved_at = ? WHERE idempotency_key = ? AND user_id = ?')
+    .run('credited', Date.now() / 1000, idempotency_key, req.user.id);
 });
 ```
+
+**Post-implementation fixes (found via code review, 11 September 2026):**
+- **Type validation on `code`/`idempotency_key`.** The original handler only checked truthiness
+  (`!code || !idempotency_key`), which a non-empty array satisfies. `idempotency_key` sent as an
+  array (e.g. `idempotency_key[]=a&idempotency_key[]=b`, valid under this app's
+  `express.urlencoded({ extended: true })` config, or the JSON equivalent) reached
+  `db.prepare(...).get(idempotencyKey)`; better-sqlite3 treats a single array argument to `.get()`
+  as a positional bind-parameter list, throwing `RangeError: Too many parameter values were
+  provided`. That throw is synchronous inside an `async` handler with no `try/catch`, and this
+  app runs Express 4 (`express: "^4.19.2"`), which does not catch rejections from async route
+  handlers (only Express 5 does) — so it became an unhandled rejection that killed the whole
+  Node process on one malformed request, no auth bypass needed beyond ordinary self-registration.
+  Fixed with `typeof code !== 'string'` / `typeof idempotency_key !== 'string'` checks (and the
+  same pattern on `/login` and `/register`'s `username`/`password`, which had the identical
+  crash-class bug even though it wasn't the field the review happened to flag).
+- **Idempotency keys were a single global namespace, not scoped per user.** The dedup lookup
+  (`SELECT * FROM redemption_requests WHERE idempotency_key = ?`) matched on `idempotency_key`
+  alone, so any authenticated user who supplied another user's previously-used key got back that
+  other user's cached redemption status — an IDOR unrelated to the intended TOCTOU race, and
+  `redemption_requests.idempotency_key` being the table's own `PRIMARY KEY` meant a second user
+  couldn't even use the *same* key string for their own independent attempt without hitting a
+  constraint violation. Fixed by scoping both the dedup `SELECT` and the resolution `UPDATE` with
+  `AND user_id = ?`, and changing the schema's uniqueness to `UNIQUE(user_id, idempotency_key)`
+  behind a new surrogate `id` primary key (see §2 schema above). `GET /wallet/history` was already
+  correctly scoped by `user_id` and needed no change. Regression tests for both fixes live in
+  `tests/security.test.js`.
 
 **Why this is genuinely racy in Node's single-threaded event loop model, not just
 theoretically:** everything before `await sleep(...)` — the idempotency check, the `codes.used`

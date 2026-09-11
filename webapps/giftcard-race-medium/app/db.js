@@ -15,12 +15,14 @@ CREATE TABLE IF NOT EXISTS codes (
 );
 
 CREATE TABLE IF NOT EXISTS redemption_requests (
-    idempotency_key TEXT PRIMARY KEY,
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    idempotency_key TEXT NOT NULL,
     code            TEXT NOT NULL,
     user_id         INTEGER NOT NULL,
     status          TEXT NOT NULL DEFAULT 'processing',
     created_at      REAL NOT NULL,
-    resolved_at     REAL
+    resolved_at     REAL,
+    UNIQUE(user_id, idempotency_key)
 );
 
 CREATE TABLE IF NOT EXISTS purchases (
