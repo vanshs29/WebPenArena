@@ -191,6 +191,14 @@
       "path": "webapps/predictable-reset-medium",
       "image": "benchmark/predictable-reset-medium",
       "container_port": 5000
+    },
+    {
+      "id": "verbtamper-medium",
+      "name": "Wrenlake",
+      "description": "OWASP A01:2021 — HTTP Verb Tampering; the admin role-change and report-export routes correctly require admin on POST but never re-apply the role check to a later-added PUT verb, letting any authenticated member self-promote to admin and export a confidential report (Medium)",
+      "path": "webapps/verbtamper-medium",
+      "image": "benchmark/verbtamper-medium",
+      "container_port": 5000
     }
   ]
 }
