@@ -231,6 +231,14 @@
       "path": "webapps/cachepoison-medium",
       "image": "benchmark/cachepoison-medium",
       "container_port": 5000
+    },
+    {
+      "id": "authz-failopen-medium",
+      "name": "Oakmere",
+      "description": "OWASP A01:2021 (maps to A10:2025 Mishandling of Exceptional Conditions) — a workspace-admin and a ticket-ownership authorization check both fail open when their database lookup throws, triggered via HTTP Parameter Pollution (a duplicated query key binds as a non-scalar array better-sqlite3 refuses to accept); independently confirmed and exploited on two structurally different routes (self-promotion to workspace admin via /admin/promote, then a horizontal ticket-content leak via /tickets/lookup relying on a parseInt array-to-string coercion quirk) (Medium)",
+      "path": "webapps/authz-failopen-medium",
+      "image": "benchmark/authz-failopen-medium",
+      "container_port": 5000
     }
   ]
 }

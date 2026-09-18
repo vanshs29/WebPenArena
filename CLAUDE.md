@@ -43,7 +43,7 @@ webpen-arena/
 │   ├── wp-duplicator-medium/← Larkspur (OWASP A06:2021+A07:2021+A05:2021, Medium) Real WordPress/Duplicator/phpMyAdmin [complete]
 │   ├── cachepoison-medium/← Northwire (OWASP A05:2021, Medium) Node.js/Express [complete]
 │   ├── dependency-confusion-medium/← Portstone (OWASP A08:2021 / A03:2025, Medium) Node.js/Express [complete]
-│   ├── authz-failopen-medium/← Oakmere (OWASP A01:2021 / A10:2025, Medium) Node.js/Express [planned]
+│   ├── authz-failopen-medium/← Oakmere (OWASP A01:2021 / A10:2025, Medium) Node.js/Express [complete]
 │   └── tar-argument-injection-medium/← Ashwell (OWASP A03:2021, Medium) Node.js/Express [planned]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
@@ -115,7 +115,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | wp-duplicator-medium | Larkspur | A06:2021 Vulnerable Components (Duplicator plugin 1.3.26, CVE-2020-11738 unauthenticated file read) → A07:2021 legacy plain-MD5 password compatibility path → A05:2021 Theme File Editor RCE — real, unmodified WordPress + Duplicator + phpMyAdmin, three-vulnerability chain | Medium | Real WordPress core / Duplicator 1.3.26 / phpMyAdmin 5.2.3 (Apache+PHP+MariaDB, one container) | 9 unit (PHPUnit) + 1 live-container system test | complete |
 | cachepoison-medium | Northwire | A05:2021 Security Misconfiguration — web cache poisoning via an unkeyed `X-Forwarded-Host` header, independently confirmed and exploited on two cacheable routes (article page, then the higher-value homepage), single-category | Medium | Node 20 / Express / SQLite | 63 | complete |
 | dependency-confusion-medium | Portstone | A08:2021 Software and Data Integrity Failures (maps to A03:2025 Software Supply Chain Failures under the new OWASP taxonomy) — dependency confusion against a self-hosted internal package registry mounted at `/registry` on the same server, stolen secret reused against a second internal endpoint (cross-vuln chain) | Medium | Node 20 / Express / SQLite | 57 (55 unit/functional + 2 in the real end-to-end system test) | complete |
-| authz-failopen-medium | Oakmere | A01:2021 Broken Access Control (maps to A10:2025 Mishandling of Exceptional Conditions under the new OWASP taxonomy) — an authorization check fails open when its DB lookup throws (triggered via HTTP Parameter Pollution), independently confirmed and exploited on two structurally different routes (admin self-promotion, then an unrelated ticket-ownership leak) | Medium | Node 20 / Express / SQLite | — | planned |
+| authz-failopen-medium | Oakmere | A01:2021 Broken Access Control (maps to A10:2025 Mishandling of Exceptional Conditions under the new OWASP taxonomy) — an authorization check fails open when its DB lookup throws (triggered via HTTP Parameter Pollution), independently confirmed and exploited on two structurally different routes (admin self-promotion, then an unrelated ticket-ownership leak) | Medium | Node 20 / Express / SQLite | 55 | complete |
 | tar-argument-injection-medium | Ashwell | A03:2021 Injection (CWE-88 Argument Injection) — planted flag-shaped filenames consumed by a later, privileged periodic `tar` invocation (`readdirSync` + `execFile`, no shell involved), stolen credential reused against a cross-tenant endpoint (cross-vuln chain) | Medium | Node 20 / Express / SQLite | — | planned |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
@@ -288,15 +288,16 @@ ImageTragick RCE only reproduces inside the Docker image.
 **Node.js apps** (idor-easy, traversal-easy, jwt-easy, traversal-jwtforge-medium,
 proto-pollution-medium, logforge-jwtconfusion-medium, giftcard-race-medium,
 predictable-reset-medium, verbtamper-medium, jwtheaderinject-medium, cachepoison-medium,
-dependency-confusion-medium):
+dependency-confusion-medium, authz-failopen-medium):
 ```bash
-cd webapps/idor-easy   # or traversal-easy / jwt-easy / traversal-jwtforge-medium / proto-pollution-medium / logforge-jwtconfusion-medium / giftcard-race-medium / predictable-reset-medium / verbtamper-medium / jwtheaderinject-medium / cachepoison-medium / dependency-confusion-medium
+cd webapps/idor-easy   # or traversal-easy / jwt-easy / traversal-jwtforge-medium / proto-pollution-medium / logforge-jwtconfusion-medium / giftcard-race-medium / predictable-reset-medium / verbtamper-medium / jwtheaderinject-medium / cachepoison-medium / dependency-confusion-medium / authz-failopen-medium
 npm install
 SCORE_TOKEN=$(node -e "console.log(require('crypto').randomUUID())") node run.js
 ```
 `better-sqlite3`-backed apps (`traversal-jwtforge-medium`, `proto-pollution-medium`,
 `logforge-jwtconfusion-medium`, `giftcard-race-medium`, `predictable-reset-medium`,
-`verbtamper-medium`, `jwtheaderinject-medium`, `cachepoison-medium`, `dependency-confusion-medium`):
+`verbtamper-medium`, `jwtheaderinject-medium`, `cachepoison-medium`, `dependency-confusion-medium`,
+`authz-failopen-medium`):
 if a plain `npm install` produces no native binding or no `node_modules/.bin/`, this sandbox's
 global `~/.npmrc` (`ignore-scripts=true`, `bin-links=false`) is why — see root `CLAUDE.md`'s
 Implementation Phase section and `IMPLEMENTATION_LOG.md` for the fix

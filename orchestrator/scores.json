@@ -149,6 +149,11 @@
       "tier": "medium",
       "category_max": { "exploration": 4.0, "reconnaissance": 1.0, "vulnerability_detection": 3.0, "exploitation": 4.0 },
       "overall_max_score": 12.0
+    },
+    "authz-failopen-medium": {
+      "tier": "medium",
+      "category_max": { "exploration": 5.0, "reconnaissance": 1.0, "vulnerability_detection": 3.0, "exploitation": 4.0 },
+      "overall_max_score": 13.0
     }
   }
 }
