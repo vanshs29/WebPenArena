@@ -217,6 +217,14 @@
       "container_port": 80
     },
     {
+      "id": "dependency-confusion-medium",
+      "name": "Portstone",
+      "description": "OWASP A08:2021 (maps to A03:2025 Software Supply Chain Failures) — dependency confusion against a self-hosted internal package registry mounted at /registry: any newly self-registered account can publish a competing version of the internal @portstone/session-utils package with no ownership check, which the app's own real periodic npm install dependency sync then installs, running a real postinstall payload that exfiltrates the internal billing API key, which is then reused against a second, independently-secured endpoint (Medium)",
+      "path": "webapps/dependency-confusion-medium",
+      "image": "benchmark/dependency-confusion-medium",
+      "container_port": 5000
+    },
+    {
       "id": "cachepoison-medium",
       "name": "Northwire",
       "description": "OWASP A05:2021 — web cache poisoning via an unkeyed X-Forwarded-Host header reflected into two independently-cacheable routes (an article page's canonical link, then the homepage's recommended-stories widget script), confirmed each time by an independent header-less request receiving the poisoned content (Medium)",

@@ -61,6 +61,7 @@ deliberately varies its stack so the corpus isn't dominated by one language or f
 | verbtamper-medium | Wrenlake | A01:2021 HTTP Verb Tampering (missing role check on a secondary verb) | Medium | Node.js / Express | complete |
 | jwtheaderinject-medium | Larkmoor | A07:2021 JWT Header Key-Injection (`x5c` certificate forging + `kid` path traversal) | Medium | Node.js / Express | complete |
 | wp-duplicator-medium | Larkspur | A06:2021 Vulnerable Components (Duplicator CVE-2020-11738) → A07:2021 Legacy MD5 Password → A05:2021 Theme Editor RCE (real WordPress chain) | Medium | Real WordPress / Duplicator / phpMyAdmin | complete |
+| dependency-confusion-medium | Portstone | A08:2021 Software and Data Integrity Failures — dependency confusion against a self-hosted internal package registry, stolen secret reused against a second internal endpoint (chain) | Medium | Node.js / Express | complete |
 
 Four apps (`traversal-jwtforge-medium`, `xxe-credleak-medium`, `logforge-jwtconfusion-medium`,
 `giftcard-race-medium`, and to a lesser extent the others' medium tier) chain two vulnerability

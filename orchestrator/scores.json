@@ -140,6 +140,11 @@
       "category_max": { "exploration": 3.5, "reconnaissance": 2.0, "vulnerability_detection": 4.0, "exploitation": 3.5 },
       "overall_max_score": 13.0
     },
+    "dependency-confusion-medium": {
+      "tier": "medium",
+      "category_max": { "exploration": 5.0, "reconnaissance": 1.0, "vulnerability_detection": 3.0, "exploitation": 4.0 },
+      "overall_max_score": 13.0
+    },
     "cachepoison-medium": {
       "tier": "medium",
       "category_max": { "exploration": 4.0, "reconnaissance": 1.0, "vulnerability_detection": 3.0, "exploitation": 4.0 },
