@@ -61,7 +61,10 @@ deliberately varies its stack so the corpus isn't dominated by one language or f
 | verbtamper-medium | Wrenlake | A01:2021 HTTP Verb Tampering (missing role check on a secondary verb) | Medium | Node.js / Express | complete |
 | jwtheaderinject-medium | Larkmoor | A07:2021 JWT Header Key-Injection (`x5c` certificate forging + `kid` path traversal) | Medium | Node.js / Express | complete |
 | wp-duplicator-medium | Larkspur | A06:2021 Vulnerable Components (Duplicator CVE-2020-11738) → A07:2021 Legacy MD5 Password → A05:2021 Theme Editor RCE (real WordPress chain) | Medium | Real WordPress / Duplicator / phpMyAdmin | complete |
+| cachepoison-medium | Northwire | A05:2021 Security Misconfiguration — web cache poisoning via an unkeyed `X-Forwarded-Host` header | Medium | Node.js / Express | complete |
 | dependency-confusion-medium | Portstone | A08:2021 Software and Data Integrity Failures — dependency confusion against a self-hosted internal package registry, stolen secret reused against a second internal endpoint (chain) | Medium | Node.js / Express | complete |
+| authz-failopen-medium | Oakmere | A01:2021 Broken Access Control — authorization checks fail open when their DB lookup throws (chain) | Medium | Node.js / Express | complete |
+| tar-argument-injection-medium | Ashwell | A03:2021 Injection (CWE-88 Argument Injection) — planted flag-shaped filenames consumed by a privileged `tar` invocation, stolen credential reused against a cross-tenant endpoint (chain) | Medium | Node.js / Express | complete |
 
 Four apps (`traversal-jwtforge-medium`, `xxe-credleak-medium`, `logforge-jwtconfusion-medium`,
 `giftcard-race-medium`, and to a lesser extent the others' medium tier) chain two vulnerability

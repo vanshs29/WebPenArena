@@ -1,0 +1,21 @@
+{
+  "name": "ashwell",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node run.js",
+    "test": "jest --forceExit --testPathIgnorePatterns=tests/e2e",
+    "test:e2e": "jest --forceExit --testMatch=\"**/tests/e2e/**/*.test.js\" --testTimeout=180000"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.6.0",
+    "cookie-parser": "^1.4.6",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  }
+}

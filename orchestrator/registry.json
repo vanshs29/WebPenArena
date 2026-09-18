@@ -239,6 +239,14 @@
       "path": "webapps/authz-failopen-medium",
       "image": "benchmark/authz-failopen-medium",
       "container_port": 5000
+    },
+    {
+      "id": "tar-argument-injection-medium",
+      "name": "Ashwell",
+      "description": "OWASP A03:2021 — CWE-88 Argument Injection: claimant-uploaded filenames shaped like tar flags (--checkpoint=1, --checkpoint-action=exec=sh shell.sh, shell.sh) are passed as separate argv entries to a real, unmodified tar binary by a periodic privileged archival job (execFile('tar', [...readdirSync(caseDir)])), executing the planted payload in that job's process context and exfiltrating INTERNAL_ARCHIVE_API_KEY, which is then reused against an independently-secured cross-tenant endpoint (Medium)",
+      "path": "webapps/tar-argument-injection-medium",
+      "image": "benchmark/tar-argument-injection-medium",
+      "container_port": 5000
     }
   ]
 }
