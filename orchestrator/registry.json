@@ -207,6 +207,14 @@
       "path": "webapps/jwtheaderinject-medium",
       "image": "benchmark/jwtheaderinject-medium",
       "container_port": 5000
+    },
+    {
+      "id": "wp-duplicator-medium",
+      "name": "Larkspur",
+      "description": "OWASP A06:2021 — real, unmodified WordPress + Duplicator plugin 1.3.26 (CVE-2020-11738 unauthenticated arbitrary file read) chained through OWASP A07:2021 (WordPress core's legacy plain-MD5 password compatibility path, overwritten via a bundled real phpMyAdmin using the leaked DB credentials) into OWASP A05:2021 (Theme File Editor, enabled by default, giving direct PHP RCE to any authenticated admin) (Medium)",
+      "path": "webapps/wp-duplicator-medium",
+      "image": "benchmark/wp-duplicator-medium",
+      "container_port": 80
     }
   ]
 }

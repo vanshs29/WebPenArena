@@ -134,6 +134,11 @@
       "tier": "medium",
       "category_max": { "exploration": 5.5, "reconnaissance": 1.0, "vulnerability_detection": 3.0, "exploitation": 5.0 },
       "overall_max_score": 14.5
+    },
+    "wp-duplicator-medium": {
+      "tier": "medium",
+      "category_max": { "exploration": 3.5, "reconnaissance": 2.0, "vulnerability_detection": 4.0, "exploitation": 3.5 },
+      "overall_max_score": 13.0
     }
   }
 }

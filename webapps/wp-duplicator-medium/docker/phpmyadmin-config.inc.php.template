@@ -1,0 +1,20 @@
+<?php
+/**
+ * phpMyAdmin config, real and unmodified aside from these standard
+ * environment-specific settings -- cookie auth (default mode), so any valid
+ * MySQL credentials (including the ones leaked from wp-config.php) log in
+ * normally. blowfish_secret is generated fresh at first container boot via
+ * entrypoint.sh + envsubst; it only encrypts phpMyAdmin's own auth cookie,
+ * it is not a WordPress credential.
+ */
+$cfg['blowfish_secret'] = '${PMA_BLOWFISH_SECRET}';
+
+$i = 0;
+$i++;
+$cfg['Servers'][$i]['auth_type'] = 'cookie';
+$cfg['Servers'][$i]['host'] = '127.0.0.1';
+$cfg['Servers'][$i]['compress'] = false;
+$cfg['Servers'][$i]['AllowNoPassword'] = false;
+
+$cfg['UploadDir'] = '';
+$cfg['SaveDir'] = '';

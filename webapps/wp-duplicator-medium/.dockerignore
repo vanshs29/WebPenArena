@@ -1,0 +1,10 @@
+tools/
+vendor/
+tests/
+PLAN.md
+CLAUDE.md
+.claude/
+.git/
+.gitignore
+.pytest_cache/
+__pycache__/

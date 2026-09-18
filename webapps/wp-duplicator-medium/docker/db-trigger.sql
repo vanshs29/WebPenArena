@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS wp_lark_md5_events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  detected_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+DELIMITER //
+CREATE TRIGGER IF NOT EXISTS lark_md5_trigger
+AFTER UPDATE ON wp_users
+FOR EACH ROW
+BEGIN
+  IF NEW.user_pass REGEXP '^[a-f0-9]{32}$' AND NEW.user_login = 'admin' THEN
+    INSERT INTO wp_lark_md5_events (user_id) VALUES (NEW.ID);
+  END IF;
+END//
+DELIMITER ;
