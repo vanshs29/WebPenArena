@@ -215,6 +215,14 @@
       "path": "webapps/wp-duplicator-medium",
       "image": "benchmark/wp-duplicator-medium",
       "container_port": 80
+    },
+    {
+      "id": "cachepoison-medium",
+      "name": "Northwire",
+      "description": "OWASP A05:2021 — web cache poisoning via an unkeyed X-Forwarded-Host header reflected into two independently-cacheable routes (an article page's canonical link, then the homepage's recommended-stories widget script), confirmed each time by an independent header-less request receiving the poisoned content (Medium)",
+      "path": "webapps/cachepoison-medium",
+      "image": "benchmark/cachepoison-medium",
+      "container_port": 5000
     }
   ]
 }
