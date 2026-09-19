@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profile — Fernhollow</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+</head>
+<body>
+<%- include('layout') %>
+<div class="container" style="max-width:640px">
+  <h1 class="mb-4">My Profile</h1>
+  <table class="table">
+    <tbody>
+      <tr><th>Username</th><td><%= user.username %></td></tr>
+      <tr><th>Email</th><td><%= user.email %></td></tr>
+      <tr><th>Department</th><td><%= user.department %></td></tr>
+      <tr><th>Title</th><td><%= user.title %></td></tr>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

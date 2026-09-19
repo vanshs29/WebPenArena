@@ -65,6 +65,7 @@ deliberately varies its stack so the corpus isn't dominated by one language or f
 | dependency-confusion-medium | Portstone | A08:2021 Software and Data Integrity Failures — dependency confusion against a self-hosted internal package registry, stolen secret reused against a second internal endpoint (chain) | Medium | Node.js / Express | complete |
 | authz-failopen-medium | Oakmere | A01:2021 Broken Access Control — authorization checks fail open when their DB lookup throws (chain) | Medium | Node.js / Express | complete |
 | tar-argument-injection-medium | Ashwell | A03:2021 Injection (CWE-88 Argument Injection) — planted flag-shaped filenames consumed by a privileged `tar` invocation, stolen credential reused against a cross-tenant endpoint (chain) | Medium | Node.js / Express | complete |
+| ormleak-medium | Fernhollow | A03:2021 Injection — Prisma ORM structural operator injection (`{"not": ...}`) bypassing a password-reset token check, plus an allowlist-free directory search enabling salary bisection | Medium | Node.js / Express / Prisma | complete |
 
 Four apps (`traversal-jwtforge-medium`, `xxe-credleak-medium`, `logforge-jwtconfusion-medium`,
 `giftcard-race-medium`, and to a lesser extent the others' medium tier) chain two vulnerability

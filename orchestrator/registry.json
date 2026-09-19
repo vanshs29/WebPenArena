@@ -247,6 +247,14 @@
       "path": "webapps/tar-argument-injection-medium",
       "image": "benchmark/tar-argument-injection-medium",
       "container_port": 5000
+    },
+    {
+      "id": "ormleak-medium",
+      "name": "Fernhollow",
+      "description": "OWASP A03:2021 Injection — Prisma ORM query-builder trust: a structured {\"not\": ...} value in place of a scalar resetToken bypasses the password-reset check for any account (taking over the admin), and an internal directory search that spreads every query key into the Prisma where clause with no field allowlist lets numeric bracket operators bisect the admin's confidential salary, an independent second finding (Medium)",
+      "path": "webapps/ormleak-medium",
+      "image": "benchmark/ormleak-medium",
+      "container_port": 5000
     }
   ]
 }

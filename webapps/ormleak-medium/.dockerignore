@@ -1,0 +1,9 @@
+node_modules
+tests
+PLAN.md
+CLAUDE.md
+.claude
+*.db
+*.db-journal
+.git
+jest.config.js
