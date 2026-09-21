@@ -121,7 +121,14 @@ function lark_check_theme_tamper(): void
 
     if ($currentHash !== $pristineHash) {
         lark_fire('exploit_theme_save');
-        if (isset($_GET['cmd']) && $_GET['cmd'] !== '') {
+        // is_string() guard: a request like ?cmd[]=id makes $_GET['cmd'] an
+        // array, and `array !== ''` is true (never identical, different
+        // types) -- without this check that would fire exploit_rce even
+        // though the injected functions.php payload's system($_GET['cmd'])
+        // would itself throw a TypeError on an array argument and never
+        // actually run a command. Confirmed live, 2026-09-21: ?cmd[]=id
+        // fired exploit_rce with no real command execution possible.
+        if (isset($_GET['cmd']) && is_string($_GET['cmd']) && $_GET['cmd'] !== '') {
             lark_fire('exploit_rce');
         }
     }
@@ -134,7 +141,20 @@ function lark_track_admin_ajax_duplicator(string $uri): void
     }
 
     lark_fire('recon_duplicator_probe');
+    // is_string() guard: a request like ?file[]=x makes $_GET['file'] an
+    // array, and strpos()/realpath() both require a string argument --
+    // without this check that's an uncaught TypeError (a real 500,
+    // confirmed live 2026-09-21 via docker logs: "strpos(): Argument #1
+    // ($haystack) must be of type string, array given"), not a graceful
+    // "not a traversal attempt" response. Duplicator's own real code
+    // (duplicator.php) calls sanitize_text_field($_GET['file']), which
+    // itself throws on a non-scalar value, so a real attacker's traversal
+    // request is always a plain string in practice -- this only guards
+    // against a malformed/fuzzed request crashing the recon checkpoint.
     $file = $_GET['file'] ?? '';
+    if (!is_string($file)) {
+        $file = '';
+    }
     if (strpos($file, '..') !== false) {
         lark_fire('recon_duplicator_traversal');
     }

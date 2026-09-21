@@ -738,3 +738,43 @@ build order, beyond what §9 already covers:
   update to the shelved-CMS-category note explaining what this app does and doesn't resolve for
   that category), `webpen-arena/README.md`, and root `CLAUDE.md` (corpus status table,
   corpus-wide events list, corpus app count, File Locations) all updated to match.
+
+---
+
+## 11. Post-implementation fixes (21 September 2026)
+
+A deliberate double-check of the scoring logic (rebuilding fresh, re-running both suites, then
+probing edge cases the original suites didn't cover) found two real bugs in
+`mu-plugins/scoring.php`, both from the same root cause: reading a `$_GET` value without
+checking it was actually a string before passing it to a function that requires one.
+
+1. **Crash**: `admin-ajax.php?action=duplicator_download&file[]=x` makes `$_GET['file']` an
+   array. `strpos($file, '..')` (and the downstream `realpath()` call) throws an uncaught
+   `TypeError` on an array argument — confirmed live via `docker logs`
+   ("`strpos(): Argument #1 ($haystack) must be of type string, array given`"), a real 500 for
+   any fuzzer or agent that happens to send an array-shaped parameter. Site-wide impact was
+   limited to that one request (confirmed a normal page load immediately afterward still
+   returned 200), but it's still exactly the kind of environment-induced noise the corpus's own
+   statistical-power-check philosophy warns against.
+2. **False credit**: `?cmd[]=id` makes `$_GET['cmd']` an array. `$_GET['cmd'] !== ''` is `true`
+   for an array (different types are never `===`), so `exploit_rce` fired even though the
+   injected `functions.php` payload's `system($_GET['cmd'])` call would itself throw on an array
+   argument and never actually run anything — full exploitation credit reachable with no real
+   command execution, once `exploit_theme_save` had already fired.
+
+Both fixed with an `is_string()` guard before the value reaches `strpos()`/`realpath()` or the
+`!==` comparison. A worthwhile finding for the two other checks in the same file that read
+`$_GET` (`action`, `format`): both were already safe by construction, since they use
+`!== '<literal>'`/`=== '<literal>'` against a fixed string rather than passing the value into a
+function — an array there just evaluates as correctly "not equal," no crash risk. Added a
+regression test (`tests/system/test_exploit_chain.py::test_array_typed_query_params_are_handled_safely`)
+covering both cases plus confirming a genuine string `cmd=` still fires `exploit_rce` normally
+after the fix. Full suite (9 PHPUnit + 2 system tests) reverified green after the fix, against a
+freshly rebuilt image.
+
+Worth checking for any future app that reads `$_GET`/`$_POST` values directly (PHP or otherwise)
+and passes them into a function with a scalar-typed parameter: PHP's query-string parser turns
+`key[]=` or `key[x]=` into an array automatically, and neither `isset()` nor a loose
+`!== ''`-style comparison against a string catches that — only an explicit type check does. This
+is the same general boundary-validation lesson `giftcard-race-medium` and `jwtheaderinject-medium`
+already recorded for their own stacks, now confirmed to apply here too.
