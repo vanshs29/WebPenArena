@@ -8,6 +8,7 @@ const METRICS = [
 const totalsAllEl = document.getElementById("totals-all");
 const totalsEl = document.getElementById("totals");
 const totalsTierHeadingEl = document.getElementById("totals-tier-heading");
+const launchTierBtn = document.getElementById("btn-launch-tier");
 const gridEl = document.getElementById("app-grid");
 const emptyTierEl = document.getElementById("empty-tier");
 const statusBadgeEl = document.getElementById("status-badge");
@@ -109,7 +110,9 @@ function applyTier() {
   if (tierTotals) {
     renderTotals(totalsEl, tierTotals.totals);
   }
-  totalsTierHeadingEl.textContent = activeTier[0].toUpperCase() + activeTier.slice(1);
+  const tierLabel = activeTier[0].toUpperCase() + activeTier.slice(1);
+  totalsTierHeadingEl.textContent = tierLabel;
+  launchTierBtn.textContent = `Launch ${tierLabel} apps`;
   const tierHasApps = latestData.apps.some((a) => a.difficulty === activeTier);
   emptyTierEl.hidden = tierHasApps;
   gridEl.hidden = !tierHasApps;
@@ -284,6 +287,14 @@ gridEl.dataset.activeTier = activeTier;
 document.getElementById("btn-launch-all").addEventListener("click", (e) => {
   withButton(e.target, async () => {
     const res = await fetch("/api/launch-all", { method: "POST" });
+    const data = await res.json();
+    for (const err of data.errors ?? []) addBuildError(err.id, err.stderr);
+  });
+});
+
+launchTierBtn.addEventListener("click", (e) => {
+  withButton(e.target, async () => {
+    const res = await fetch(`/api/launch-tier/${activeTier}`, { method: "POST" });
     const data = await res.json();
     for (const err of data.errors ?? []) addBuildError(err.id, err.stderr);
   });

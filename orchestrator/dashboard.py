@@ -83,6 +83,38 @@ def create_app(apps: list[dict]) -> Flask:
 
         return jsonify({"launched": launched, "errors": errors, "skipped": skipped})
 
+    @app.post("/api/launch-tier/<tier>")
+    def api_launch_tier(tier):
+        from orchestrator import image_exists, build_image_data, run_container_data
+
+        if tier not in scoring.DIFFICULTIES:
+            return jsonify({"ok": False, "error": "unknown tier"}), 400
+
+        tier_apps = [a for a in apps if scoring.difficulty_of(a["id"]) == tier]
+        already_running = {row["app"]["id"] for row in scoring.discover_running_apps(apps)}
+
+        launched, errors, skipped = [], [], []
+        for reg_app in tier_apps:
+            if reg_app["id"] in already_running:
+                skipped.append(reg_app["id"])
+                continue
+            if not image_exists(reg_app["image"]):
+                build = build_image_data(reg_app)
+                if not build["ok"]:
+                    errors.append({
+                        "id": reg_app["id"],
+                        "error": "image build failed",
+                        "stderr": build["stderr"],
+                    })
+                    continue
+            info = run_container_data(reg_app)
+            if info is None:
+                errors.append({"id": reg_app["id"], "error": "docker run failed"})
+            else:
+                launched.append(info)
+
+        return jsonify({"ok": True, "launched": launched, "errors": errors, "skipped": skipped})
+
     @app.post("/api/apps/<app_id>/launch")
     def api_launch_one(app_id):
         from orchestrator import image_exists, build_image_data, run_container_data

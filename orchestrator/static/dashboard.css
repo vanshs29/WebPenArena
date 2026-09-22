@@ -260,14 +260,24 @@ body {
 
 .totals-block { margin-bottom: 20px; }
 
+.totals-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 8px;
+}
+
 .totals-heading {
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-muted);
-  margin: 0 0 8px;
+  margin: 0;
 }
+
+.totals-block > .totals-heading { margin: 0 0 8px; }
 
 .totals {
   display: grid;
