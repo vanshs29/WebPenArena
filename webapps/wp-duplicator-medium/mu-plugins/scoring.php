@@ -21,6 +21,7 @@ require_once __DIR__ . '/scoring-core.php';
 
 define('LARK_STATE_DIR', getenv('LARK_STATE_DIR') ?: '/opt/wp-duplicator/state');
 define('LARK_SCORING_DB', getenv('LARK_SCORING_DB') ?: '/app/data/scoring.sqlite');
+define('LARK_TASK_ID', 'wp-duplicator-medium');
 
 function lark_db(): SQLite3
 {
@@ -262,6 +263,7 @@ function lark_handle_score_view(): void
     if (($_GET['format'] ?? '') === 'json') {
         header('Content-Type: application/json');
         echo json_encode([
+            'task_id' => LARK_TASK_ID,
             'overall_score' => $scores['overall_score'],
             'overall_max' => $scores['overall_max'],
             'categories' => $scores['categories'],
@@ -283,54 +285,111 @@ function lark_render_dashboard_html(array $rows, array $scores): void
         'vulnerability_detection' => 'Vulnerability Detection',
         'exploitation' => 'Exploitation',
     ];
+    $firedRows = array_values(array_filter($rows, fn($row) => $row['fired_at'] !== null));
+    usort($firedRows, fn($a, $b) => strcmp($a['fired_at'], $b['fired_at']));
 
     header('Content-Type: text/html; charset=utf-8');
     ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Larkspur &mdash; Score Dashboard</title>
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="5">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Score Dashboard &mdash; Larkspur</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<style>
+  .stage-header { font-weight: 600; background: #f8f9fa; }
+  .checkpoint-row td { padding-left: 2rem; color: #444; }
+  .badge-done { background-color: #198754; }
+  .badge-miss { background-color: #6c757d; }
+  .score-fraction { font-size: 0.85rem; color: #666; }
+  .weight-cell { text-align: center; color: #666; font-variant-numeric: tabular-nums; }
+</style>
 </head>
-<body class="p-4">
-<div class="container">
-  <h1>Larkspur &mdash; Score Dashboard</h1>
-  <p class="text-muted">Overall: <strong><?php echo htmlspecialchars((string) $scores['overall_score']); ?></strong>
-     / <?php echo htmlspecialchars((string) $scores['overall_max']); ?></p>
+<body>
+<div class="container mt-4 mb-5" style="max-width:860px">
+  <h1 class="mb-0">Larkspur Score Dashboard</h1>
+  <p class="text-muted mb-4">
+    Task: <code><?php echo htmlspecialchars(LARK_TASK_ID); ?></code> &mdash;
+    <a href="?format=json" target="_blank">JSON API</a>
+  </p>
 
-  <?php foreach ($labels as $catKey => $catLabel): $cat = $scores['categories'][$catKey]; ?>
-  <h2 class="h5 mt-4"><?php echo htmlspecialchars($catLabel); ?>
-    (<?php echo htmlspecialchars((string) $cat['score']); ?> / <?php echo htmlspecialchars((string) $cat['max']); ?>)</h2>
-  <table class="table table-sm table-bordered">
-    <thead><tr><th>Checkpoint</th><th>What triggers it</th><th>Status</th></tr></thead>
-    <tbody>
-    <?php foreach ($rows as $row): if ($row['category'] !== $catKey) { continue; } ?>
+  <table class="table table-bordered align-middle mb-4">
+    <thead class="table-dark">
       <tr>
-        <td><?php echo htmlspecialchars($row['label']); ?></td>
-        <td><?php echo htmlspecialchars($row['trigger_desc']); ?></td>
-        <td><?php echo $row['fired_at'] !== null ? '&#10003;' : '&#10007;'; ?></td>
+        <th style="width:30%">Stage / Checkpoint</th>
+        <th style="width:40%">What triggers it</th>
+        <th class="text-center" style="width:12%">Weight</th>
+        <th class="text-center" style="width:18%">Status</th>
       </tr>
+    </thead>
+    <tbody>
+    <?php foreach ($labels as $catKey => $catLabel): $cat = $scores['categories'][$catKey]; ?>
+      <tr class="stage-header">
+        <td><?php echo htmlspecialchars($catLabel); ?></td>
+        <td class="score-fraction"><?php echo htmlspecialchars(number_format((float) $cat['score'], 1)); ?> / <?php echo htmlspecialchars((string) $cat['max']); ?> pts</td>
+        <td class="weight-cell">&mdash;</td>
+        <td class="text-center">
+        <?php if ($cat['score'] == $cat['max']): ?>
+          <span class="badge badge-done">&#10003; Complete</span>
+        <?php elseif ($cat['score'] > 0): ?>
+          <span class="badge bg-warning text-dark"><?php echo (int) round(($cat['score'] / $cat['max']) * 100); ?>%</span>
+        <?php else: ?>
+          <span class="badge badge-miss">&#10007; None</span>
+        <?php endif; ?>
+        </td>
+      </tr>
+      <?php foreach ($rows as $row): if ($row['category'] !== $catKey) { continue; } ?>
+      <tr class="checkpoint-row">
+        <td><code><?php echo htmlspecialchars($row['id']); ?></code></td>
+        <td><?php echo htmlspecialchars($row['trigger_desc']); ?></td>
+        <td class="weight-cell"><?php echo htmlspecialchars((string) $row['weight']); ?></td>
+        <td class="text-center">
+        <?php if ($row['fired_at'] !== null): ?>
+          <span class="badge badge-done">&#10003;</span>
+        <?php else: ?>
+          <span class="badge badge-miss">&#10007;</span>
+        <?php endif; ?>
+        </td>
+      </tr>
+      <?php endforeach; ?>
     <?php endforeach; ?>
+      <tr class="stage-header">
+        <td colspan="3">Overall (design-time ceiling, not blended across categories)</td>
+        <td class="text-center"><?php echo htmlspecialchars(number_format((float) $scores['overall_score'], 1)); ?> / <?php echo htmlspecialchars((string) $scores['overall_max']); ?> pts</td>
+      </tr>
     </tbody>
   </table>
-  <?php endforeach; ?>
 
-  <p><a href="/score/<?php echo $token; ?>?format=json">JSON</a></p>
-
-  <form method="post" action="/score/<?php echo $token; ?>/reset"
-        onsubmit="return confirm('Reset all scoring progress for this run?');">
-    <button type="submit" class="btn btn-danger">Reset</button>
-  </form>
-
-  <details class="mt-4">
-    <summary>Event log</summary>
-    <ul>
-    <?php foreach ($rows as $row): if ($row['fired_at'] === null) { continue; } ?>
-      <li><?php echo htmlspecialchars($row['fired_at'] . ' -- ' . $row['label']); ?></li>
-    <?php endforeach; ?>
-    </ul>
+  <details<?php echo $firedRows === [] ? '' : ' open'; ?>>
+    <summary class="mb-2" style="cursor:pointer;font-weight:600">
+      Event Log (<?php echo count($firedRows); ?>)
+    </summary>
+    <?php if ($firedRows === []): ?>
+    <p class="text-muted">No events recorded yet.</p>
+    <?php else: ?>
+    <table class="table table-sm table-bordered">
+      <thead><tr><th>Time</th><th>Metric</th><th>Detail</th></tr></thead>
+      <tbody>
+      <?php foreach ($firedRows as $row): ?>
+        <tr>
+          <td class="text-muted small text-nowrap"><?php echo htmlspecialchars($row['fired_at']); ?></td>
+          <td><code><?php echo htmlspecialchars($row['id']); ?></code></td>
+          <td><?php echo htmlspecialchars($row['label']); ?></td>
+        </tr>
+      <?php endforeach; ?>
+      </tbody>
+    </table>
+    <?php endif; ?>
   </details>
+
+  <div class="mt-4">
+    <form method="post" action="/score/<?php echo $token; ?>/reset"
+          onsubmit="return confirm('Reset all scoring progress for this run?');">
+      <button type="submit" class="btn btn-danger btn-sm">Reset</button>
+    </form>
+  </div>
 </div>
 </body>
 </html>
