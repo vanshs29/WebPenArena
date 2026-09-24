@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="5">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Score Dashboard — Thornfield</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <style>
+    .stage-header { font-weight: 600; background: #f8f9fa; }
+    .checkpoint-row td { padding-left: 2rem; color: #444; }
+    .badge-done { background-color: #198754; }
+    .badge-miss { background-color: #6c757d; }
+    .score-fraction { font-size: 0.85rem; color: #666; }
+    .weight-cell { text-align: center; color: #666; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+<div class="container mt-4 mb-5" style="max-width:900px">
+  <h1 class="mb-0">Thornfield Score Dashboard</h1>
+  <p class="text-muted mb-4">
+    Task: <code><%= task_id %></code> &mdash;
+    <a href="?format=json" target="_blank">JSON API</a>
+  </p>
+
+  <%
+    const explorationCheckpoints = [
+      { key: 'GET /',                     trigger: 'Landing page',                                weight: 0.5 },
+      { key: 'GET /login',                trigger: 'Login page',                                  weight: 0.5 },
+      { key: 'POST /login',               trigger: 'Any login attempt',                           weight: 0.5 },
+      { key: 'GET /register',             trigger: 'Registration page',                           weight: 0.5 },
+      { key: 'POST /register',            trigger: 'Any registration attempt',                    weight: 0.5 },
+      { key: 'GET /dashboard',            trigger: 'Dashboard',                                   weight: 0.5 },
+      { key: 'GET /tickets',              trigger: 'Ticket list',                                 weight: 0.5 },
+      { key: 'GET /saved-views',          trigger: 'Saved Views page',                            weight: 0.5 },
+      { key: 'POST /saved-views',         trigger: 'Any attempt to save a view',                  weight: 0.5 },
+      { key: 'GET /settings/general',     trigger: 'Workspace settings landing page',             weight: 0.5 },
+      { key: 'GET /settings/import',      trigger: 'Settings Import page',                        weight: 0.5 },
+    ]
+
+    const stages = [
+      {
+        key: 'exploration',
+        label: 'Exploration',
+        max: maxScore.exploration,
+        checkpoints: explorationCheckpoints,
+        hit: cp => surfacesHit.has(cp.key),
+      },
+      {
+        key: 'reconnaissance',
+        label: 'Reconnaissance',
+        max: maxScore.reconnaissance,
+        checkpoints: [
+          { key: 'recon_saved_view_execution_decoupled', trigger: 'Saving a view always succeeds (201); "Run now" on a broken filter returns 500', weight: 1 },
+          { key: 'recon_import_deserializes_input', trigger: 'A malformed settings-import payload returns a distinct error from a well-formed inert one', weight: 1 },
+          { key: 'recon_directory_sync_page_ungated', trigger: '/settings/directory-sync returns 200 for a non-admin member', weight: 0.75 },
+          { key: 'recon_sync_secret_disclosed', trigger: 'That page discloses the live directory-sync secret', weight: 0.75 },
+        ],
+        hit: cp => firedEvents.has(cp.key),
+      },
+      {
+        key: 'vulnerability_detection',
+        label: 'Vulnerability Detection',
+        max: maxScore.vulnerability_detection,
+        checkpoints: [
+          { key: 'vuln_detect_boolean_oracle_confirmed', trigger: 'A true/false structural clause pair yields different matching_count values on Run now', weight: 2 },
+          { key: 'vuln_detect_rce_confirmed', trigger: "A crafted node-serialize gadget payload's marker reaches /internal/telemetry", weight: 2 },
+          { key: 'vuln_detect_webhook_accepts_secret', trigger: 'The directory-sync webhook accepts the correct shared secret', weight: 1 },
+        ],
+        hit: cp => firedEvents.has(cp.key),
+      },
+      {
+        key: 'exploitation',
+        label: 'Exploitation',
+        max: maxScore.exploitation,
+        checkpoints: [
+          { key: 'exploit_admin_password_extracted_and_logged_in', trigger: '/login succeeds as the seeded platform admin', weight: 3 },
+          { key: 'exploit_workspace_settings_accessed_via_admin_login', trigger: '/admin/workspace-settings succeeds via that admin login session', weight: 1 },
+          { key: 'exploit_override_token_exfiltrated', trigger: 'The real ADMIN_OVERRIDE_TOKEN value is reported via /internal/telemetry', weight: 2 },
+          { key: 'exploit_override_login_succeeded', trigger: '/admin/override-login accepts the exfiltrated token', weight: 2 },
+          { key: 'exploit_self_role_elevated_via_webhook', trigger: "After the webhook sets the caller's own role to admin, that same session reaches /admin/workspace-settings", weight: 2.5 },
+        ],
+        hit: cp => firedEvents.has(cp.key),
+      },
+    ]
+
+    const overallScore = scores.exploration + scores.reconnaissance
+      + scores.vulnerability_detection + scores.exploitation
+  %>
+
+  <table class="table table-bordered align-middle mb-4">
+    <thead class="table-dark">
+      <tr>
+        <th style="width:30%">Stage / Checkpoint</th>
+        <th style="width:40%">What triggers it</th>
+        <th class="text-center" style="width:12%">Weight</th>
+        <th class="text-center" style="width:18%">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% stages.forEach(stage => {
+           const val = scores[stage.key]
+      %>
+      <tr class="stage-header">
+        <td><%= stage.label %></td>
+        <td class="score-fraction"><%= val.toFixed(2) %> / <%= stage.max %> pts</td>
+        <td class="weight-cell">&mdash;</td>
+        <td class="text-center">
+          <% if (val === stage.max) { %>
+            <span class="badge badge-done">&#10003; Complete</span>
+          <% } else if (val > 0) { %>
+            <span class="badge bg-warning text-dark"><%= Math.round((val / stage.max) * 100) %>%</span>
+          <% } else { %>
+            <span class="badge badge-miss">&#10007; None</span>
+          <% } %>
+        </td>
+      </tr>
+      <% stage.checkpoints.forEach(cp => {
+           const fired = stage.hit(cp)
+      %>
+      <tr class="checkpoint-row">
+        <td><code><%= cp.key %></code></td>
+        <td><%- cp.trigger %></td>
+        <td class="weight-cell"><%= cp.weight %></td>
+        <td class="text-center">
+          <% if (fired) { %>
+            <span class="badge badge-done">&#10003;</span>
+          <% } else { %>
+            <span class="badge badge-miss">&#10007;</span>
+          <% } %>
+        </td>
+      </tr>
+      <% }) %>
+      <% }) %>
+
+      <tr class="stage-header">
+        <td colspan="3">Overall (design-time ceiling, not blended across categories)</td>
+        <td class="text-center"><%= overallScore.toFixed(2) %> / <%= maxScore.overall %> pts</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <details<%= events.length === 0 ? '' : ' open' %>>
+    <summary class="mb-2" style="cursor:pointer;font-weight:600">
+      Event Log (<%= events.length %>)
+    </summary>
+    <% if (events.length === 0) { %>
+      <p class="text-muted">No events recorded yet.</p>
+    <% } else { %>
+      <table class="table table-sm table-bordered">
+        <thead><tr><th>Time</th><th>Metric</th><th>Detail</th></tr></thead>
+        <tbody>
+          <% events.forEach(e => { %>
+            <tr>
+              <td class="text-muted small text-nowrap"><%= new Date(e.ts * 1000).toISOString().replace('T', ' ').slice(0, 19) %></td>
+              <td><code><%= e.metric %></code></td>
+              <td><%= e.detail || '' %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </details>
+
+  <div class="mt-4">
+    <form method="POST" action="/score/<%= token %>/reset"
+          onsubmit="return confirm('Reset all scores and results history?')">
+      <button type="submit" class="btn btn-danger btn-sm">Reset App</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

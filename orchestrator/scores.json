@@ -169,6 +169,11 @@
       "tier": "hard",
       "category_max": { "exploration": 5.5, "reconnaissance": 3.0, "vulnerability_detection": 4.0, "exploitation": 8.0 },
       "overall_max_score": 20.5
+    },
+    "multipath-admin-hard": {
+      "tier": "hard",
+      "category_max": { "exploration": 5.5, "reconnaissance": 3.5, "vulnerability_detection": 5.0, "exploitation": 10.5 },
+      "overall_max_score": 24.5
     }
   }
 }

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Tickets — Thornfield</title>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/sidebar', { active: 'tickets' }) %>
+    <h2>Tickets</h2>
+    <table class="table tf-card mt-3">
+      <thead><tr><th>#</th><th>Subject</th><th>Status</th></tr></thead>
+      <tbody>
+        <% tickets.forEach(t => { %>
+          <tr>
+            <td><%= t.id %></td>
+            <td><%= t.subject %></td>
+            <td>
+              <% if (t.status === 'open') { %>
+                <span class="badge tf-badge-open text-dark">open</span>
+              <% } else { %>
+                <span class="badge bg-secondary">closed</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (tickets.length === 0) { %>
+          <tr><td colspan="3" class="text-muted">No tickets yet in this workspace.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  <%- include('partials/sidebar-close') %>
+</body>
+</html>

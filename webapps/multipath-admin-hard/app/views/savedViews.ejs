@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Saved Views — Thornfield</title>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/sidebar', { active: 'saved-views' }) %>
+    <h2>Saved Views</h2>
+    <p class="text-muted">Save a filter once, then re-run it any time from this list to see how
+      many of your workspace's tickets currently match.</p>
+
+    <form id="save-form" class="row g-2 mb-4">
+      <div class="col-md-4">
+        <input type="text" name="name" class="form-control" placeholder="View name" required>
+      </div>
+      <div class="col-md-6">
+        <input type="text" name="filter" class="form-control" placeholder="e.g. status:open" required>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn tf-btn-primary text-white w-100">Save</button>
+      </div>
+    </form>
+
+    <ul class="list-group">
+      <% views.forEach(v => { %>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong><%= v.name %></strong>
+            <div class="text-muted small"><%= v.filter_string %></div>
+          </div>
+          <div>
+            <span class="badge bg-light text-dark border me-2 run-result" id="result-<%= v.id %>"></span>
+            <button class="btn btn-sm btn-outline-secondary run-now-btn" data-id="<%= v.id %>">Run now</button>
+          </div>
+        </li>
+      <% }) %>
+    </ul>
+  <%- include('partials/sidebar-close') %>
+  <script>
+    document.getElementById('save-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      await fetch('/saved-views', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: form.get('name'), filter: form.get('filter') }),
+      });
+      window.location.reload();
+    });
+    document.querySelectorAll('.run-now-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const res = await fetch(`/saved-views/${id}/run-now`, { method: 'POST' });
+        const body = await res.json().catch(() => ({}));
+        document.getElementById(`result-${id}`).textContent =
+          res.ok ? `${body.matching_count} matches` : (body.error || 'error');
+      });
+    });
+  </script>
+</body>
+</html>

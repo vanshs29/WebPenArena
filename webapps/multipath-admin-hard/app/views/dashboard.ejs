@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Dashboard — Thornfield</title>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/sidebar', { active: 'dashboard' }) %>
+    <h2>Welcome back</h2>
+    <p class="text-muted">Signed in as <%= user.email %></p>
+    <div class="row g-3 mt-3">
+      <div class="col-md-3">
+        <div class="tf-card p-3 text-center">
+          <div class="fs-3 fw-bold"><%= openCount %></div>
+          <div class="text-muted">Open tickets</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="tf-card p-3 text-center">
+          <div class="fs-3 fw-bold"><%= closedCount %></div>
+          <div class="text-muted">Closed tickets</div>
+        </div>
+      </div>
+    </div>
+  <%- include('partials/sidebar-close') %>
+</body>
+</html>

@@ -265,6 +265,14 @@
       "path": "webapps/nestedauth-blindsqli-hard",
       "image": "benchmark/nestedauth-blindsqli-hard",
       "container_port": 5000
+    },
+    {
+      "id": "multipath-admin-hard",
+      "name": "Thornfield",
+      "description": "Three independent, structurally distinct pathways to full admin compromise — OWASP A03:2021 second-order blind SQL injection (a Saved Views feature's parameterized save is completely safe, but its later run-now re-execution rebuilds an unparameterized query from the already-stored filter string, exploited via an in-band boolean count oracle to extract the seeded platform admin's real password) plus OWASP A08:2021 insecure deserialization RCE (a real, disclosed node-serialize CVE-2017-5941 gadget against a Settings Import feature exfiltrates a dedicated ADMIN_OVERRIDE_TOKEN break-glass credential) plus OWASP A01:2021 webhook trust/authorization gap (a Directory Sync settings page discloses its own webhook's shared secret to any authenticated non-admin member, letting that member's own role be self-elevated to admin via the otherwise-correctly-secret-gated webhook) — each pathway ends in a structurally distinct, independently observable form of admin so all three exploitation checkpoints stay independent despite sharing one objective (Hard)",
+      "path": "webapps/multipath-admin-hard",
+      "image": "benchmark/multipath-admin-hard",
+      "container_port": 5000
     }
   ]
 }

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Platform Workspace Settings — Thornfield</title>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <nav class="navbar tf-navbar navbar-dark px-3">
+    <a class="navbar-brand" href="#">Thornfield Platform Administration</a>
+  </nav>
+  <div class="container py-5">
+    <h2>Platform workspace settings</h2>
+    <p class="text-muted">
+      <% if (viaOverride) { %>
+        Session issued via break-glass override.
+      <% } else { %>
+        Signed in as <%= user.email %>.
+      <% } %>
+    </p>
+    <div class="tf-card p-4" style="max-width:520px">
+      <p>This page is only reachable by a platform administrator or a break-glass session.</p>
+    </div>
+  </div>
+</body>
+</html>

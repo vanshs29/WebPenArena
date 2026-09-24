@@ -1,0 +1,11 @@
+<nav class="navbar tf-navbar navbar-dark px-3">
+  <a class="navbar-brand" href="/dashboard">Thornfield</a>
+</nav>
+<div class="d-flex">
+  <div class="tf-sidebar p-3" style="width:220px">
+    <a href="/dashboard" class="<%= active === 'dashboard' ? 'active' : '' %>">Dashboard</a>
+    <a href="/tickets" class="<%= active === 'tickets' ? 'active' : '' %>">Tickets</a>
+    <a href="/saved-views" class="<%= active === 'saved-views' ? 'active' : '' %>">Saved Views</a>
+    <a href="/settings/general" class="<%= active === 'settings' ? 'active' : '' %>">Settings</a>
+  </div>
+  <div class="flex-grow-1 p-4">
