@@ -16,7 +16,7 @@ def test_api_results_returns_list(client):
 
 
 def test_ping_json_returns_output(client, monkeypatch):
-    monkeypatch.setattr('app.routes.run_ping', lambda h: FakePingResult(
+    monkeypatch.setattr('app.routes.run_ping', lambda h, trace_path: FakePingResult(
         stdout='PING localhost: 56 data bytes\n64 bytes from 127.0.0.1: icmp_seq=0 ttl=64'
     ))
     resp = client.post('/ping', json={'host': 'localhost'})
@@ -25,7 +25,7 @@ def test_ping_json_returns_output(client, monkeypatch):
 
 
 def test_ping_result_stored_in_db(client, monkeypatch):
-    monkeypatch.setattr('app.routes.run_ping', lambda h: FakePingResult(stdout='ok'))
+    monkeypatch.setattr('app.routes.run_ping', lambda h, trace_path: FakePingResult(stdout='ok'))
     client.post('/ping', json={'host': 'localhost'})
     resp = client.get('/api/results')
     targets = [r['target'] for r in resp.get_json()]

@@ -38,7 +38,8 @@
       "description": "OWASP A03:2021 — OS Command Injection (Easy)",
       "path": "webapps/cmdi-easy",
       "image": "benchmark/cmdi-easy",
-      "container_port": 5000
+      "container_port": 5000,
+      "extra_docker_args": ["--cap-add=SYS_PTRACE"]
     },
     {
       "id": "debug-easy",

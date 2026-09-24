@@ -92,7 +92,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | idor-easy | NoteNest | A01:2021 IDOR | Easy | Node 20 / Express / SQLite | 66 | complete |
 | sqli-medium | TalentHub | A03:2021 SQLi | Medium | Python 3.12 / Flask / SQLite | 107 | complete |
 | xss-easy | PinBoard | A03:2021 XSS | Easy | Go 1.25 / net/http / SQLite | 80 | complete |
-| cmdi-easy | PulseHub | A03:2021 CMDi | Easy | Python 3.12 / Flask / SQLite | 43 | complete |
+| cmdi-easy | PulseHub | A03:2021 CMDi | Easy | Python 3.12 / Flask / SQLite | 54 | complete |
 | traversal-easy | DocVault | A05:2021 Traversal | Easy | Node 20 / Express / SQLite | 49 | complete |
 | ssrf-easy | LinkPeek | A10:2021 SSRF | Easy | Go 1.25 / net/http / SQLite | 47 | complete |
 | jwt-easy | DevBlog | A07:2021 JWT alg:none | Easy | Node 20 / Express / SQLite | 44 | complete |
@@ -308,6 +308,12 @@ needs the `SYS_PTRACE` capability; launching via the orchestrator picks this up 
 from `registry.json`'s `extra_docker_args`, but a manual `docker run` needs
 `--cap-add=SYS_PTRACE` added explicitly or the exploitation check silently never fires (fails
 closed, not with an error — see PLAN.md's Exploitation section for the fail-silently rationale).
+`cmdi-easy` (PulseHub) uses the same `strace`-based technique for its `vulnerability_detection`
+check (see `CMDI_EXEC_DETECTION_PLAN.md` at the repo root) and needs the same
+`--cap-add=SYS_PTRACE` when launched outside the orchestrator; unlike `outdated-components-
+easy`, running it directly on the host (no Docker) works fine without any extra capability,
+since Docker's seccomp profile, not the kernel's own ptrace rules, is what blocks an unprivileged
+process from tracing its own child by default.
 
 **Node.js apps** (idor-easy, traversal-easy, jwt-easy, traversal-jwtforge-medium,
 proto-pollution-medium, logforge-jwtconfusion-medium, giftcard-race-medium,

@@ -2,7 +2,7 @@ from .conftest import FakePingResult, SEEDED_CREDENTIAL
 
 
 def test_injection_output_included_in_response(client, monkeypatch):
-    monkeypatch.setattr('app.routes.run_ping', lambda h: FakePingResult(
+    monkeypatch.setattr('app.routes.run_ping', lambda h, trace_path: FakePingResult(
         stdout='uid=0(root) gid=0(root) groups=0(root)\n'
     ))
     resp = client.post('/ping', json={'host': 'localhost; id'})
@@ -11,7 +11,7 @@ def test_injection_output_included_in_response(client, monkeypatch):
 
 
 def test_credentials_retrieved_via_injection(client, monkeypatch):
-    monkeypatch.setattr('app.routes.run_ping', lambda h: FakePingResult(
+    monkeypatch.setattr('app.routes.run_ping', lambda h, trace_path: FakePingResult(
         stdout=SEEDED_CREDENTIAL + '\n'
     ))
     resp = client.post('/ping', json={'host': '; cat /app/db.env'})
@@ -20,7 +20,7 @@ def test_credentials_retrieved_via_injection(client, monkeypatch):
 
 def test_run_ping_passes_host_to_subprocess(client, monkeypatch):
     captured = []
-    def fake_run(host):
+    def fake_run(host, trace_path):
         captured.append(host)
         return FakePingResult(stdout='ok')
     monkeypatch.setattr('app.routes.run_ping', fake_run)
@@ -29,7 +29,7 @@ def test_run_ping_passes_host_to_subprocess(client, monkeypatch):
 
 
 def test_stderr_included_in_output(client, monkeypatch):
-    monkeypatch.setattr('app.routes.run_ping', lambda h: FakePingResult(
+    monkeypatch.setattr('app.routes.run_ping', lambda h, trace_path: FakePingResult(
         stdout='', stderr='connect: Network is unreachable'
     ))
     resp = client.post('/ping', json={'host': '10.0.0.1'})

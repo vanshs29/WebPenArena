@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import time
 
@@ -59,10 +60,12 @@ def _seed_data(db):
             )
 
 
-def reset_db(db):
+def reset_db(db, exec_trace_path):
     db.execute('DELETE FROM scoring_events')
     db.execute('DELETE FROM results')
     db.commit()
+    if os.path.exists(exec_trace_path):
+        os.remove(exec_trace_path)
     _seed_data(db)
     db.commit()
 

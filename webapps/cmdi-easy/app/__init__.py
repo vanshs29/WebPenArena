@@ -14,6 +14,9 @@ def create_app(test_config=None):
         app.config['DATABASE'] = os.path.join(app.instance_path, 'pulsehub.db')
         app.config['SCORE_TOKEN'] = os.environ.get('SCORE_TOKEN', '')
         app.config['SECRET_FILE_PATH'] = os.environ.get('SECRET_FILE_PATH', '/app/db.env')
+        app.config['EXEC_TRACE_PATH'] = os.environ.get(
+            'EXEC_TRACE_PATH', os.path.join(app.instance_path, '.exec-trace'),
+        )
         os.makedirs(app.instance_path, exist_ok=True)
 
     with app.app_context():
