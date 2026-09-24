@@ -34,7 +34,7 @@ RUN printf "push graphic-context\nviewbox 0 0 640 480\nimage over 0,0 0,0 '|id >
 FROM python:3.12-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpng16-16 libjpeg62-turbo libxml2 libbz2-1.0 libgomp1 \
+    libpng16-16 libjpeg62-turbo libxml2 libbz2-1.0 libgomp1 strace \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=imagemagick-build /usr/local/bin/convert /usr/local/bin/convert
@@ -42,6 +42,13 @@ COPY --from=imagemagick-build /usr/local/bin/identify /usr/local/bin/identify
 COPY --from=imagemagick-build /usr/local/lib/libMagick*.so* /usr/local/lib/
 COPY --from=imagemagick-build /usr/local/etc/ImageMagick-6/ /usr/local/etc/ImageMagick-6/
 RUN ldconfig
+
+# Empty delegates.xml so convert has no legitimate delegate to invoke -- the only
+# way it can still spawn a child process is the pipe-filename mechanism the
+# exploitation check relies on, which is handled directly in ImageMagick's own
+# blob-opening code and does not go through this file.
+RUN printf '<?xml version="1.0"?>\n<delegatemap>\n</delegatemap>\n' \
+    > /usr/local/etc/ImageMagick-6/delegates.xml
 
 WORKDIR /app
 COPY requirements.txt .

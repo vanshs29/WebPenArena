@@ -110,7 +110,8 @@
       "description": "OWASP A06:2021 — Vulnerable and Outdated Components (ImageTragick) (Easy)",
       "path": "webapps/outdated-components-easy",
       "image": "benchmark/outdated-components-easy",
-      "container_port": 5000
+      "container_port": 5000,
+      "extra_docker_args": ["--cap-add=SYS_PTRACE"]
     },
     {
       "id": "clickjacking-easy",

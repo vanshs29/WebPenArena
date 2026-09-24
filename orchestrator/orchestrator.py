@@ -126,6 +126,7 @@ def run_container_data(app: dict) -> dict | None:
             "--name", container_name,
             "-p", f"{host_port}:{app['container_port']}",
             "-e", f"SCORE_TOKEN={token}",
+            *app.get("extra_docker_args", []),
             app["image"],
         ]
         result = subprocess.run(cmd, capture_output=True, text=True)

@@ -43,12 +43,12 @@ def _seed_data(db, upload_dir, seeds_dir):
         )
 
 
-def reset_db(db, upload_dir, seeds_dir, marker_path):
+def reset_db(db, upload_dir, seeds_dir, trace_path):
     db.execute('DELETE FROM scoring_events')
     db.execute('DELETE FROM photos')
     db.commit()
-    if os.path.exists(marker_path):
-        os.remove(marker_path)
+    if os.path.exists(trace_path):
+        os.remove(trace_path)
     _seed_data(db, upload_dir, seeds_dir)
     db.commit()
 

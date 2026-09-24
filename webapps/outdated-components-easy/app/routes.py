@@ -21,7 +21,13 @@ bp = Blueprint('main', __name__)
 
 IMAGE_MAGIC_PREFIXES = (b'\xff\xd8\xff', b'\x89PNG\r\n\x1a\n', b'GIF87a', b'GIF89a')
 SCRIPT_CONTENT_SIGNATURES = (b'push graphic-context', b'viewbox')
-RCE_OUTPUT_PATTERN = re.compile(r'uid=\d+\(')
+# Bare command name, PATH-resolved by strace itself (matches both the local dev
+# host's system convert and the Docker image's pinned /usr/local/bin/convert).
+# strace's own execvp()-style PATH search can emit failed ENOENT attempts before
+# the real binary is found; EXECVE_SUCCESS_PATTERN only matches successful (= 0)
+# execve lines, so that PATH-search noise never counts as a "child exec".
+CONVERT_BINARY = 'convert'
+EXECVE_SUCCESS_PATTERN = re.compile(r'execve\(.*\)\s*=\s*0\s*$', re.MULTILINE)
 
 EXPLORATION_SURFACES = [
     ('GET',  '/',                          'Visit the gallery'),
@@ -46,11 +52,20 @@ def content_type_mismatch(data: bytes) -> bool:
     return not is_real_image_magic(data) and matches_script_content_signature(data)
 
 
-def run_convert(src_path, thumb_path):
+def run_convert(src_path, thumb_path, trace_path):
     return subprocess.run(
-        ['convert', src_path, '-resize', '200x200', thumb_path],
+        [
+            'strace', '-f', '-qq', '-e', 'trace=execve', '-o', trace_path,
+            CONVERT_BINARY, src_path, '-resize', '200x200', thumb_path,
+        ],
         capture_output=True,
     )
+
+
+def _trace_shows_child_exec(trace_content: str) -> bool:
+    """True if the trace recorded more than one successful execve -- convert's
+    own launch plus at least one child process it spawned itself."""
+    return len(EXECVE_SUCCESS_PATTERN.findall(trace_content)) > 1
 
 
 def save_upload(upload_dir, original_filename, data):
@@ -113,8 +128,10 @@ def upload_submit():
     src_path = os.path.join(upload_dir, filename)
     thumb_filename = f'thumb_{filename}'
     thumb_path = os.path.join(upload_dir, thumb_filename)
+    trace_path = current_app.config['RCE_TRACE_PATH']
 
-    run_convert(src_path, thumb_path)
+    run_convert(src_path, thumb_path, trace_path)
+    _check_exploit_trace(db, trace_path)
     thumb_exists = os.path.exists(thumb_path)
 
     db.execute(
@@ -159,18 +176,21 @@ def _check_score_token(token: str) -> bool:
     return bool(score_token) and token == score_token
 
 
-def _check_exploit_marker(db):
-    proof_path = current_app.config['RCE_PROOF_PATH']
-    if not os.path.exists(proof_path):
+def _check_exploit_trace(db, trace_path):
+    if not os.path.exists(trace_path):
         return
-    with open(proof_path) as f:
-        content = f.read()
-    if RCE_OUTPUT_PATTERN.search(content):
-        existing = db.execute(
-            "SELECT id FROM scoring_events WHERE metric='exploit'"
-        ).fetchone()
-        if existing is None:
-            write_event(db, 'exploit', 'command output captured via RCE proof file')
+    try:
+        with open(trace_path) as f:
+            content = f.read()
+    except OSError:
+        return
+    if not _trace_shows_child_exec(content):
+        return
+    existing = db.execute(
+        "SELECT id FROM scoring_events WHERE metric='exploit'"
+    ).fetchone()
+    if existing is None:
+        write_event(db, 'exploit', 'convert spawned a child process during thumbnail generation')
 
 
 @bp.route('/score/<token>')
@@ -179,7 +199,6 @@ def score(token):
         return '', 404
 
     db = get_db(current_app._get_current_object())
-    _check_exploit_marker(db)
     scores = get_scores(db)
     events = get_events(db)
     surfaces_hit = get_exploration_surfaces(db)
@@ -221,7 +240,7 @@ def score_reset(token):
         db,
         current_app.config['UPLOAD_DIR'],
         current_app.config['SEEDS_DIR'],
-        current_app.config['RCE_PROOF_PATH'],
+        current_app.config['RCE_TRACE_PATH'],
     )
     db.close()
 

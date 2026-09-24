@@ -101,7 +101,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | deserialization-easy | SessionStore | A08:2021 Deserialization | Easy | Java 21 / Spring Boot / SQLite | 36 | complete |
 | nosqli-easy | QuickPoll | A03:2021 NoSQL Injection | Easy | Fastify (TS) / MongoDB + SQLite | 50 | complete |
 | config-exposure-easy | OpsDesk | A05:2021 Backup File Exposure | Easy | PHP 8.3 / SQLite | 41 | complete |
-| outdated-components-easy | PixSnap | A06:2021 Vulnerable/Outdated Components (ImageTragick) | Easy | Python 3.12 / Flask / SQLite | 72 | complete |
+| outdated-components-easy | PixSnap | A06:2021 Vulnerable/Outdated Components (ImageTragick) | Easy | Python 3.12 / Flask / SQLite | 83 | complete |
 | clickjacking-easy | BillFold | A05:2021 Clickjacking / UI Redress | Easy | Node 20 / Express / Playwright / SQLite | 75 | complete |
 | authn-bruteforce-easy | Alderworks | A07:2021 OSINT username + unthrottled brute force | Easy | Python 3.12 / Flask / SQLite | 56 | complete |
 | mass-assignment-easy | Crewsheet | A01:2021 Mass assignment → self-escalation to admin | Easy | Ruby 3.3 / Sinatra / SQLite | 56 | complete |
@@ -231,6 +231,21 @@ verify via a production build + curl (stylesheet compiles and is linked, expecte
 render in the markup) and say so explicitly — that's markup/asset verification, not a substitute
 for actually looking at it.
 
+### Per-app `docker run` args — `extra_docker_args` in the registry
+
+Most apps need nothing beyond the standard `docker run -d --name ... -p ... -e SCORE_TOKEN=...
+<image>` invocation `orchestrator/orchestrator.py`'s `run_container_data()` builds for every
+app. If a specific app's scoring mechanism needs an extra Docker flag (a capability grant, a
+mount, an env var Docker itself must set rather than the app), add an `"extra_docker_args"` key
+to that app's `registry.json` entry — a list of extra `docker run` flags spliced into the
+command immediately before the image name. Every other entry omits the field, which defaults to
+`[]` (`app.get("extra_docker_args", [])`), so this is fully backward-compatible and opt-in per
+app. `outdated-components-easy` is the reference example: its entry sets
+`"extra_docker_args": ["--cap-add=SYS_PTRACE"]` so its own `strace`-based exploitation check can
+call `ptrace` inside the container (Docker's default seccomp profile blocks `ptrace` unless that
+capability is granted; no `--security-opt seccomp=unconfined` is needed on top of it). See
+`STRACE_EXPLOIT_DETECTION_PLAN.md` at the repo root for the full design.
+
 ---
 
 ## Orchestrator
@@ -287,7 +302,12 @@ python run.py
 normal (non-vulnerable) behavior: the exploit depends on the specific pre-patch ImageMagick
 6.9.3-9 binary the Dockerfile builds from source, not whatever `convert` happens to be on
 `PATH` locally. Running it directly is fine for iterating on routes/scoring, but the actual
-ImageTragick RCE only reproduces inside the Docker image.
+ImageTragick RCE only reproduces inside the Docker image. Exploitation is detected via
+`strace`-wrapped `convert` (see `STRACE_EXPLOIT_DETECTION_PLAN.md` at the repo root), which
+needs the `SYS_PTRACE` capability; launching via the orchestrator picks this up automatically
+from `registry.json`'s `extra_docker_args`, but a manual `docker run` needs
+`--cap-add=SYS_PTRACE` added explicitly or the exploitation check silently never fires (fails
+closed, not with an error — see PLAN.md's Exploitation section for the fail-silently rationale).
 
 **Node.js apps** (idor-easy, traversal-easy, jwt-easy, traversal-jwtforge-medium,
 proto-pollution-medium, logforge-jwtconfusion-medium, giftcard-race-medium,

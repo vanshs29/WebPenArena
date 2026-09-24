@@ -13,15 +13,15 @@ def test_reset_clears_exploration_progress(client, score_token):
     assert get_scores(client, score_token)['reconnaissance'] == 0.0
 
 
-def test_reset_removes_rce_proof_file(client, app, score_token):
-    proof_path = app.config['RCE_PROOF_PATH']
-    with open(proof_path, 'w') as f:
-        f.write('uid=0(root) gid=0(root) groups=0(root)\n')
+def test_reset_removes_rce_trace_file(client, app, score_token):
+    trace_path = app.config['RCE_TRACE_PATH']
+    with open(trace_path, 'w') as f:
+        f.write('121277 execve("/usr/local/bin/convert", ["convert"], 0x7f) = 0\n')
 
     client.post(f'/score/{score_token}/reset')
 
     import os
-    assert not os.path.exists(proof_path)
+    assert not os.path.exists(trace_path)
     assert get_scores(client, score_token)['exploitation'] == 0.0
 
 
