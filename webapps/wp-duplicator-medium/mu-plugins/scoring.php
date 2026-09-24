@@ -265,6 +265,8 @@ function lark_handle_score_view(): void
             'overall_score' => $scores['overall_score'],
             'overall_max' => $scores['overall_max'],
             'categories' => $scores['categories'],
+            'scores' => array_map(fn($cat) => $cat['score'], $scores['categories']),
+            'max_score' => array_map(fn($cat) => $cat['max'], $scores['categories']),
         ]);
         return;
     }
