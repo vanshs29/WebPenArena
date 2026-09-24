@@ -62,7 +62,7 @@ fetch('/graphql', {
       return;
     }
     body.innerHTML = keys
-      .map((k) => `<tr><td>${k.label}</td><td class="mdn-secret">${k.key}</td></tr>`)
+      .map((k) => `<tr><td>${escapeHtml(k.label)}</td><td class="mdn-secret">${escapeHtml(k.key)}</td></tr>`)
       .join('');
   })
   .catch(() => {

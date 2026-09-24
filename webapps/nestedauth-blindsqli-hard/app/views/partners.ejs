@@ -22,7 +22,7 @@ fetch('/graphql', {
   .then((result) => {
     const list = document.getElementById('partners-list');
     const orgs = (result.data && result.data.organizationDirectory) || [];
-    list.innerHTML = orgs.map((o) => `<li class="list-group-item">${o.name}</li>`).join('');
+    list.innerHTML = orgs.map((o) => `<li class="list-group-item">${escapeHtml(o.name)}</li>`).join('');
   })
   .catch(() => {
     document.getElementById('partners-list').innerHTML =

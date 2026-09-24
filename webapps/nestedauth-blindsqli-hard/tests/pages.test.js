@@ -50,6 +50,26 @@ describe('ordinary authenticated pages', () => {
   })
 })
 
+describe('cross-account rendering sinks escape untrusted data', () => {
+  test('/htmlEscape.js is served as a static asset', async () => {
+    const app = await newTestApp()
+    const res = await request(app).get('/htmlEscape.js')
+    expect(res.status).toBe(200)
+    expect(res.text).toContain('escapeHtml')
+  })
+
+  test.each(['/partners', '/marketplace', '/integrations', '/team'])(
+    '%s loads htmlEscape.js and does not build markup from raw interpolation',
+    async (pagePath) => {
+      const app = await newTestApp()
+      const { cookie } = await registerAndLogin(app)
+      const res = await request(app).get(pagePath).set('Cookie', cookie)
+      expect(res.text).toContain('/htmlEscape.js')
+      expect(res.text).toContain('escapeHtml(')
+    }
+  )
+})
+
 describe('public status page', () => {
   test('renders without authentication', async () => {
     const app = await newTestApp()
