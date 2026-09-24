@@ -1,0 +1,58 @@
+<h1 class="h3 mb-4">Your Integrations</h1>
+
+<% if (!team) { %>
+  <p class="text-muted">Your organization has no team configured yet.</p>
+<% } else { %>
+  <div class="mdn-card p-4">
+    <h2 class="h5"><%= team.name %></h2>
+    <table class="table align-middle mb-0" id="integrations-table">
+      <thead>
+        <tr><th>Name</th><th>Description</th><th>Credentials</th></tr>
+      </thead>
+      <tbody id="integrations-body">
+        <tr><td colspan="3" class="text-muted">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+  const TEAM_INTEGRATIONS_QUERY = `query TeamIntegrations($teamId: ID!) {
+    team(id: $teamId) {
+      id
+      name
+      integrations {
+        id
+        name
+        description
+        credentials
+      }
+    }
+  }`;
+  const TEAM_ID = <%- JSON.stringify(String(team.id)) %>;
+
+  fetch('/graphql', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: TEAM_INTEGRATIONS_QUERY, variables: { teamId: TEAM_ID } }),
+  })
+    .then((r) => r.json())
+    .then((result) => {
+      const body = document.getElementById('integrations-body');
+      const integrations = (result.data && result.data.team && result.data.team.integrations) || [];
+      if (integrations.length === 0) {
+        body.innerHTML = '<tr><td colspan="3" class="text-muted">No integrations configured yet.</td></tr>';
+        return;
+      }
+      body.innerHTML = integrations
+        .map(
+          (i) =>
+            `<tr><td>${i.name}</td><td>${i.description}</td><td class="mdn-secret">${i.credentials}</td></tr>`
+        )
+        .join('');
+    })
+    .catch(() => {
+      document.getElementById('integrations-body').innerHTML =
+        '<tr><td colspan="3" class="text-muted">Unable to load integrations.</td></tr>';
+    });
+  </script>
+<% } %>

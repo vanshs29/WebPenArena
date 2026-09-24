@@ -164,6 +164,11 @@
       "tier": "medium",
       "category_max": { "exploration": 4.5, "reconnaissance": 1.0, "vulnerability_detection": 3.0, "exploitation": 6.0 },
       "overall_max_score": 14.5
+    },
+    "nestedauth-blindsqli-hard": {
+      "tier": "hard",
+      "category_max": { "exploration": 5.5, "reconnaissance": 3.0, "vulnerability_detection": 4.0, "exploitation": 8.0 },
+      "overall_max_score": 20.5
     }
   }
 }

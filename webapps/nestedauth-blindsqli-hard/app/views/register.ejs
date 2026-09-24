@@ -1,0 +1,52 @@
+<% title = 'Create your organization — Meridian' %>
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="mdn-card p-4">
+      <h1 class="h4 mb-3">Set up your organization</h1>
+      <% if (error) { %>
+        <div class="alert alert-danger" role="alert"><%= error %></div>
+      <% } %>
+      <form id="register-form">
+        <div class="mb-3">
+          <label class="form-label" for="orgName">Organization name</label>
+          <input class="form-control" type="text" id="orgName" name="orgName" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="name">Your name</label>
+          <input class="form-control" type="text" id="name" name="name" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="email">Work email</label>
+          <input class="form-control" type="email" id="email" name="email" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="password">Password</label>
+          <input class="form-control" type="password" id="password" name="password" required>
+        </div>
+        <button class="btn btn-primary w-100" type="submit">Create organization</button>
+      </form>
+      <p class="mt-3 mb-0 text-muted">Already have an account? <a href="/login">Log in</a>.</p>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = {
+    orgName: document.getElementById('orgName').value,
+    name: document.getElementById('name').value,
+    email: document.getElementById('email').value,
+    password: document.getElementById('password').value,
+  };
+  const res = await fetch('/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (res.ok) {
+    window.location.href = '/login';
+  } else {
+    window.location.href = '/register?error=1';
+  }
+});
+</script>

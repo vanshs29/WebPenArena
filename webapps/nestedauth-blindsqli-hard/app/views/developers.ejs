@@ -1,0 +1,35 @@
+<h1 class="h3 mb-4">Developer Documentation</h1>
+
+<div class="mdn-card p-4 mb-4">
+  <h2 class="h5">The Partner Integration Platform</h2>
+  <p>Meridian exposes a GraphQL API at <code>/graphql</code> for partner organizations that want to programmatically manage their own incidents, team rosters, and third-party integrations. Authenticate with your existing Meridian session and send a standard GraphQL-over-HTTP request:</p>
+  <pre class="bg-light p-3 rounded"><code>POST /graphql
+Content-Type: application/json
+
+{ "query": "{ me { id name email } }" }</code></pre>
+  <p class="mb-0">Schema introspection is disabled in production. Refer to this page for the fields available to your integration.</p>
+</div>
+
+<div class="mdn-card p-4 mb-4">
+  <h2 class="h5">Your organization and team</h2>
+  <p>The <code>organization(id: ID!)</code> and <code>team(id: ID!)</code> queries return data scoped to your own organization — you can only request your own organization's or team's id. Use these to list your teammates and manage the integrations attached to your team.</p>
+</div>
+
+<div class="mdn-card p-4 mb-4">
+  <h2 class="h5">The integration marketplace</h2>
+  <p>Organizations can list their integrations in the shared marketplace so other partners can discover and connect with them for cross-org tooling. Browse every listed integration with the <code>publicIntegrations</code> query — this is intentionally a platform-wide listing, not scoped to your own organization, since the whole point of the marketplace is discovery across organizations.</p>
+</div>
+
+<div class="mdn-card p-4 mb-4">
+  <h2 class="h5">Cross-organization incident response</h2>
+  <p>When Meridian staff declare a platform-wide incident, we assemble a cross-org response squad drawn from every affected organization's team, so responders can coordinate directly instead of routing everything through Meridian support. Look up the roster for a platform-wide incident with <code>incidentResponseSquad(incidentId: ID!)</code>, using an incident id from the public status page. This, too, is intentionally cross-organizational — a platform-wide incident by definition involves more than one customer.</p>
+</div>
+
+<div class="mdn-card p-4">
+  <h2 class="h5">Partner API (REST)</h2>
+  <p class="mb-2">A small set of REST endpoints complement the GraphQL API for server-to-server integrations that don't need the full query flexibility:</p>
+  <ul>
+    <li><code>GET /partner-api/integrations/self</code> — authenticate with the <code>X-Integration-Secret</code> header for one of your team's integrations to retrieve your organization's incident history.</li>
+    <li><code>GET /partner-api/incidents</code> — authenticate with a personal API key as a bearer token to retrieve your organization's incident history from your own account context.</li>
+  </ul>
+</div>

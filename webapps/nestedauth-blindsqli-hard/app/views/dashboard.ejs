@@ -1,0 +1,35 @@
+<h1 class="h3 mb-4">Welcome back, <%= member.name %></h1>
+<p class="text-muted">Organization: <strong><%= orgName %></strong></p>
+
+<div class="row g-3 mb-4">
+  <% const counts = { resolved: 0, monitoring: 0, investigating: 0 };
+     incidentCounts.forEach((row) => { counts[row.status] = row.count }); %>
+  <div class="col-md-4">
+    <div class="mdn-card p-3 text-center">
+      <div class="display-6"><%= counts.resolved %></div>
+      <div class="text-muted">Resolved incidents</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="mdn-card p-3 text-center">
+      <div class="display-6"><%= counts.investigating %></div>
+      <div class="text-muted">Under investigation</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="mdn-card p-3 text-center">
+      <div class="display-6"><%= counts.monitoring %></div>
+      <div class="text-muted">Monitoring</div>
+    </div>
+  </div>
+</div>
+
+<div class="mdn-card p-4">
+  <h2 class="h5">Quick links</h2>
+  <ul class="mb-0">
+    <li><a href="/incidents">Review your organization's incident history</a></li>
+    <li><a href="/integrations">Manage your integrations</a></li>
+    <li><a href="/team">View your team roster</a></li>
+    <li><a href="/marketplace">Browse the integration marketplace</a></li>
+  </ul>
+</div>

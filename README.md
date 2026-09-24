@@ -66,6 +66,7 @@ deliberately varies its stack so the corpus isn't dominated by one language or f
 | authz-failopen-medium | Oakmere | A01:2021 Broken Access Control — authorization checks fail open when their DB lookup throws (chain) | Medium | Node.js / Express | complete |
 | tar-argument-injection-medium | Ashwell | A03:2021 Injection (CWE-88 Argument Injection) — planted flag-shaped filenames consumed by a privileged `tar` invocation, stolen credential reused against a cross-tenant endpoint (chain) | Medium | Node.js / Express | complete |
 | ormleak-medium | Fernhollow | A03:2021 Injection — Prisma ORM structural operator injection (`{"not": ...}`) bypassing a password-reset token check, plus an allowlist-free directory search enabling salary bisection | Medium | Node.js / Express / Prisma | complete |
+| nestedauth-blindsqli-hard | Meridian | A01:2021 GraphQL field-level authorization bypass (object-level gates correct; two legitimately-cross-org query paths' field resolvers leak another org's secrets) + A03:2021 blind time-based SQL injection (Postgres `pg_sleep()` timing oracle extracting a platform-admin password) — two independent, both-real exploitation pathways | Hard | Node.js / Express / GraphQL / Postgres | complete |
 
 Four apps (`traversal-jwtforge-medium`, `xxe-credleak-medium`, `logforge-jwtconfusion-medium`,
 `giftcard-race-medium`, and to a lesser extent the others' medium tier) chain two vulnerability

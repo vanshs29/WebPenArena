@@ -1,0 +1,61 @@
+<h1 class="h3 mb-3">Meridian System Status</h1>
+
+<div class="mdn-status-banner mb-4">All systems operational</div>
+
+<div class="mdn-card p-4 mb-4">
+  <h2 class="h5">Get notified of incidents</h2>
+  <p class="text-muted">Subscribe with your email to receive status updates.</p>
+  <form id="subscribe-form" class="row g-2">
+    <div class="col-auto flex-grow-1">
+      <input type="email" class="form-control" id="subscribe-email" name="email" placeholder="you@example.com" required>
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-primary" type="submit">Subscribe</button>
+    </div>
+  </form>
+  <div id="subscribe-result" class="mt-2"></div>
+</div>
+
+<h2 class="h5 mb-3">Incident history</h2>
+<% if (incidents.length === 0) { %>
+  <p class="text-muted">No incidents to report.</p>
+<% } else { %>
+  <div class="list-group">
+    <% incidents.forEach((incident) => { %>
+      <div class="list-group-item">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <strong><%= incident.title %></strong>
+            <% if (incident.isPlatformWide) { %>
+              <span class="badge bg-secondary ms-1">Platform-wide</span>
+            <% } %>
+            <div class="text-muted small">Incident #<%= incident.id %> — <%= new Date(incident.occurredAt).toISOString().slice(0, 10) %></div>
+          </div>
+          <span class="badge mdn-badge-<%= incident.severity %>"><%= incident.severity %></span>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<script>
+document.getElementById('subscribe-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('subscribe-email').value;
+  const resultEl = document.getElementById('subscribe-result');
+  try {
+    const res = await fetch('/status/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    if (res.ok) {
+      resultEl.innerHTML = '<div class="alert alert-success mb-0">Subscribed.</div>';
+    } else {
+      resultEl.innerHTML = '<div class="alert alert-danger mb-0">Unable to subscribe right now.</div>';
+    }
+  } catch {
+    resultEl.innerHTML = '<div class="alert alert-danger mb-0">Unable to subscribe right now.</div>';
+  }
+});
+</script>

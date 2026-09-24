@@ -1,0 +1,40 @@
+<% title = 'Log in — Meridian' %>
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="mdn-card p-4">
+      <h1 class="h4 mb-3">Log in to Meridian</h1>
+      <% if (error) { %>
+        <div class="alert alert-danger" role="alert"><%= error %></div>
+      <% } %>
+      <form id="login-form">
+        <div class="mb-3">
+          <label class="form-label" for="email">Work email</label>
+          <input class="form-control" type="email" id="email" name="email" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="password">Password</label>
+          <input class="form-control" type="password" id="password" name="password" required>
+        </div>
+        <button class="btn btn-primary w-100" type="submit">Log in</button>
+      </form>
+      <p class="mt-3 mb-0 text-muted">New to Meridian? <a href="/register">Create an organization</a>.</p>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const res = await fetch('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (res.ok) {
+    window.location.href = '/dashboard';
+  } else {
+    window.location.href = '/login?error=1';
+  }
+});
+</script>

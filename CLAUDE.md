@@ -45,7 +45,8 @@ webpen-arena/
 │   ├── dependency-confusion-medium/← Portstone (OWASP A08:2021 / A03:2025, Medium) Node.js/Express [complete]
 │   ├── authz-failopen-medium/← Oakmere (OWASP A01:2021 / A10:2025, Medium) Node.js/Express [complete]
 │   ├── tar-argument-injection-medium/← Ashwell (OWASP A03:2021, Medium) Node.js/Express [complete]
-│   └── ormleak-medium/← Fernhollow (OWASP A03:2021, Medium) Node.js/Express + Prisma [complete]
+│   ├── ormleak-medium/← Fernhollow (OWASP A03:2021, Medium) Node.js/Express + Prisma [complete]
+│   └── nestedauth-blindsqli-hard/← Meridian (OWASP A01:2021+A03:2021, Hard) Node.js/Express + GraphQL + Postgres [complete]
 ├── orchestrator/
 │   ├── orchestrator.py ← interactive CLI (build / launch / stop)
 │   ├── registry.json   ← app manifest (add new apps here when implementation is complete)
@@ -119,6 +120,7 @@ Apps marked **[planned]** have a written `PLAN.md` but are not yet implemented a
 | authz-failopen-medium | Oakmere | A01:2021 Broken Access Control (maps to A10:2025 Mishandling of Exceptional Conditions under the new OWASP taxonomy) — an authorization check fails open when its DB lookup throws (triggered via HTTP Parameter Pollution), independently confirmed and exploited on two structurally different routes (admin self-promotion, then an unrelated ticket-ownership leak) | Medium | Node 20 / Express / SQLite | 55 | complete |
 | ormleak-medium | Fernhollow | A03:2021 Injection — Prisma ORM query-builder trust: structural operator injection (`{"not": ...}`) bypasses a password-reset token check (generalized from self-account proof to full admin takeover), independently paired with a missing field-allowlist on a directory search endpoint enabling numeric bisection extraction of the admin's confidential salary | Medium | Node 20 / Express / Prisma / SQLite | 107 | complete |
 | tar-argument-injection-medium | Ashwell | A03:2021 Injection (CWE-88 Argument Injection) — planted flag-shaped filenames consumed by a later, privileged periodic `tar` invocation (`readdirSync` + `execFile`, no shell involved), stolen credential reused against a cross-tenant endpoint (cross-vuln chain) | Medium | Node 20 / Express / SQLite | 55 (53 unit/functional + 2 in the real end-to-end system test) | complete |
+| nestedauth-blindsqli-hard | Meridian | A01:2021 GraphQL field-level authorization bypass (object-level gates correct; two intentionally-cross-org query paths' field resolvers leak another org's Integration credentials and a member's personal API key, each independently reused against a real endpoint) **+** A03:2021 blind time-based SQL injection (Postgres `pg_sleep()`, server-measured control-paired timing oracle) extracting a platform-admin password to reach an internal, GraphQL-unreachable admin surface — the corpus's first hard-tier app, two independent both-real exploitation pathways | Hard | Node 20 / Express / GraphQL (`graphql-http`) / Postgres | 89 | complete |
 
 All apps share the same four-metric scoring model (Exploration, Reconnaissance, Vulnerability
 Detection, Exploitation) and expose `GET /score/<token>` for humans and `?format=json` for the
@@ -351,6 +353,51 @@ paths). The Docker image needs `openssl` on `node:20-slim` for Prisma's query en
 `PrismaClientValidationError.message`, which the app deliberately echoes to clients as its recon
 signal, so `createPrismaClient` sets `errorFormat: 'minimal'`. Found only by reading the live
 container's 500 body, not by the Jest suite; `tests/security.test.js` now guards it.
+
+`nestedauth-blindsqli-hard` (Meridian) is the corpus's first Postgres-backed app (every other
+Node app uses `better-sqlite3` or MongoDB directly) — a synchronous SQLite driver would block the
+whole event loop for the sleep duration on every timing-payload request, which is exactly what
+the app's blind-SQLi pathway needs to avoid. This sandbox has no local Postgres install, so
+iterative TDD used a throwaway `postgres:16-alpine` Docker container instead of a bare `node run.js`:
+```bash
+docker run -d --name meridian-dev-pg -e POSTGRES_USER=meridian -e POSTGRES_PASSWORD=meridian \
+  -e POSTGRES_DB=meridian -p 55432:5432 postgres:16-alpine
+cd webapps/nestedauth-blindsqli-hard
+npm install
+export DATABASE_URL=postgres://meridian:meridian@localhost:55432/meridian
+SCORE_TOKEN=$(node -e "console.log(require('crypto').randomUUID())") node run.js
+node node_modules/jest/bin/jest.js --forceExit --runInBand   # --runInBand: tests share one live Postgres instance, not per-test files
+```
+`initDb()` truncates and reseeds the whole database on every `createApp()` call (test or real
+launch alike), so a single shared Postgres instance gives every test full isolation without
+schema-per-test complexity — this doubles as the app's own reset mechanism. Two real bugs
+surfaced only by building and driving the actual Docker image, not by the Jest suite: (1) the
+Dockerfile's `postgresql` apt package installs `initdb`/`pg_ctl` under
+`/usr/lib/postgresql/15/bin/`, which is not on the default `PATH` even for the `postgres` OS
+user `gosu` switches to — `entrypoint.sh` failed silently (redirected `initdb` output hid the
+`exec: "initdb": executable file not found in $PATH` error) until the Dockerfile added that
+directory to `ENV PATH`; (2) `PLAN.md`'s own illustrative Postgres timing payload,
+`AND (SELECT 1 FROM pg_sleep(N))`, throws `argument of AND must be type boolean, not type
+integer` against real Postgres (`AND` needs a boolean on both sides; a scalar subquery selecting
+the literal `1` is an integer) — confirmed via a throwaway `psql` probe before writing any test,
+then fixed corpus-wide within this app to the boolean-safe form `AND 1=(SELECT 1 FROM
+pg_sleep(N))`, which does short-circuit correctly (verified directly: a false-condition probe
+returns in ~2ms, a true-condition one takes the full sleep duration). Worth checking for any
+future Postgres timing-based app: confirm the exact payload syntax against a real `psql` session
+before locking in test assertions around it, the same lesson `logforge-jwtconfusion-medium`
+already established for JWT library versions. A third, unrelated bug caught by curl-driving the
+live container rather than Jest: parallel GraphQL field resolution (multiple `Integration`/
+`Member` objects in one response, each independently calling `writeEvent`) raced the scoring
+module's original check-then-insert dedup, producing duplicate `scoring_events` rows — harmless
+for scoring (`getFiredEvents`/`getScores` already compute via `DISTINCT`) but sloppy; fixed with
+a Postgres unique index on `(metric, COALESCE(detail, ''))` plus `INSERT ... ON CONFLICT DO
+NOTHING`, verified atomic by re-running the same live-container exploit chain and confirming zero
+duplicate rows. Full dual-pathway exploit chain (GraphQL cross-org leaks reused against both
+`/partner-api/` endpoints; a genuine blind binary-search extraction of the platform admin's
+8-character password via the timing oracle, scripted in Python against the live container with
+no database access, 55 requests / ~79s) verified end-to-end with plain `curl`/`python3` against
+the real Docker image, reaching the full 20.5/20.5 score; reset confirmed to rotate the admin
+password and restore seed data.
 
 **Node.js + Playwright apps** (clickjacking-easy):
 ```bash

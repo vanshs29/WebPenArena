@@ -1,0 +1,46 @@
+<h1 class="h3 mb-4">Integration Marketplace</h1>
+<p class="text-muted">Integrations listed by organizations across the Meridian platform, available for cross-org incident tooling and partner workflows.</p>
+
+<div class="row g-3" id="marketplace-grid">
+  <div class="col-12 text-muted">Loading…</div>
+</div>
+
+<script>
+const MARKETPLACE_QUERY = `query Marketplace {
+  publicIntegrations {
+    id
+    name
+    description
+  }
+}`;
+
+fetch('/graphql', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ query: MARKETPLACE_QUERY }),
+})
+  .then((r) => r.json())
+  .then((result) => {
+    const grid = document.getElementById('marketplace-grid');
+    const listings = (result.data && result.data.publicIntegrations) || [];
+    if (listings.length === 0) {
+      grid.innerHTML = '<div class="col-12 text-muted">No marketplace listings yet.</div>';
+      return;
+    }
+    grid.innerHTML = listings
+      .map(
+        (i) => `
+        <div class="col-md-4">
+          <div class="mdn-card p-3 h-100">
+            <h2 class="h6">${i.name}</h2>
+            <p class="text-muted mb-0">${i.description}</p>
+          </div>
+        </div>`
+      )
+      .join('');
+  })
+  .catch(() => {
+    document.getElementById('marketplace-grid').innerHTML =
+      '<div class="col-12 text-muted">Unable to load the marketplace.</div>';
+  });
+</script>

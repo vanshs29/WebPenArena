@@ -1,0 +1,6 @@
+PLAN.md
+CLAUDE.md
+.claude/
+node_modules/
+tests/
+.git/

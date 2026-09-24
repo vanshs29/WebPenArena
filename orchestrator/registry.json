@@ -255,6 +255,14 @@
       "path": "webapps/ormleak-medium",
       "image": "benchmark/ormleak-medium",
       "container_port": 5000
+    },
+    {
+      "id": "nestedauth-blindsqli-hard",
+      "name": "Meridian",
+      "description": "Dual independent pathway — OWASP A01:2021 GraphQL field-level authorization bypass (object-level organization/team gates stay fully correct; Integration.credentials and Member.apiKeys field resolvers ignore ownership when reached through legitimately cross-org query paths, leaking an org's integration secret and a member's personal API key, each reused against a real /partner-api endpoint) plus OWASP A03:2021 blind time-based SQL injection (a raw string-concatenated existence-check query on the public status-page subscribe endpoint, exploited via a Postgres pg_sleep timing oracle to extract the platform admin's password and reach an internal, GraphQL-unreachable admin surface) — the corpus's first hard-tier app and first Postgres-backed app (Hard)",
+      "path": "webapps/nestedauth-blindsqli-hard",
+      "image": "benchmark/nestedauth-blindsqli-hard",
+      "container_port": 5000
     }
   ]
 }

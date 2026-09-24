@@ -1,0 +1,108 @@
+:root {
+  --mdn-navy-950: #0b1220;
+  --mdn-navy-900: #101a2e;
+  --mdn-navy-800: #16233d;
+  --mdn-navy-700: #1f3050;
+  --mdn-slate-200: #cbd5e1;
+  --mdn-slate-400: #94a3b8;
+  --mdn-accent: #38bdf8;
+  --mdn-status-good: #22c55e;
+  --mdn-status-warn: #f59e0b;
+  --mdn-status-bad: #ef4444;
+}
+
+body {
+  background-color: #f4f6fb;
+  color: #16233d;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.meridian-navbar {
+  background-color: var(--mdn-navy-950);
+  border-bottom: 1px solid var(--mdn-navy-700);
+}
+
+.meridian-navbar .navbar-brand {
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+
+.meridian-navbar .nav-link {
+  color: var(--mdn-slate-200);
+}
+
+.meridian-navbar .nav-link:hover {
+  color: #fff;
+}
+
+.meridian-footer {
+  background-color: var(--mdn-navy-950);
+  color: var(--mdn-slate-400);
+}
+
+.mdn-hero {
+  background: linear-gradient(135deg, var(--mdn-navy-950), var(--mdn-navy-800));
+  color: #fff;
+  border-radius: 0.75rem;
+  padding: 3rem 2.5rem;
+}
+
+.mdn-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.6rem;
+  background: #fff;
+}
+
+.mdn-badge-minor {
+  background-color: #e0f2fe;
+  color: #075985;
+}
+
+.mdn-badge-major {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.mdn-badge-critical {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.mdn-badge-resolved {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.mdn-status-banner {
+  background-color: #dcfce7;
+  color: #166534;
+  border-radius: 0.5rem;
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+}
+
+.mdn-secret {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.85rem;
+  background: #eef2ff;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.3rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: var(--mdn-navy-950);
+    color: var(--mdn-slate-200);
+  }
+
+  .mdn-card {
+    background: var(--mdn-navy-900);
+    border-color: var(--mdn-navy-700);
+    color: var(--mdn-slate-200);
+  }
+
+  .mdn-secret {
+    background: var(--mdn-navy-800);
+    color: var(--mdn-slate-200);
+  }
+}
